@@ -1,0 +1,271 @@
+BROKER SCHEMA Canonical
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+ 
+PATH LIB_Core;
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Rich Jones			29/06/05	Initial Version
+--			  All		Rich Jones			12/10/05	Changed the error handling
+--			  All		Chris Walters		10/11/06	Remove PASSTHRU and changed to cDatabaseRead
+--														Converted to EAGLE standard format
+--			  All		Kieran Mazur		30
+---------------------------------------------------------------------------------------
+-- Description:
+-- Looks up keys in the domain. Either specific keys or all keys will be retuned
+-- depending on whether a lost ok keys was included in the message 
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE CAN_Get_Reference_Data_Lookup_Data_Provider
+	Declare ClearCaseRevision CHAR('%Revision%');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		Declare inRef Reference To InputLocalEnvironment; -- Points to the input message
+		Declare outRef Reference To InputLocalEnvironment; -- Points to the output message
+		Declare forRef Reference To InputLocalEnvironment; -- Points to retrieved database information
+		Declare DB_OUT_PARAMS Reference To OutputLocalEnvironment; -- Used for Database Return Values
+		Declare DB_IN_PARAMS Reference To InputLocalEnvironment; -- Used in cDatabaseRead
+		
+		--Copy the message unchanged. Interface Id will be appended to the message		
+		CALL CopyEntireMessage();
+
+		--Find the input message
+		Move inRef To InputRoot.XMLNSC.can:esbMessage.can:getReferenceDataIn;
+		
+		--Find out if the data domain belongs to an external interface. This is used to route requests to external parties
+		-- Read the INTERFACE_ID and INTERFACE_NAME from the REFERENCE_DATA_MAP table
+		SET DB_IN_PARAMS.INTERFACE.DATA_DOMAIN = inRef.cs:DataDomain;
+		CALL cDatabaseRead ('SELECT INTERFACE_ID
+								FROM ASSET.REFERENCE_DATA_MAP
+	        					WHERE DATA_DOMAIN = ?',
+							 		False, 'EAI:000700', DB_IN_PARAMS.INTERFACE, DB_OUT_PARAMS, 'DATA_DOMAIN');
+		
+		
+		Move outRef To OutputRoot.XMLNSC.can:esbMessage.can:getReferenceDataIn;
+		Create Lastchild Of outRef As outRef Namespace cs Name 'interfaceID' Value DB_OUT_PARAMS.DATA_DOMAIN.INTERFACE_ID;										
+												
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
+
+
+CREATE FILTER MODULE CAN_Get_Reference_Data_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		Declare inRef Reference To Root.XMLNSC;
+		--Dummy test at present, as all data requests will be fufilled by EAI
+		-- If an internal data provider, return true
+		If Root.XMLNSC.can:esbMessage.can:getReferenceDataIn.cs:interfaceID = 'Something' Then  
+			RETURN TRUE;
+		Else
+			RETURN FALSE;
+		End If;		
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE CAN_Get_Reference_Data_Lookup_Keys_In_Domain
+
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+
+		Declare inRef   Reference To InputLocalEnvironment; -- Pointer used for the input message
+		Declare outRef  Reference To InputLocalEnvironment;  -- Used as a shortcut to the output message
+		Declare oleRef  Reference To InputLocalEnvironment; -- Used as a scratchpad
+		Declare keyRef  Reference To InputLocalEnvironment;  -- Used for Reading all of the input keys in the message - when present
+		Declare forRef  Reference To InputLocalEnvironment; -- Used to loop through database output
+		Declare outRef2  Reference To InputLocalEnvironment; -- Used to loop through database output
+		Declare noOfKeys Integer; -- Used to keep a count of the output keys
+		Declare DB_OUT_PARAMS Reference To OutputLocalEnvironment;
+		Declare DB_IN_PARAMS Reference To InputLocalEnvironment; -- Used in cDatabaseRead
+		Declare i Integer;
+		Declare keyData CHAR;
+		
+		--Find the input message
+		Move inRef To InputRoot.XMLNSC.can:esbMessage.can:getReferenceDataIn;
+				
+		-- Build output message and namespace declarations
+		SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Version = '1.0';
+		SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Encoding = 'UTF-8';
+		
+		--Build esbMessage
+		Create LastChild of OutputRoot.XMLNSC As outRef Namespace can Name 'esbMessage';
+		SET OutputRoot.XMLNSC.can:esbMessage.(XMLNSC.NamespaceDecl)xmlns:can = can;
+		SET OutputRoot.XMLNSC.can:esbMessage.(XMLNSC.NamespaceDecl)xmlns:cs = cs;
+		
+		--Map input message attributes to output message
+		SET outRef.(XMLNSC.Attribute)LastMessage = InputRoot.XMLNSC.can:esbMessage.(XMLNSC.Attribute)LastMessage;
+		SET outRef.(XMLNSC.Attribute)MessageType = InputRoot.XMLNSC.can:esbMessage.(XMLNSC.Attribute)MessageType;
+		SET outRef.(XMLNSC.Attribute)BusinessTransId = InputRoot.XMLNSC.can:esbMessage.(XMLNSC.Attribute)BusinessTransId;
+		SET outRef.(XMLNSC.Attribute)BusinessCorrelId = InputRoot.XMLNSC.can:esbMessage.(XMLNSC.Attribute)BusinessCorrelId;
+		SET outRef.(XMLNSC.Attribute)UserID = InputRoot.XMLNSC.can:esbMessage.(XMLNSC.Attribute)UserID;
+		
+		--Create canonical response message
+		Create LastChild Of outRef As outRef NAMESPACE can Name 'getReferenceDataOut';						
+		
+		--If we did not get a Data Key then the request is to look up all the Generic Reference Data in the supplied Domain				
+		IF inRef.cs:DataKey[1] Is Null Then
+			-- Lookup all keys in the domain
+		    -- Get generic_ref_data using domain only
+			SET DB_IN_PARAMS.REFERENCE_DATA.DATA_DOMAIN = inRef.cs:DataDomain;
+			CALL cDatabaseRead ('SELECT DATA_KEY, DESCRIPTION,
+								(Case When IS_ACTIVE = ''Y'' Then ''true'' 
+									When IS_ACTIVE = ''N'' Then ''false''
+									End) As IS_ACTIVE
+										FROM ASSET.GENERIC_REFERENCE_DATA
+	        							WHERE DATA_DOMAIN = ?
+	        							Order By DATA_KEY',
+							 				False, 'EAI:000701', DB_IN_PARAMS.REFERENCE_DATA, DB_OUT_PARAMS, 'REFERENCE_DATA_1');
+	                        
+		    If SQLCODE <> 0  Then
+		        Throw User Exception Values
+					('EAI', 'FAILED: database unavailable',
+				 	'EAI:000702', 'ERROR: Database access error: sqlcode not in (0, 100)',	        
+		        	SQLCODE, SQLERRORTEXT, SQLNATIVEERROR, SQLSTATE, 
+		            'DOMAIN, KEY =', Cast(inRef.cs:DataDomain As Char) ||', NO KEY');
+		            
+		    End If;
+		    
+		    FOR forRef AS DB_OUT_PARAMS.REFERENCE_DATA_1[] DO
+				Create LastChild Of outRef.can:referenceData As outRef2 NAMESPACE cs Name 'DataKey' Value TRIM(forRef.DATA_KEY);
+				Create LastChild Of outRef.can:referenceData NAMESPACE cs Name 'DataDescription' Value forRef.DESCRIPTION;
+		   		Set outRef2.(XMLNSC.Attribute)IsActive = Cast(forRef.IS_ACTIVE As Char);
+		    END FOR;
+		   
+		ELSE
+			--Data Domain and Data Key supplied. Loop through each instance and look up the Generic Reference Data that 
+			--matches the values.
+		    
+		    FOR keyRef As inRef.cs:DataKey[] Do
+		      	
+		      	--Pad the spaces if it is less then 30 Characters	        
+		        SET i = LENGTH(keyRef);       
+				WHILE i < 30 Do
+					Set keyRef = keyRef || ' ';
+					Set i = i + 1;
+				END WHILE;
+				--Use the Data Key and Data Domain in the look up.
+		        SET DB_IN_PARAMS.REFERENCE_DATA.DATA_DOMAIN = inRef.cs:DataDomain; 				
+				SET DB_IN_PARAMS.REFERENCE_DATA.DATA_KEY = keyRef;
+		        
+		        CALL cDatabaseRead ('SELECT DATA_KEY, DESCRIPTION,
+									(Case When IS_ACTIVE = ''Y'' Then ''true'' 
+									When IS_ACTIVE = ''N'' Then ''false''
+									End) As IS_ACTIVE
+										FROM ASSET.GENERIC_REFERENCE_DATA
+	        							WHERE DATA_DOMAIN = ?
+	        							AND DATA_KEY = ?',
+							 				False, 'EAI:000703', DB_IN_PARAMS.REFERENCE_DATA, DB_OUT_PARAMS, 'REFERENCE_DATA_2');
+		        --Handle Database Errors
+		        IF SQLCODE <> 0   Then
+		            Throw User Exception Values
+		                ('EAI', 'FAILED: database unavailable',
+				 		'EAI:000704', 'ERROR: Database access error: sqlcode not in (0, 100)',	        
+		        		SQLCODE, SQLERRORTEXT, SQLNATIVEERROR, SQLSTATE, 
+		            	'DOMAIN, KEY =', Cast(inRef.cs:DataDomain As Char) || COALESCE(Cast(keyRef As Char),'No Value'));
+		        END IF;
+
+        		--Add the Data to the Response message
+			    FOR forRef AS DB_OUT_PARAMS.REFERENCE_DATA_2[] DO
+					Create LastChild Of outRef.can:referenceData As outRef2 NAMESPACE cs Name 'DataKey' Value TRIM(forRef.DATA_KEY);
+					Create LastChild Of outRef.can:referenceData NAMESPACE cs Name 'DataDescription' Value forRef.DESCRIPTION;
+			   		Set outRef2.(XMLNSC.Attribute)IsActive = Cast(forRef.IS_ACTIVE As Char);
+			    End FOR;
+		        -- Remove the used data elements
+		        Set DB_OUT_PARAMS.REFERENCE_DATA_2 = NULL;
+		        Set DB_IN_PARAMS.REFERENCE_DATA = NULL;
+		     END FOR;
+		END IF;
+
+		--Create the response element to indicate if any rows have been found
+		If Cardinality(outRef.can:referenceData[]) = 0 Then 
+			Set outRef.can:response = 'No items found';
+		Else 	
+			Set outRef.can:response = 'Items found';	
+		End If;	
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE CAN_Get_Reference_Data_Create_Message_To_External_Data_Provider
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		Declare inRef Reference To InputLocalEnvironment;
+		Declare outRef Reference To InputLocalEnvironment;
+		
+		CALL CopyMessageHeaders();
+		Move inRef To InputRoot.XMLNSC.can:esbMessage.can:getReferenceDataIn;
+
+		-- Build output message and namespace declarations
+		SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Version = '1.0';
+		SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Encoding = 'UTF-8';
+		
+		Create LastChild of OutputRoot.XMLNSC As outRef Namespace can Name 'esbMessage';
+		SET OutputRoot.XMLNSC.can:esbMessage.(XMLNSC.NamespaceDecl)xmlns:can = can;
+		SET OutputRoot.XMLNSC.can:esbMessage.(XMLNSC.NamespaceDecl)xmlns:cs = cs;
+		
+		Create Lastchild Of outRef As outRef Namespace can Name 'getReferenceDataOut';
+		Set outRef.cs:interfaceID = inRef.cs:interfaceID;
+		Set outRef.cs:DataDomain = inRef.cs:DataDomain;
+		Set outRef.cs:DataKey = inRef.cs:DataKey;
+
+	
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;

@@ -1,0 +1,39 @@
+BROKER SCHEMA Logging
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Rich Jones			29/06/05	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Write the output message to the log file if ESB_TRACE_OUTPUT = 1
+---------------------------------------------------------------------------------------
+
+CREATE FILTER MODULE "SF_Trace_Output_Output_Trace_Required"
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		If Environment.Variables.ENV.ESB_TRACE_OUTPUT = '1' Then
+			RETURN TRUE;
+		Else
+			RETURN FALSE;
+		End If;	
+	END;
+
+END MODULE;

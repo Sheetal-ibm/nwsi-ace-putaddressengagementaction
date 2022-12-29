@@ -1,0 +1,31 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+CREATE PROCEDURE AddRATLItem (INOUT RATLAdaptorInput REFERENCE, IN itemName CHARACTER, IN itemValue CHARACTER, IN updateService BOOLEAN)
+
+BEGIN
+	
+	DECLARE itemRef REFERENCE TO RATLAdaptorInput;
+	DECLARE fItemName CHARACTER '';
+	
+	Create LastChild of RATLAdaptorInput As itemRef NAMESPACE ns_RATL Name 'item';
+	
+	IF(itemName = 'RPRCBLB') THEN
+		SET itemRef.(XMLNSC.Attribute)isMoreBlobRef = 'true';
+	END IF;
+	
+	Create LastChild of itemRef NAMESPACE ns_Adptr_Def Name 'name' Value itemName;
+	Create LastChild of itemRef NAMESPACE ns_Adptr_Def Name 'value' Value itemValue;
+	
+--------------------------------------------
+--For update service need to add extra Item. 
+--------------------------------------------
+	
+	IF updateService Then
+				Set fItemName = 'F' || SUBSTRING(itemName FROM 2);
+					Create LastChild of RATLAdaptorInput As itemRef NAMESPACE ns_RATL Name 'item';
+					Create LastChild of itemRef NAMESPACE ns_Adptr_Def Name 'name' Value fItemName;
+					Create LastChild of itemRef NAMESPACE ns_Adptr_Def Name 'value' Value '1';
+	END IF;
+	
+					
+END;

@@ -1,0 +1,81 @@
+/* ===========================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+==============================================================================================
+**********************************************************************************************
+** File Version History
+**********************************************************************************************
+** Change ID 		     CID 			 Date 		   Description 		   Test cycle
+** ----------- 		-------------- 	   ---------- 	 ----------------- 	   -----------
+**   TFR 3 			   C412459    	   17/11/2019 	  Initial Version 	       DEV
+**												
+**********************************************************************************************
+** Description of the ESQL
+** ===========================================================================================
+** The ESQL module sets up the data required for pulling the config file used by the 
+** subsequent node ReadFileConfig, prepares the data in Environment  for logging & logs at P1.
+**********************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+PATH uk.co.nationwide.nem.esb.patterns,uk.co.nationwide.nem.esb.logging;
+
+DECLARE OperationName EXTERNAL CHAR '';
+
+CREATE COMPUTE MODULE ServiceGatewayIn_LogRequestMessage
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refToInHeader 	 		 REFERENCE TO InputRoot.HTTPInputHeader;
+		DECLARE refToHTTPInput 	 		 REFERENCE TO InputLocalEnvironment.HTTP.Input;
+		DECLARE refToEnv,refToEnvSrvData REFERENCE TO Environment;
+			
+		-------------------------------
+--		-- Prep Data for Read Config --
+--		-------------------------------
+--		SET Environment.Operation = OperationName;
+--		SET Environment.CacheName = RetrieveCacheNameAndIncrementThread();
+		
+		---------------------------
+		-- Prep Data for Logging --
+		---------------------------
+		SET Environment.ESBServiceData.LogID 					= UUIDASCHAR;
+		
+		MOVE refToEnvSrvData TO Environment.ESBServiceData;
+		
+		SET refToEnvSrvData.serviceName 						= ApplicationLabel;
+		SET refToEnvSrvData.sourceSystemID 						= COALESCE(refToInHeader."X-Source-System-Id",'');
+		SET refToEnvSrvData.logPosition 						= 'P1';
+		SET refToEnvSrvData.functionalIdentifier 				= SUBSTRING(SUBSTRING(refToInHeader."X-Channel-Alternate-Id"
+																			  AFTER 'FUNCTIONALUNITID ') BEFORE '"');
+		SET refToEnvSrvData.channelAlternateIdentifier 			= COALESCE(refToInHeader."X-Channel-Alternate-Id",'');
+		SET refToEnvSrvData.creationDateTimeSubStr 			    = COALESCE(refToInHeader."X-Create-Date-Time",'');
+		SET refToEnvSrvData.serviceHeader.messageInfo.journeyID = COALESCE(refToInHeader."X-Journey-Id",'');
+		SET refToEnvSrvData.additionalInfo						= COALESCE(refToInHeader."X-Additional-Info",'');
+		
+		--Saving/Creating elements to be used by subsequent nodes for transformation
+		SET refToEnvSrvData.involvedPartyId	 = refToHTTPInput.Path.Segment[4];
+		CREATE LASTCHILD OF refToEnvSrvData NAME 'SvcResponse';
+		SET Environment.InHTTPHdr			 = refToInHeader;
+		
+		--Saving Auth header for Audit
+		SET Environment.Request.Header.authorization =  refToInHeader.Authorization;
+
+		--Saving service header data into Environment for Audit_SF
+		--							   Source          Target
+		CALL loadServiceHeaderToEnv(refToInHeader,refToEnvSrvData);
+		
+		--Create elements in localEnvironment for logging both headers & payload
+		CREATE LASTCHILD OF OutputLocalEnvironment DOMAIN('JSON') NAME 'InMsgLog';
+		SET OutputLocalEnvironment.InMsgLog.Data.Headers = InputRoot.HTTPInputHeader;
+		SET OutputLocalEnvironment.InMsgLog.Data.Body 	 = InputRoot.[<];
+		CREATE LASTCHILD OF refToEnv  DOMAIN 'XMLNSC' NAME 'Variables';
+		CALL log4jv2logging(refToEnv,OutputLocalEnvironment.InMsgLog,refToEnvSrvData.sourceSystemID,'ESB');
+		
+		--Delete the temporary fields post logging
+		DELETE FIELD OutputLocalEnvironment.InMsgLog;
+		
+		RETURN TRUE;
+		
+	END;
+END MODULE;

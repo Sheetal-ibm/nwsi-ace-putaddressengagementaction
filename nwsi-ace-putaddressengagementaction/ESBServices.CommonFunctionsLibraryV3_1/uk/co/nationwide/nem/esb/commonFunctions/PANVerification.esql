@@ -1,0 +1,25 @@
+
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+CREATE FUNCTION MatchValueWithRegExp (IN regExPattern CHAR, IN valueToBeMatched CHAR) RETURNS BOOLEAN LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.esb.PatternMatch.MatchValueWithRegExp";
+
+CREATE PROCEDURE PANValidate(IN AccountId CHARACTER, IN accValResult CHARACTER, INOUT IsPan BOOLEAN)
+BEGIN
+	--------------------------------------------------------------------------------------------
+	--Set the value of FmtAcc variable by calling getAccountNumberFormatted function
+	--------------------------------------------------------------------------------------------
+	
+	IF accValResult IN (0,-1,-2,-3)		 	OR
+       accValResult IS NULL					THEN	
+		
+		IF  (MatchValueWithRegExp(Pan,AccountId))  OR
+			(MatchValueWithRegExp(Pan1,AccountId)) OR
+			(MatchValueWithRegExp(Pan2,AccountId)) = true 	THEN 
+			SET IsPan = true;
+		ELSE
+			SET IsPan = false;
+		END IF;
+		
+	END IF;
+END;

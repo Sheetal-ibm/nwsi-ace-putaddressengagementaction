@@ -1,0 +1,110 @@
+
+/* =======================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+==========================================================================================
+******************************************************************************************
+** File Version History
+******************************************************************************************
+**  Change ID 	WorkItemId     CID 	     Date 		         Description	    Test cycle
+** ----------- 	----------   --------   ---------- 	  ------------------------	-----------
+**   TFR 3  	  277540      C412459   21/11/2019 	   		Initial Version 	    DEV
+**												
+*******************************************************************************************
+** Description of the ESQL
+** ========================================================================================
+** The ESQL provides logic to transform the incoming request from the consumer to a request 
+** for PutInvolvedParties.
+** ========================================================================================*/
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+PATH uk.co.nationwide.nem.esb.patterns;
+
+
+CREATE COMPUTE MODULE SF_Call_InvolvedPartyManagementV3_TransformToPutInvolvedPartiesRequest
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToInRoot		REFERENCE TO InputRoot;
+		DECLARE refToInJSON 	REFERENCE TO InputRoot.JSON.Data;
+		DECLARE refToOutContactPref	REFERENCE TO OutputRoot;
+		DECLARE refToInHdr		REFERENCE TO InputRoot.HTTPInputHeader;
+		DECLARE refToRestHeader REFERENCE TO InputLocalEnvironment;
+		DECLARE refToEnv		REFERENCE TO Environment;
+		DECLARE refToEnvSrvData REFERENCE TO refToEnv.ESBServiceData;
+		DECLARE P1_ValidateConfig  CHAR;
+		
+		
+		--< Prepare Data for BackendMediation lib with the data from ReadConfig subflow
+		CALL retrieveCacheSubTree(refToEnv,'ENV_PARAMETERS',Environment.Operation);
+		SET  Environment.Variables.STATIC.BackendURL 	= refToEnv.ENV_PARAMETERS.InvolvedPartyManagement_v3_UIPD_URL;
+		SET  Environment.Variables.STATIC.BackendTimeOut = refToEnv.ENV_PARAMETERS.InvolvedPartyManagement_v3_UIPD_Timeout;
+		SET  Environment.Variables.STATIC.Operation    =  'UpdateInvolvedPartyDetails';
+		
+		CALL isValidJournal (refToInRoot,refToEnv,ApplicationLabel);	
+		--Throws an exception if validation fails for incoming request
+		SET  P1_ValidateConfig = refToEnv.ENV_PARAMETERS.P1_ValidateConfig;
+		IF UPPER(P1_ValidateConfig) = 'YES' THEN
+			CALL isValidRequest (refToInRoot,refToEnv,ApplicationLabel);
+		END IF;
+		
+		CALL bizUseCaseValidation(refToInRoot,refToEnv);
+		----------------------------------------------------------------------			
+		--Saving moreProcessing to be used further to decide RSCE invocation--
+		----------------------------------------------------------------------
+		IF EXISTS(refToInJSON.moreProcessingSCOA[]) THEN
+       		SET refToEnvSrvData.moreProcessingSCOA = refToInJSON.moreProcessingSCOA;
+		END IF;
+		
+		  -----------------------------------------------------	
+    	--(As per design agreement, there will be only one --
+		-- contactPref obj at a time in the array from req)--
+		-----------------------------------------------------
+		IF (refToInJSON.contactPreferences.Item.contactPointRole.contactPointRoleSoftLock <> '') THEN
+			SET refToEnvSrvData.contactPointRoleSoftLock = refToInJSON.contactPreferences.Item.contactPointRole.contactPointRoleSoftLock;
+		END IF;
+		
+		CREATE LASTCHILD OF OutputLocalEnvironment.Destination.REST.Request AS refToRestHeader NAME 'Parameters';
+		
+		-----------------------------------------------------------
+		-- Create HTTP headers (Request parameteres & JWT token) --
+		-----------------------------------------------------------
+		--						   Source      Target
+		CALL createBackendHeader(refToInHdr,refToRestHeader);
+		
+		-- Involved party identifier should be a 10 digit string so padding with leading  0 if required
+		SET refToRestHeader.involvedPartyId = RIGHT('0000000000' || refToEnvSrvData.involvedPartyId,10);
+				
+		SET OutputRoot.HTTPRequestHeader.Authorization = Environment.Request.Header.authorization;
+		
+		
+		
+		-->
+		
+		SET refToRestHeader."X-Schema-Version" = COALESCE(refToEnv.ENV_PARAMETERS.UIPD_Schema,'3.2');
+		
+		--< Mapping PutInvolvedParties JSON Request body
+		CREATE LASTCHILD OF OutputRoot DOMAIN('JSON');			
+		SET OutputRoot.JSON.Data.involvedPartySoftLock = refToInJSON.involvedPartySoftLock;
+		
+		--< Mapping contact preferences if exists in the request from channel
+		IF EXISTS(refToInJSON.contactPreferences[]) THEN
+			CREATE LASTCHILD OF OutputRoot.JSON.Data.involvedPartyDetails AS refToOutContactPref IDENTITY (JSON.Array)contactPreferences;
+			SET refToOutContactPref.Item[] = refToInJSON.contactPreferences.Item[];
+			SET refToEnvSrvData.startDate  = refToInJSON.contactPreferences.Item.contactPointStartDate;
+		END IF;
+		
+		--< Saving moreProcessing to be used further in the orchestration
+		IF (refToInJSON.moreProcessingSCOA <> '') THEN
+			SET refToEnvSrvData.moreProcessingSCOA = refToInJSON.moreProcessingSCOA;
+			-- Under the assumption that correspondence address to be updated would always be one i.e. contactPreferences array length 
+			-- would always be 1
+			CREATE FIRSTCHILD OF refToOutContactPref.Item NAME 'moreProcessing' VALUE refToInJSON.moreProcessingSCOA;
+		END IF;
+		
+	  RETURN TRUE;
+	
+	END;
+END MODULE;

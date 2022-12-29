@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFlowOrder.msgnode="ComIbmFlowOrder.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTryCatch.msgnode="ComIbmTryCatch.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:uk_co_nationwide_nem_esb_customerEventManagement_BackendMediationLibrary_CustomerEventManagementV3.subflow="uk/co/nationwide/nem/esb/customerEventManagement/BackendMediationLibrary_CustomerEventManagementV3.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_CustomerEventManagementV3.subflow" nsPrefix="uk_co_nationwide_si_esb_putAddressEngagementAction_SF_Call_CustomerEventManagementV3.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="SF_Call_CustomerEventManagementV3" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_CustomerEventManagementV3" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/nwsi-ace-putaddressengagementaction-4.0/icons/full/obj16/SF_Call_CustomerEventManagementV3.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/nwsi-ace-putaddressengagementaction-4.0/icons/full/obj30/SF_Call_CustomerEventManagementV3.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="CustomerEventManagement_v3_0_RecordSignificantCustomerEvent (RSCE) -  Transformation/Mediation subflow"/>
+    <longDescription xmi:type="utility:ConstantString" string="The subflow deals with the transformation of incoming message to request SOAP message for the backend SOAP service RSCE. As RSCE works on the pattern - Fire&amp;Forget, this subflow mediates by simply putting the message on the input queue of RSCE and handles any errors during that process."/>
+    <version xmi:type="utility:ConstantString" string="1.0"/>
+    <composition>
+      <nodes xmi:type="ComIbmTryCatch.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="286,229">
+        <translation xmi:type="utility:ConstantString" string="Try Catch"/>
+        <shortDescription xmi:type="utility:ConstantString" string="TryCatch node for exceptions during RSCE mediation"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="928,150" computeExpression="esql://routine/uk.co.nationwide.nem.esb.putAddressEngagementAction#SF_Call_CustomerEventManagementV3_HandleException.Main">
+        <translation xmi:type="utility:ConstantString" string="HandleException"/>
+        <shortDescription xmi:type="utility:ConstantString" string="RSCE MQ Failure - ExceptionHandler"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node handles any MQ put failures during the mediation with RSCE and saves the error to be used for PartialSuccess JSON object in the final response."/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="411,233" computeExpression="esql://routine/uk.co.nationwide.nem.esb.putAddressEngagementAction#SF_Call_CustomerEventManagementV3_TransformToRSCERequest.Main">
+        <translation xmi:type="utility:ConstantString" string="TransformToRSCERequest"/>
+        <shortDescription xmi:type="utility:ConstantString" string="RSCE - Request Message Transformation"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node transforms the incoming JSON request into a SOAP message for RSCE as per the schema definitions of RSCE WSDL."/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="171,229">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_CustomerEventManagementV3" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="777,150">
+        <translation xmi:type="utility:ConstantString" string="Flow Order"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="857,198" queueName="REC_SIG_CUST_EVENT_V3.0.ESB.ERR.O" validateMaster="none">
+        <translation xmi:type="utility:ConstantString" string="MQ Output"/>
+      </nodes>
+      <nodes xmi:type="uk_co_nationwide_nem_esb_customerEventManagement_BackendMediationLibrary_CustomerEventManagementV3.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="567,234">
+        <translation xmi:type="utility:ConstantString" string="BackendMediationLibrary_CustomerEventManagementV3"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.try" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in">
+        <bendPoints>224,-89,-269,-10</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.first" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.second" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.SOAPFault_Modelled" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

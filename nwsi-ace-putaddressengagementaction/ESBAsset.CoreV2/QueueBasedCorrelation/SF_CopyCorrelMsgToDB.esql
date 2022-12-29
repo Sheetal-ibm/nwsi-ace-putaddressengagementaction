@@ -1,0 +1,112 @@
+BROKER SCHEMA QueueBasedCorrelation
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+ 
+ 
+ 
+ 
+PATH LIB_Core; -- This allows use of the core db procedures
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			06/11/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Store the Correl Msg to the DB.
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_CopyCorrelMsgToDB_Store_Correl_Msg_To_DB
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	---------------------------------------------------------------------------------------
+	-- Description:
+	-- Main Function
+	---------------------------------------------------------------------------------------
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Copy the whole Local Environment.
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		-- Prepare insert parameters.
+		DECLARE SQL CHAR;
+		SET SQL = 'INSERT INTO ASSET.RESPONSE_CONTROL(REQ_MSG_ID,MESSAGE_DATA) VALUES(?,?)';
+		SET InputLocalEnvironment.InputParams.REQ_MSG_ID = TransfBlobToChar(InputLocalEnvironment.CorrelMsgRoot.MQMD.MsgId);
+		SET InputLocalEnvironment.InputParams.MESSAGE_DATA = TransfBlobToChar(ASBITSTREAM(InputLocalEnvironment.CorrelMsgRoot));
+		
+		-- Store to DB.
+		CALL cDatabaseWrite(SQL, 'ERR:00204', InputLocalEnvironment.InputParams);
+		
+		-- Clear temporary correlation message root element.
+		SET OutputLocalEnvironment.CorrelMsgRoot = NULL;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			06/11/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Transform Blob data to Char data.
+---------------------------------------------------------------------------------------
+
+CREATE FUNCTION TransfBlobToChar(IN BlobValue BLOB) RETURNS CHAR
+BEGIN
+	DECLARE StrValue CHAR;
+	IF BlobValue IS NOT NULL THEN
+		SET StrValue = CAST(BlobValue AS CHAR);
+		SET StrValue = SUBSTRING(StrValue FROM 3 FOR (LENGTH(StrValue) - 3));
+	END IF;
+	RETURN StrValue;
+END;
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			06/11/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Throw an exception because no Correlation Message is found in the correlation queue.
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_CopyCorrelMsgToDB_Throw_Exception
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		THROW USER EXCEPTION VALUES (
+			 'ESB',
+			 'FAILURE: No Matched Correlation Message.',
+			 'ERR:00203',
+			 'soap:Server');
+	END;
+
+END MODULE;

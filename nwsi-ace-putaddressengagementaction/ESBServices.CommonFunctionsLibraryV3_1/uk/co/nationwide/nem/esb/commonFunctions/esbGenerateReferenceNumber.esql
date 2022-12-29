@@ -1,0 +1,26 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+------------------------------------------------------------------------------
+--Function :generateReferenceNumber
+--Description: This function returns a unique reference number generated from a DB2 sequence 
+------------------------------------------------------------------------------
+CREATE FUNCTION generateReferenceNumber(IN referenceDomainName CHARACTER) RETURNS INTEGER
+ BEGIN
+ 	
+ 	  ------------------------------
+ 	  --Declare Variables
+ 	  ------------------------------
+	   DECLARE SequenceName CHARACTER;
+	   DECLARE refNum ROW;
+	   DECLARE referenceNumber INTEGER;
+	   
+     SET SequenceName = 'REFDATA.' || referenceDomainName || '_SEQ';
+     ---------------------------------
+     --Fetch next value from sequence
+     ---------------------------------
+     SET refNum.number[] = PASSTHRU('values(nextval for '||SequenceName||')');
+     SET referenceNumber = refNum.number[1]."1";
+     RETURN referenceNumber;
+ END;
+
+		
+

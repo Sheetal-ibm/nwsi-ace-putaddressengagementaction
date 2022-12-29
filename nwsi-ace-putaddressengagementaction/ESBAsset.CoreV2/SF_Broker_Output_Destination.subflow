@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:Logging_SF_Trace_Output.subflow="Logging/SF_Trace_Output.subflow" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SF_Broker_Output_Destination.subflow" 
+nsPrefix="SF_Broker_Output_Destination.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<translation xmi:type="utility:TranslatableString" key="SF_Broker_Output_Destination" bundleName="SF_Broker_Output_Destination" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_Broker_Output_Destination.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_Broker_Output_Destination.gif"/>
+<shortDescription xmi:type="utility:ConstantString" string="Used to provide common functionality at the end of every message flow"/>
+<longDescription xmi:type="utility:ConstantString" string="It is responsible for the following:&#xA;· Calling the logging module&#xA;· Writing the message to the queue&#xA;"/>
+<composition>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="36,86">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="SF_Broker_Output_Destination" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="82,198" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="658,90">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="SF_Broker_Output_Destination" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="Logging_SF_Trace_Output.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="472,95">
+<translation xmi:type="utility:ConstantString" string="SF_Trace_Output"/>
+</nodes>
+<nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="339,93" queueManagerName="NOTSET" queueName="NOTSET" destinationMode="list">
+<translation xmi:type="utility:ConstantString" string="MQOutput"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="132,88" computeExpression="esql://routine/Core#SF_Broker_Output_Destination_ExamplePreparationNode.Main" computeMode="destinationAndMessage">
+<translation xmi:type="utility:ConstantString" string="ExamplePreparationNode"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_4" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+</composition>
+<propertyOrganizer>
+</propertyOrganizer>
+<stickyBoard/>
+</eClassifiers>
+</ecore:EPackage>

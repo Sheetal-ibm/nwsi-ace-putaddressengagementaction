@@ -1,0 +1,100 @@
+BROKER SCHEMA Core
+PATH LIB_Core; -- This allows use of the core db procedures
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name            Date    	Description
+-- 			  All		Rich Jones		29/06/05	Initial Version
+--			  All		Rich Jones		10/10/05	Changed the name of the usr folder
+-- AA00000478 All		Rich Jones		28/11/05	Added the namespaces for the MQRFH2
+-- AA00000512 All		Rich Jones		28/11/05	Removed namespaces
+-- AA00000582 All		Rich Jones		19/12/05	Replaced embedded sql with common functions
+-- AA00000576 All		Rich Jones		25/01/06	Changed the code due to db changes
+-- 100645 				Shaun Dennett	27-02-09	Changed to extract the correlid as a message id and convert it 
+--													into a char type compatible with the message id stored on the db
+-- 110181 	   ALL 		Shaun Dennett	05/03/09	Added conditional logic to delete the row from the RESPONSE CONTROL
+--													table to bring it in line with teh core design
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used at the start of reply flows from back end systems that do not support RFH headers
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Broker_Input_Reply_No_RFH_Reconstruct_RFH_Header
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			
+		CALL CopyMessageHeaders();	
+			
+		-- The next 2 references are used for database access using the common routines
+    	Declare DB_IN_PARAMS  Reference To InputLocalEnvironment; -- Used in database write and reads
+    	Declare DB_OUT_PARAMS Reference To InputLocalEnvironment; -- Used in database reads to hold the output
+    	Declare noRowsRef     Reference To DB_IN_PARAMS;
+    	
+    	Declare SQL_STATEMENT Char '';
+    	Declare correlId Char '';
+    	Declare throwOnNoRowsTrue Boolean True;
+    	Declare resultBranchName Char '';
+				              	              
+		--Set correlId 		 = CAST(InputRoot.MQMD.CorrelId as CHAR CCSID 850);	
+		
+		Set correlId 		=  SUBSTRING(CAST(InputRoot.MQMD.CorrelId  AS CHAR)FROM 3 FOR 48);
+		Set resultBranchName = 'RESPONSE_CONTROL';            
+
+		Create LastChild Of DB_IN_PARAMS Name 'REQ_MSG_ID' Value correlId;
+		
+		Set SQL_STATEMENT    = 'Select REQ_MSG_ID, RFH_USR, MESSAGE_DATA, SYS_INSERT_TSTMP
+					              From ASSET.RESPONSE_CONTROL
+				                 Where REQ_MSG_ID = ?';	
+
+		Call cDatabaseRead(SQL_STATEMENT, throwOnNoRowsTrue, 'ERR:00004', DB_IN_PARAMS, DB_OUT_PARAMS, resultBranchName);
+		
+		Set Environment.Variables.theUSR = Cast(DB_OUT_PARAMS.RESPONSE_CONTROL.RFH_USR As BLOB CCSID 437);
+		
+		-- Parse the USR folder retrieved from the database read
+        If Environment.Variables.theUSR Is Not Null Then
+            Create LastChild of OutputRoot Domain 'XMLNS' Parse(Environment.Variables.theUSR);
+            Set Environment.Variables.parsedUSR  = OutputRoot.XMLNS;
+            Set OutputRoot.XMLNS = NULL;
+
+        End If;
+		
+		-- Recontruct RFH header
+		Set OutputRoot.MQMD.correlId	  = DB_OUT_PARAMS.RESPONSE_CONTROL.REQ_MSG_ID;
+		Set OutputRoot.MQRFH2.usr  		  = Environment.Variables.parsedUSR.usr;
+		Set OutputRoot.MQRFH2.message	  = DB_OUT_PARAMS.RESPONSE_CONTROL.MESSAGE_DATA;
+		Set OutputRoot.MQRFH2.insertTstmp = DB_OUT_PARAMS.RESPONSE_CONTROL.SYS_INSERT_TSTMP;
+		Set OutputRoot.MQRFH2.updateTstmp = DB_OUT_PARAMS.RESPONSE_CONTROL.SYS_UPDATE_TSTMP;
+			
+		-- Now work out whether you need to delete the record from the table
+		-- Parse the USR folder retrieved from the database read
+		Set DB_IN_PARAMS = null;
+		Create LastChild Of DB_IN_PARAMS Name 'REQ_MSG_ID' Value correlId;
+		
+        If  Environment.Variables.STATIC.DELETE_FROM_RESPONSE_CONTROL = 'Y' Then
+           Set SQL_STATEMENT    = 'Delete from ASSET.RESPONSE_CONTROL
+				                	 Where REQ_MSG_ID = ?';	
+
+			Call cDatabaseWrite(SQL_STATEMENT,'ERR:00005', DB_IN_PARAMS);
+		
+
+        End If;
+			
+		-- Delete temporary RFH
+		Set DB_OUT_PARAMS.tempRFH = NULL;
+		
+		Set OutputRoot.XMLNS 	  = InputRoot.XMLNS;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+END MODULE;

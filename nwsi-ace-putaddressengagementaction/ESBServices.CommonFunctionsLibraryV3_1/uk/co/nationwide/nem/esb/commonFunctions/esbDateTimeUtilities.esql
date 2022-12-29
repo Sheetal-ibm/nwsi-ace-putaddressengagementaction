@@ -1,0 +1,62 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+DECLARE ns11 NAMESPACE 'http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/';
+
+------------------------------------------------------------------------------
+--Function :  extractDateFromTimeStamp
+--Description: Call the extractDateFromTimeStamp function  which returns date
+------------------------------------------------------------------------------
+CREATE FUNCTION extractDateFromTimeStamp(IN timeStamp1 TIMESTAMP ) RETURNS DATE
+BEGIN
+	  DECLARE date1 DATE;
+------------------------------------------------------------------
+--Extracting Date From createDateTime---------
+------------------------------------------------------------------
+       SET date1 = CAST(timeStamp1 AS DATE);
+       return date1;
+END;
+
+------------------------------------------------------------------------------
+--Function :  extractTimeFromTimeStamp
+--Description: Call the extractTimeFromTimeStamp function  which returns time
+------------------------------------------------------------------------------
+CREATE FUNCTION extractTimeFromTimeStamp(IN timeStamp1 TIMESTAMP ) RETURNS TIME
+BEGIN
+	  DECLARE time1 TIME;
+------------------------------------------------------------------
+--Extracting Time From createDateTime---------
+------------------------------------------------------------------
+      SET time1= CAST(timeStamp1 AS TIME);
+      return time1;
+END;
+
+
+--------------------------------------------------------------------------------------------
+--Function :  formatDateAsCCYYMMDD
+--Description: Call the formatDateAsCCYYMMDD function  which returns date in CCYYMMDD format
+--------------------------------------------------------------------------------------------
+CREATE FUNCTION formatDateAsCCYYMMDD(IN date1 DATE ) RETURNS CHARACTER
+BEGIN
+	 DECLARE charDate CHARACTER;
+------------------------------------------------------------------
+--Date to be converted in CCYYMMDD format
+------------------------------------------------------------------
+      SET charDate= CAST(date1 AS CHARACTER FORMAT 'yyyyMMdd');
+      return charDate;
+END;
+
+---------------------------------------------------------------------------------------------
+--Function :  formatTimeAsHHMMSSCC
+--Description: Call the  formatTimeAsHHMMSSCC function  which returns time in HHMMSSCC format
+----------------------------------------------------------------------------------------------
+CREATE FUNCTION  formatTimeAsHHMMSSCC(IN time1 TIME) RETURNS CHARACTER
+BEGIN
+	  DECLARE charTime CHARACTER;
+------------------------------------------------------------------
+--Time to be converted in HHMMSSCC format
+------------------------------------------------------------------
+      SET charTime= CAST(time1 AS CHARACTER FORMAT 'HHmmssSS');
+      return charTime;
+END;
+
+

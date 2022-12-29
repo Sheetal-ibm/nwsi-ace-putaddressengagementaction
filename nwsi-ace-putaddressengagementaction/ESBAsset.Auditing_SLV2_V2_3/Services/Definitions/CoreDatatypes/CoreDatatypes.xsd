@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" version="1.0" xmlns:cenum="http://uk/co/nationwide/Services/Definitions/Enumerations/" xmlns:cns="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" xmlns:prdt="http://uk/co/nationwide/PrimitiveDatatypes/">
+  <xsd:import namespace="http://uk/co/nationwide/Services/Definitions/Enumerations/" schemaLocation="../Enumerations/Enumerations.xsd"/>
+  <xsd:import namespace="http://uk/co/nationwide/PrimitiveDatatypes/" schemaLocation="../../../PrimitiveDatatypes/PrimitiveDatatypes.xsd"/>
+  <xsd:complexType name="AdditionalInfo">
+    <xsd:annotation>
+      <xsd:documentation>Additional Information that may be required to be passed from the consumer, as a special case, to manage the integration. This name value pair needs to be agreed at the time of design</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="name" type="prdt:BasicString60"/>
+      <xsd:element name="value" type="prdt:BasicString60"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ExtensionPoint">
+    <xsd:annotation>
+      <xsd:documentation>Array of Any elements, used in Fault and StatusResponse</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:any maxOccurs="unbounded" minOccurs="0" namespace="##any" processContents="lax"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ChannelInfo">
+    <xsd:annotation>
+      <xsd:documentation>To capture different elements related to the Consumer channel. This information can be used for AUDIT purpose if required.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="channel" type="prdt:BasicString25"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="alternateIdentifier" type="cns:AlternateIdentifer"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="BaseDescriptor">
+    <xsd:annotation>
+      <xsd:documentation>Base complex type that includes Code(String13) and Description(String1000). The following complex types are created as an extension of it:
+
+Fault
+
+Stack</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="code" type="prdt:String13">
+        <xsd:annotation>
+          <xsd:documentation>Error Code in the NEM Canonical Error Format XXX.XXX.99999</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="description" type="prdt:String1000">
+        <xsd:annotation>
+          <xsd:documentation>Error Description</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="AlternateIdentifer">
+    <xsd:annotation>
+      <xsd:documentation>The alternateIdentifier is used to pass any other identifiers related to the channel. For example, staffID, employeeID etc</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="type" type="cenum:AlternateIdentifierType"/>
+      <xsd:element name="identifier" type="prdt:BasicString60"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="MessageInfo_v2">
+    <xsd:annotation>
+      <xsd:documentation>Identify  the message uniquely for logging and integration purpose.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="journeyID" type="prdt:UUID"/>
+      <xsd:element name="sourceSystemID" type="prdt:BasicString60"/>
+      <xsd:element name="createDateTime" type="prdt:DateTime"/>
+      <xsd:element minOccurs="0" name="ipAddress" type="prdt:IPAddress"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="TransactionStatus">
+    <xsd:annotation>
+      <xsd:documentation>Type used to return business errors occurred when invoking an operation. </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="status" type="cenum:ResponseStatusType">
+        <xsd:annotation>
+          <xsd:documentation>returns the status of the transaction</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="result" type="cns:Result">
+        <xsd:annotation>
+          <xsd:documentation>Optional at the moment, to be used in processes and services to indicate certain behaviours. Reserved for future use</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="stack" type="cns:Stack"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="GatewayInfo">
+    <xsd:annotation>
+      <xsd:documentation>To capture details regarding consumer and provider service versions which will be utilised by the Service Gateway.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="virtualEnvironment" type="prdt:BasicString20"/>
+      <xsd:element minOccurs="0" name="schemaVersion" type="prdt:BasicString10"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:group name="EventMetadata">
+    <xsd:annotation>
+      <xsd:documentation>group used to cover source, severity and category, it is used within Stack and Fault complex types</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="source" type="prdt:String256">
+        <xsd:annotation>
+          <xsd:documentation>Source of the event or error, it can be the name of the operation, a system name or other identifier used to locate the source of the error
+
+Examples: 
+
+ServiceName.Operation.[activity]
+
+SoRname
+
+RowID</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="severity" type="cenum:SeverityType">
+        <xsd:annotation>
+          <xsd:documentation>severity of the error</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="category" type="cenum:CategoryType">
+        <xsd:annotation>
+          <xsd:documentation>category of the error</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:group>
+  <xsd:complexType name="Stack">
+    <xsd:annotation>
+      <xsd:documentation>Type used as base for all stack elements, doesn't include timestamp</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="cns:BaseDescriptor">
+        <xsd:sequence>
+          <xsd:group minOccurs="0" ref="cns:EventMetadata">
+            <xsd:annotation>
+              <xsd:documentation>Not visible in the XML Instances, used to group, source, severity and category attributes.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:group>
+          <xsd:element minOccurs="0" name="context" type="cns:ExtensionPoint">
+            <xsd:annotation>
+              <xsd:documentation>Extension bucket to be used to place specific types defined in targetNamespace</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Result">
+    <xsd:annotation>
+      <xsd:documentation>optional complex type to add result information that can be used by composite services.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="behaviour" type="cenum:BehaviourType">
+        <xsd:annotation>
+          <xsd:documentation>Optional at the moment, to be used in processes and services to indicate certain behaviours. Reserved for future use</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="overallSeverityLevel" type="cenum:SeverityType">
+        <xsd:annotation>
+          <xsd:documentation>Maximum severity level, for all errors within the stack</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="MessageInfo">
+    <xsd:annotation>
+      <xsd:documentation>Identify  the message uniquely for logging and integration purpose.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="journeyID" type="prdt:UUID"/>
+      <xsd:element name="sourceSystemID" type="prdt:BasicString60"/>
+      <xsd:element name="createDateTime" type="prdt:DateTime"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ServiceHeader_v2">
+    <xsd:sequence>
+      <xsd:element name="messageInfo" type="cns:MessageInfo_v2"/>
+      <xsd:element name="channelInfo" type="cns:ChannelInfo"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="additionalInfo" type="cns:AdditionalInfo"/>
+      <xsd:element minOccurs="0" name="gatewayInfo" type="cns:GatewayInfo"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ServiceHeader">
+    <xsd:sequence>
+      <xsd:element name="messageInfo" type="cns:MessageInfo"/>
+      <xsd:element name="channelInfo" type="cns:ChannelInfo"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="additionalInfo" type="cns:AdditionalInfo"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ODMFault">
+    <xsd:sequence>
+      <xsd:element name="exceptionDescription" type="prdt:Text"/>
+      <xsd:element name="timeStamp" type="xsd:anyType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ContactPointSoftLock">
+    <xsd:sequence>
+      <xsd:element name="softLock" type="prdt:String12"/>
+      <xsd:element minOccurs="0" name="type" type="prdt:String"/>
+      <xsd:element minOccurs="0" name="contactPointRoleSoftLock" type="prdt:String34"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="Fault">
+    <xsd:annotation>
+      <xsd:documentation>Type used as base for all exceptions, includes time stamp</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="cns:BaseDescriptor">
+        <xsd:sequence>
+          <xsd:group minOccurs="0" ref="cns:EventMetadata">
+            <xsd:annotation>
+              <xsd:documentation>Not visible in the XML Instances, used to group, source, severity and category attributes.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:group>
+          <xsd:element minOccurs="0" name="timeStamp" type="prdt:DateTime">
+            <xsd:annotation>
+              <xsd:documentation>date and time when the error occur</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="context" type="cns:ExtensionPoint">
+            <xsd:annotation>
+              <xsd:documentation>Extension bucket to be used to place specific types defined in targetNamespace</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+</xsd:schema>

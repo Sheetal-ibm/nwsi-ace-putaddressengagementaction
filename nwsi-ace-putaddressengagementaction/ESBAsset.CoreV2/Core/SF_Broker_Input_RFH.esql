@@ -1,0 +1,72 @@
+BROKER SCHEMA Core
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name            Date    	Description
+-- 			  All		Rich Jones		29/06/05	Initial Version
+--			  All		Rich Jones		20/09/05	Changed name of usr folder to usr
+-- AA00000478 All		Rich Jones		28/11/05	Added the namespaces for the MQRFH2
+-- AA00000512 All		Rich Jones		28/11/05	Removed namespaces
+-- AA00000633 All		Rich Jones		16/02/06	If no usr folder, throw exception
+
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used at the start of request flows where an RFH header is supplied by the caller 
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Broker_Input_RFH_Add_MQMD_details_to_RFH
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		Declare outRef Reference To InputLocalEnvironment; -- Shortcut to the output message
+		
+		CALL CopyMessageHeaders();
+		
+		Move outRef To OutputRoot.MQRFH2.usr;
+		
+		-- If there is no usr folder, throw an exception
+		If Not Lastmove(outRef) Then
+			THROW USER EXCEPTION VALUES
+			('ESB', 'FAILED: Expected usr part of RFH header missing',
+			 'ERR:00136',
+			 'soap:Server');
+		End If;	
+		
+		-- Save original RFH to a different folder
+		Set outRef.originalUsr.(XML.CDataSection) = BITSTREAM(InputRoot.MQRFH2.usr);
+		
+		-- Add MQMD details to RFH		
+		Set outRef.originalMsgId  	   = InputRoot.MQMD.MsgId;	
+		Set outRef.originalReplyToQ    = InputRoot.MQMD.ReplyToQ;
+		Set outRef.originalReplyToQMgr = InputRoot.MQMD.ReplyToQMgr;		
+		
+		Set OutputRoot.XMLNS = InputRoot.XMLNS;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;

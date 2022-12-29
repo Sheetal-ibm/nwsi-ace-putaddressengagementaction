@@ -1,0 +1,175 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+----------------------------------------------------------------------------
+--Creating Function 'NameCreation' with Jointholder tress as input reference 
+----------------------------------------------------------------------------
+CREATE FUNCTION NameCreation (IN refToEnv REFERENCE ) RETURNS CHARACTER
+BEGIN
+   
+   --------------------
+   --Declare variables
+   --------------------
+   DECLARE Temp_JH         ROW;
+   DECLARE     CH_Name           CHARACTER ' ';
+   DECLARE     CH_CombinedSal,
+               CH_Salutation,
+               CH_Honorific      CHARACTER;
+   DECLARE INT_Counter,
+               INT_LoopCounter, cardinalityOfHolder,counter INTEGER 1;
+   
+   --------------------
+   --Declare References
+   --------------------    
+   DECLARE holder REFERENCE TO refToEnv.*:involvedParties;
+   SET cardinalityOfHolder = CARDINALITY(holder.*:individual[]);
+   
+   -----------------------------------------------------------------
+   --Looping for each Account holder to fetch required value from DB
+   -----------------------------------------------------------------
+   WHILE (counter <= cardinalityOfHolder) DO
+         
+         ---------------------------------------------------
+        --Checking if Salutaion exists in incoming message
+        ---------------------------------------------------
+        IF EXISTS(holder.*:individual[counter].*:involvedPartyNames.*:prefixTitle[]) THEN
+              
+               -------------------------------------
+              --Fetching Salutation from TMS table
+              -------------------------------------
+              SET Temp_JH.accHolder[INT_Counter].Salutation = getTMSStringFromCanonical('SALUTATION', holder.*:individual[counter].*:involvedPartyNames.*:prefixTitle );
+                   
+        ELSE
+              SET Temp_JH.accHolder[INT_Counter].Salutation = ' ';
+        END IF;
+        
+         IF NOT EXISTS (holder.*:individual[counter].*:involvedPartyNames.*:lastName[]) THEN
+               SET holder.*:individual[counter].*:involvedPartyNames.*:lastName = ' ';
+         END IF;
+         
+         ----------------------------------------------------
+         --Setting and incrementing count for Account Holders
+         ----------------------------------------------------
+         SET INT_Counter = INT_Counter + 1;
+         SET counter = counter + 1;
+   END WHILE;
+   
+   ------------------------------------------
+   --Deleting 1 to adjuest initial value of 1
+   ------------------------------------------
+   SET INT_Counter = INT_Counter - 1;
+   
+   ----------------------------------------
+   --Checking for number of Account Holders
+   ---------------------------------------- 
+   IF INT_Counter < 2 THEN
+         
+         --------------------------------------
+         --Creating Name of one account holder
+         --------------------------------------
+         SET CH_Name = TRIM(Temp_JH.accHolder[1].Salutation ||' '||
+                             COALESCE(SUBSTRING(holder.*:individual.*:involvedPartyNames.*:firstName FROM 1 for 1),'')||' '||
+                             COALESCE(SUBSTRING(holder.*:individual.*:involvedPartyNames.*:middleNames FROM 1 for 1), '' )||' '||
+                             COALESCE(holder.*:individual.*:involvedPartyNames.*:lastName,''));
+                                 
+   ----------------------------------------------
+   --Creating joint Name for two account holders
+   ----------------------------------------------
+   ELSEIF INT_Counter = 2 THEN
+         
+         -----------------------------------------------------------
+         --Checking for Salutation if its combination of Mr and Mrs
+         -----------------------------------------------------------
+         SET CH_CombinedSal = UPPER(Temp_JH.accHolder[1].Salutation)||UPPER(Temp_JH.accHolder[2].Salutation);
+         IF CH_CombinedSal IN ('MR.MRS.', 'MRS.MR.','MRMRS','MRSMR') THEN
+               
+               ------------------------------------------------------------------
+               --Checking for surname if salutation is combination of Mr and Mrs
+               ------------------------------------------------------------------
+               IF (UPPER(holder.*:individual[1].*:involvedPartyNames.*:lastName) = UPPER(holder.*:individual[2].*:involvedPartyNames.*:lastName) 
+                     AND holder.*:individual[1].*:involvedPartyNames.*:lastName <> ' ' AND holder.*:individual[2].*:involvedPartyNames.*:lastName <> ' ' ) THEN
+                     
+                     --------------------------------------------------------------------------------
+                     --Creating Name if surmanes are same and salutation is combination of Mr and Mrs
+                     --------------------------------------------------------------------------------
+                   SET CH_Name = 'Mr'||' &amp; '||' Mrs '|| holder.*:individual[1].*:involvedPartyNames.*:lastName;
+               ELSE
+                     -------------------------------------------------------------------------------------
+                     --Creating name if surnames are different but salutation is combination of Mr and Mrs
+                     -------------------------------------------------------------------------------------
+                     WHILE INT_LoopCounter<=INT_Counter DO
+
+                           SET CH_Name = CH_Name||' '||
+                                                TRIM(Temp_JH.accHolder[INT_LoopCounter].Salutation ||' '||
+                                                COALESCE(SUBSTRING(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:firstName FROM 1 for 1), '')||' '||
+                                                COALESCE(SUBSTRING(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:middleNames FROM 1 for 1), '' )||' '||
+                                                COALESCE(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:lastName,'')||' '||' &amp; ');
+                           
+                           ----------------------------
+                           --Incrementing counter count
+                           ----------------------------
+                           SET INT_LoopCounter = INT_LoopCounter+1;
+                     END WHILE;
+                     
+                     ---------------------------------------
+                     --Trimming trailing extra '&' from name
+                     ---------------------------------------
+                     SET CH_Name = TRIM (TRAILING '&amp;' FROM CH_Name);
+               END IF;
+         ELSE
+               
+               --------------------------------------------------------------------
+               --Creating name when salutation is not the combination of Mr and Mrs
+               --------------------------------------------------------------------
+               WHILE INT_LoopCounter<=INT_Counter DO
+                                      
+                 SET CH_Name =     CH_Name||' '||
+                                          TRIM(Temp_JH.accHolder[INT_LoopCounter].Salutation ||' '||
+                                          COALESCE(SUBSTRING(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:firstName FROM 1 for 1),'')||' '||
+                                          COALESCE(SUBSTRING(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:middleNames FROM 1 for 1), '' )||' '||
+                                          COALESCE(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:lastName,'')||' '||' &amp; ');
+                     
+                     ----------------------------
+                     --Incrementing counter count
+                     ----------------------------
+                     SET INT_LoopCounter = INT_LoopCounter+1;
+               END WHILE;
+               
+               ---------------------------------------
+               --Trimming trailing extra '&' from name
+               ---------------------------------------
+               SET CH_Name = TRIM (TRAILING '&amp;' FROM CH_Name); 
+         END IF;
+   -------------------------------------------------------
+   --Creating joint Name for more than two account holders
+   -------------------------------------------------------
+   ELSEIF INT_Counter > 2 THEN
+         WHILE INT_LoopCounter<=INT_Counter DO
+                                       
+                 SET CH_Name =     CH_Name||' '||
+                                          TRIM(Temp_JH.accHolder[INT_LoopCounter].Salutation ||' '||
+                                          COALESCE(SUBSTRING(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:firstName FROM 1 for 1), '')||' '||
+                                          COALESCE(SUBSTRING(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:middleNames FROM 1 for 1), '' )||' '||
+                                          COALESCE(holder.*:individual[INT_LoopCounter].*:involvedPartyNames.*:lastName,'')||' '||' &amp; ');
+               
+               ----------------------------
+               --Incrementing counter count
+               ----------------------------
+               SET INT_LoopCounter = INT_LoopCounter+1;
+         END WHILE;
+         
+         ---------------------------------------
+         --Trimming trailing extra '&' from name
+         ---------------------------------------
+         SET CH_Name = TRIM (TRAILING '&amp;' FROM CH_Name);
+   END IF;
+   
+   ----------------------------
+   --Removing extra White space
+   ----------------------------
+   SET CH_Name = REPLACE(REPLACE(REPLACE(CH_Name,' ','<>'),'><',''), '<>',' ');  
+   
+   ----------------
+   --Returning name
+   ----------------
+   RETURN TRIM(CH_Name);
+END;

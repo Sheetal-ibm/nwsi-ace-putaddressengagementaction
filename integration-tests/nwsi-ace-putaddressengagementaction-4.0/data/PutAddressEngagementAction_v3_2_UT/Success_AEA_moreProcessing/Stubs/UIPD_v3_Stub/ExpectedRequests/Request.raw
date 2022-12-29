@@ -1,0 +1,11 @@
+path:/involved-parties/0123456787
+X-Additional-Info:["ProcessID 123456789","ParentProcessID 66213"]
+X-Channel:INTERNET
+X-Schema-Version:3.2
+X-Source-System-Id:TRANSFORM
+X-Journey-Id:4fb5a5d8-f033-4ca6-a8c7-40f2f88adc49
+X-Create-Date-Time:2017-01-01T00:00:00.001Z
+X-Channel-Alternate-Id:["MACHINEID 123.123.123.123", "FUNCTIONALUNITID 1234"]
+X-IP-Address:192.1.1.2
+X-Virtual-Environment:TFR2
+{"involvedPartySoftLock":"092349393424","involvedPartyDetails":{"contactPreferences":[{"moreProcessing":"abdbdjkh","contactPointSoftLock":"092349393424","contactPointStartDate":"2019-12-07","contactPointEndDate":"2019-12-08","contactPointOccupancyStatusCode":"4344","contactPointUsage":"1","contactPointAddressComponent":{"unitNumber":"23A","buildingNumber":"34","buildingName":"The Downs","city":"Swindon","thoroughfareName":"Hill Street","dependentThoroughfareName":"Pyre Close","dependentLocality":"Bethnal Green","doubleDependentLocality":"Whitehall","postalCode":"SWR 423","countyName":"West Midlands","country":"GB","addressLine1":"1234123 Captain Pete","addressLine2":"Beta Unit","addressLine3":"Antarctica","addressLine4":"Antarctica","pafStatus":"PAF_Address","deliveryPointSuffix":"9Z","poBoxNumber":"146"},"standaloneAddressIndicator":true,"contactPointRole":{"contactPointRoleSoftLock":"0923493934242345864137808425673452","contactPointRoleAddressPrefix":"string","contactPointMailingAddressIndicator":false}}]}}

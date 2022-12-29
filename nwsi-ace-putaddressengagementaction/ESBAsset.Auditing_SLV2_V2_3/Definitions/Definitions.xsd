@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/Definitions/" version="1.0" xmlns:dmdef="http://uk/co/nationwide/Definitions/">
+  <xsd:simpleType name="DayOfWeek">
+    <xsd:annotation>
+      <xsd:documentation>The Day Of the Week. IBM Unique ID: IDM09901</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Monday">
+        <xsd:annotation>
+          <xsd:documentation>A day of the week in the Gregorian calendar. IBM Unique ID: IDM10699</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Tuesday">
+        <xsd:annotation>
+          <xsd:documentation>A day of the week in the Gregorian calendar IBM Unique ID: IDM10931</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Wednesday">
+        <xsd:annotation>
+          <xsd:documentation>A day of the week in the Gregorian calendar IBM Unique ID: IDM10962</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Thursday">
+        <xsd:annotation>
+          <xsd:documentation>A day of the week in the Gregorian calendar IBM Unique ID: IDM10922</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Friday">
+        <xsd:annotation>
+          <xsd:documentation>A day of the week in the Gregorian calendar IBM Unique ID: IDM10598</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Saturday">
+        <xsd:annotation>
+          <xsd:documentation>A day of the week in the Gregorian calendar IBM Unique ID: IDM10845</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Sunday">
+        <xsd:annotation>
+          <xsd:documentation>A day of the week in the Gregorian calendar IBM Unique ID: IDM10882</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="CurrencyType">
+    <xsd:annotation>
+      <xsd:documentation>Identifies the actual denomination of a Currency Amount, such as US Dollars, Euro, Pounds Sterling, Bhat, Pesos, Escudos, Lira, etc. IBM Unique ID: IDM09892</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+</xsd:schema>

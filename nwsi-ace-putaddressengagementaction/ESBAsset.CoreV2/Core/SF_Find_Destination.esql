@@ -1,0 +1,153 @@
+BROKER SCHEMA Core
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+
+CREATE COMPUTE MODULE SF_Load_Destination_Values
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		Declare evRef Reference To Environment.Variables; -- Used as a shortcut to Enviornment.Variables
+		Declare inRef Reference To InputLocalEnvironment;
+		
+		Declare count INTEGER 1;		
+		Declare myDelimeter CHAR '@';
+		Declare delimiterPosition INTEGER 0;
+		
+		Declare SQLCODE_stored Int;				 -- Used to store the SQLCODE
+		Declare SQLERRORTEXT_stored Char;		 -- Used to store the SQLERRORTEXT
+		Declare SQLNATIVEERROR_stored Char;		 -- Used to store the SQLNATIVEERROR
+		Declare SQLSTATE_stored Char;			 -- Used to store the SQLSTATE
+		
+		-- We know the Key has been set in the local environment. Need to set up the destination list.
+		Set evRef.STATIC.TEMP.Entries[] = (Select ROUT.DESTINATION_TYPE, ROUT.DEST 
+										From Database.ASSET.ROUTING As ROUT
+										Where ROUT.ENVIRONMENT = Coalesce(evRef.ENV.SYS_ENV_VALUE_CONTEXT, 'ALL') 
+										AND ROUT.DATA_KEY = inRef.Variables.STATIC.ROUTING.KEY);
+
+
+		IF ((SQLCODE <> 0 AND SQLCODE <> 100) Or SQLSTATE <> 0) THEN			
+			SET SQLCODE_stored 			= SQLCODE;
+			SET SQLERRORTEXT_stored 	= SQLERRORTEXT;
+			SET SQLNATIVEERROR_stored 	= SQLNATIVEERROR;
+			SET SQLSTATE_stored 		= SQLSTATE;
+			SET count = 1;
+							
+			
+			THROW USER EXCEPTION VALUES
+			('EAI:', 'FAILED: (SF_Load_Destination_Values) Error when trying to select data from table ROUTING.',
+			'AMS:02020', 'SQLCODE = ', SQLCODE, ' SQLERRORTEXT = ', SQLERRORTEXT, 'SQLNATIVEERROR = ', SQLNATIVEERROR, ' SQLSTATE = ', SQLSTATE );		
+		END IF;	
+
+		-- For each entry returned create a destination 
+		For inRef As evRef.STATIC.TEMP.Entries[] Do
+			
+			DECLARE myCompAuth CHAR UPPER(inRef.:Premises.:CompetentAuthorityName);
+			CASE
+			
+				WHEN (inRef.DESTINATION_TYPE = 'Q') THEN 
+					SET delimiterPosition = POSITION(myDelimeter IN inRef.DEST);
+					IF delimiterPosition > 0 Then
+						-- The @ symbol was found in the string - we have a queue manager name to set in the destination list
+						SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData[count].queueManagerName = substring(inRef.DEST FROM (delimiterPosition + 1) FOR length(inRef.DEST));
+					
+						-- Lets set the Queue Name in the destination list
+						SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData[count].queueName = substring(inRef.DEST FROM 1 FOR (delimiterPosition - 1));
+					ELSE
+						-- We only have a Queue Name to set in the destination list
+						SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData[count].queueName = inRef.DEST;	
+					END IF;
+			
+				WHEN (inRef.DESTINATION_TYPE = 'W') THEN
+					-- If the destination type is a webservice then set the request URL
+					
+					SET OutputLocalEnvironment.Destination.HTTP.RequestURL = inRef.DEST;
+					
+					-- We want to save the MQMD and RFH2 header info to restore later after the webservice call
+					SET Environment.MQMD = InputRoot.MQMD;
+					SET Environment.MQRFH2 = InputRoot.MQRFH2;
+
+			END CASE;
+			
+			-- increment the count
+			SET count = count + 1;
+		End For;
+		
+		-- Delete STATIC TEMP space
+		Set evRef.STATIC.TEMP = Null;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
+
+
+CREATE FILTER MODULE SF_FD_RouteKey_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF LocalEnvironment.Variables.STATIC.ROUTING.KEY IS NOT NULL THEN 
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+
+END MODULE;
+
+
+CREATE FILTER MODULE SF_Find_Destination_FilterForMQDestination
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF LocalEnvironment.Destination.MQDestinationList.DestinationData.queueName IS NOT NULL THEN 
+			RETURN TRUE;
+		END IF;
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+CREATE FILTER MODULE SF_Find_Destination_FilterForWebserviceDestination
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF LocalEnvironment.Destination.HTTP.RequestURL IS NOT NULL THEN 
+			RETURN TRUE;
+		END IF;
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+
+
+
+
+
+
+

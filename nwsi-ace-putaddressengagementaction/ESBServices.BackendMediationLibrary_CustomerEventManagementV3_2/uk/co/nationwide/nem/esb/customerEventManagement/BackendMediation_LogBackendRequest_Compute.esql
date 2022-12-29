@@ -1,0 +1,42 @@
+/* =========================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+* 
+============================================================================================ 
+********************************************************************************************
+** File Version History
+********************************************************************************************
+** Defect ID  	 	CID         	Date        	Description       	Test cycle
+**----------- 	  ---------  	  -----------     ----------------- 	----------- 
+**   TFR2.2    C417151/C412459    01/08/2019      	Initial Version   		Dev
+********************************************************************************************
+** Description of the modules contained in the file.
+** =========================================================================================
+** This module is responsible for logging the request being sent to the backend & setting 
+** the destination queue parameter 
+********************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.customerEventManagement
+
+PATH uk.co.nationwide.nem.esb.commonFunctions,uk.co.nationwide.nem.esb.logging;
+
+CREATE COMPUTE MODULE BackendMediation_LogBackendRequest_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.ESBServiceData.logPosition = 'P2';	
+		
+		 SET OutputLocalEnvironment	= InputLocalEnvironment;	
+																
+		-----------------------
+		--Logging the Request--
+		-----------------------
+		CALL log4jv2logging(Environment,InputRoot,'ESB','CustomerEventManagement_v3_RecordSignificantCustomerEvent');
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = COALESCE(Environment.Variables.STATIC.BackendMQ,Environment.ENV_PARAMETERS.CustomerEventManagement_v3_RSCE_MQ);
+		
+		RETURN TRUE;
+	END;
+END MODULE;

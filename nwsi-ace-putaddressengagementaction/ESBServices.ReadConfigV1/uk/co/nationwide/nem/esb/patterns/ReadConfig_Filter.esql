@@ -1,0 +1,15 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.patterns
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module sets the timer transaction value 
+--****************************************************************************
+CREATE FILTER MODULE ReadConfig_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.TimerTransaction=TRUE;
+		RETURN TRUE;
+	END;
+
+END MODULE;

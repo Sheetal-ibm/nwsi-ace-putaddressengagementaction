@@ -1,0 +1,31 @@
+
+
+Importing file: C:\NEMDC\IIB\workspace\Auditing Changes\NEMServices\Increment4\Create\uk\co\nationwide\Services\Utility\AuditManager\v1\CreateAuditEvent.wsdl
+
+The WSDL import will proceed with bindings IAuditManagerBinding.
+Creating wsdl schema document for file:///C:/NEMDC/IIB/workspace/Auditing Changes/NEMServices/Increment4/Create/uk/co/nationwide/Services/Utility/AuditManager/v1/CreateAuditEvent.wsdl.
+Parsing wsdl binding {http://uk/co/nationwide/Services/Utility/AuditManager/v1/CreateAuditEvent/}IAuditManagerBinding.
+Parsing wsdl binding input createAuditEvent.
+Parsing wsdl binding output createAuditEvent.
+Parsing wsdl binding fault fault.
+Processing doc style for operation createAuditEvent.
+Populating WSDL schema CreateAuditEvent.xsd.
+Creating file CreateAuditEvent.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/IAuditManager_InlineSchema1.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/ESBAsset.Auditing_SLV2/Services/Definitions/CoreDatatypes/CoreDatatypes.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/ESBAsset.Auditing_SLV2/PrimitiveDatatypes/PrimitiveDatatypes.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/Definitions/Definitions.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/Services/Definitions/Enumerations/Enumerations.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/Services/Utility/AuditManager/v1/IAuditManager/CreateAuditEvent/CreateAuditEvent.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/Services/Utility/AuditManager/v1/TransferObjects/Utility/Auditing/Auditing.xsd in the workspace.
+Creating file /ESBAsset.Auditing_SLV2/UtilityComponents/Auditing/Enumerations/Enumerations.xsd in the workspace.
+Copying source WSDL IAuditManager.wsdl to IAuditManager.wsdl.
+Copying source WSDL CreateAuditEvent.wsdl to CreateAuditEvent.wsdl.
+
+Elapsed time processing this message definition file: 1.879 seconds
+Number of warnings for this message definition file: 0
+
+
+Number of files processed: 1
+
+

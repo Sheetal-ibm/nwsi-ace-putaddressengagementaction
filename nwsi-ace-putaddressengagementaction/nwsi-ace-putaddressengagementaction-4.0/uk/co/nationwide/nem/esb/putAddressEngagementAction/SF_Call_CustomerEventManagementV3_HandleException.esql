@@ -1,0 +1,49 @@
+/* =====================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+========================================================================================================
+********************************************************************************************************
+** File Version History
+********************************************************************************************************
+** Change ID 	  WorkItemId	     CID 		       Date 		   Description 			Test cycle
+** ----------- 	 ------------	--------------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 		C417151/C412459  	17/11/2019 	      Initial Version 	       DEV
+**												
+********************************************************************************************************
+** Description of the ESQL
+** =====================================================================================================
+** The ESQL modules logs any exceptions during the mediation with RSCE backend at P5 & sets
+** the status of the call to be used by MapServiceResponse compute module.
+********************************************************************************************************/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH uk.co.nationwide.nem.esb.logging;
+
+CREATE COMPUTE MODULE SF_Call_CustomerEventManagementV3_HandleException
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToEnvSrvData REFERENCE TO Environment.ESBServiceData;
+		
+		SET refToEnvSrvData.RSCEMQPutStatus 	  = 'Failure';
+		SET refToEnvSrvData.PartialSuccess.status = TRUE;
+		SET refToEnvSrvData.PartialSuccess.RSCE	  = 'Yes';	
+		
+		IF EXISTS(InputExceptionList.*[]) THEN
+			
+			SET refToEnvSrvData.logPosition = 'P5';
+		
+			SET refToEnvSrvData.logErrorId 	= COALESCE(refToEnvSrvData.logErrorId,UUIDASCHAR);
+			CALL log4jv2loggingExceptionList(Environment,InputRoot,InputExceptionList,'ESB',
+									  'CustomerEventManagement_v3_RecordSignificantCustomerEvent');			
+			
+		END IF;	
+		
+		RETURN FALSE;
+		
+	END;
+END MODULE;

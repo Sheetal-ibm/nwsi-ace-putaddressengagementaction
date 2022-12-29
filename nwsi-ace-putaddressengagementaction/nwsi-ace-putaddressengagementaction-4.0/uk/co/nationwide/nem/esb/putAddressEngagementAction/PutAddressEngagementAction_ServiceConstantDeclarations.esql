@@ -1,0 +1,48 @@
+/* ================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+===================================================================================================
+***************************************************************************************************
+** File Version History
+***************************************************************************************************
+** Change ID 	  WorkItemId		  CID 		   Date 		   Description 			Test cycle
+** ----------- 	 ------------		------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 			C412459  	20/11/2019 	      Initial Version 	       DEV
+**												
+***************************************************************************************************
+** Description OF the modules contained in the file.
+** ===============================================================================================
+** This esql file contains constants to be used thorughout the lifecycle of the flow. It spans  
+** constants for use cases like namespaces, patterns for validation etc.
+** ===============================================================================================*/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+DECLARE XAdditionalInfoPattern 				CONSTANT CHARACTER '^[a-zA-Z0-9,_\\''''\\.\\-]+[ ][ a-zA-Z0-9,_\\''''\\.\\-]+$';
+DECLARE XChannelPattern 					CONSTANT CHARACTER '^[\sa-zA-Z0-9,_''\.\-]*$';
+DECLARE XChannelAlternateIdPattern 			CONSTANT CHARACTER '^[a-zA-Z0-9,_\\''''\\.\\-]+[ ][ a-zA-Z0-9,_\\''''\\.\\-]+$';
+
+DECLARE XJourneyIdPattern 					CONSTANT CHARACTER '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$';
+DECLARE XSourceSystemIdPattern				CONSTANT CHARACTER '^[\sa-zA-Z0-9,_''\.\-]*$';
+DECLARE XIPAddressPattern					CONSTANT CHARACTER '^[a-fA-F0-9:\.]*$';
+
+DECLARE involvedPartyIdPattern				CONSTANT CHARACTER '^\d{1,10}$';
+
+DECLARE SvcOperationName					CONSTANT CHARACTER 'PutAddressEngagementAction';
+DECLARE valueType 	 						CONSTANT CHARACTER 'urn:ietf:params:oauth:token-type:jwt';
+DECLARE EncodingType 						CONSTANT CHARACTER 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary';
+
+-- Namespace Declarations
+DECLARE ns_SOAP_Env 						NAMESPACE 'http://www.w3.org/2003/05/soap-envelope';
+DECLARE ns_XML_Schema 						NAMESPACE 'http://www.w3.org/2001/XMLSchema-instance';
+DECLARE ns_wsse		 						NAMESPACE 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd';
+DECLARE ns_Def_CDT 							NAMESPACE 'http://uk/co/nationwide/Services/Definitions/CoreDatatypes/';
+DECLARE ns_CEM_IRSCE_v3						NAMESPACE 'http://uk/co/nationwide/Services/ESB/CustomerEventManagement/v3/IRecordSignificantCustomerEvent/';
+DECLARE ns_CEM_RSCE_v3						NAMESPACE 'http://uk/co/nationwide/Services/ESB/CustomerEventManagement/v3/IRecordSignificantCustomerEvent/RecordSignificantCustomerEvent/';
+DECLARE ns_Srv_Def_CDT						NAMESPACE 'http://uk/co/nationwide/Services/Definitions/CoreDatatypes/';
+
+DECLARE ns_CEM_TO_Event						NAMESPACE 'http://uk/co/nationwide/Services/ESB/CustomerEventManagement/TransferObjects/Event';
+DECLARE ns_CEM_TO_IP						NAMESPACE 'http://uk/co/nationwide/Services/ESB/CustomerEventManagement/TransferObjects/InvolvedParty';

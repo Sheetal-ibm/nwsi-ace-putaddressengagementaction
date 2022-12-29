@@ -1,0 +1,390 @@
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+-------------------------------------------
+--Procedure to Validate the Input Message--
+-------------------------------------------
+CREATE PROCEDURE ValidateInputHeader (IN inRef REFERENCE, INOUT refToEnv REFERENCE)
+BEGIN
+	
+	DECLARE isValid                                        						BOOLEAN;
+	DECLARE errorFields,errorFor,name,value,addholderTemp 			  			CHARACTER '';
+	DECLARE altIdInfo,addInfo,altholder,addholder		  						CHARACTER;
+	DECLARE cFieldValue                                    						CHARACTER;
+	DECLARE fieldLength                                                         INTEGER 0;
+	DECLARE refToProviderFaultinfo,reftoAddInfo,reftoChannelAltId REFERENCE TO 	refToEnv;
+	
+	--Validating Authorization--
+	IF COALESCE(inRef.Authorization,'')='' THEN
+		SET errorFields = errorFields || 'Authorization Header : Missing, ';
+		CALL createMandatoryFieldException(refToEnv,'Authorization Header: Missing');
+	END IF;
+
+	
+	IF EXISTS(inRef."X-Additional-Info"[]) THEN
+			SET isValid 			= TRUE ;
+			
+			IF ENDSWITH(inRef."X-Additional-Info", '"]') <> TRUE OR STARTSWITH(inRef."X-Additional-Info", '["') <> TRUE THEN
+
+				SET errorFields = errorFields||'X-Additional-Info | Error Reason: Pattern Validation Failed';
+				SET errorFor= 'X-Additional-Info | Error Reason: Pattern Validation Failed';
+			
+
+			
+			ELSE
+			
+		  	SET addInfo = inRef."X-Additional-Info";
+		  	
+		  	SET fieldLength=LENGTH(addInfo);
+		  	
+		  	SET fieldLength=fieldLength-2;
+		  	SET addInfo = SUBSTRING(addInfo FROM 2 FOR fieldLength) ;
+		  	
+			
+			X:WHILE isValid DO
+				SET name='';
+				
+				IF CONTAINS(addInfo,',') THEN
+					SET cFieldValue 		= SUBSTRING(addInfo BEFORE ',');
+					IF STARTSWITH(cFieldValue,'"') AND ENDSWITH(cFieldValue,'"') THEN 
+						SET cFieldValue			= SUBSTRING(cFieldValue AFTER '"');
+						SET cFieldValue			= SUBSTRING(cFieldValue BEFORE '"');
+						SET addholder 			= cFieldValue;
+						SET addholder			= TRANSLATE(addholder,'"','');
+						SET name 				= SUBSTRING(addholder BEFORE ' ');
+						SET addInfo 			= SUBSTRING(addInfo AFTER ',');
+					ELSE
+						SET errorFields = errorFields||'X-Additional-Info | Error Reason: Pattern Validation Failed';
+						SET errorFor= 'X-Additional-Info | Error Reason: Pattern Validation Failed';
+						LEAVE X;
+					END IF;		
+				ELSE
+					SET cFieldValue				= addInfo;
+					IF STARTSWITH(cFieldValue,'"') AND ENDSWITH(cFieldValue,'"') THEN 
+						SET cFieldValue			= SUBSTRING(cFieldValue AFTER '"');
+						SET cFieldValue			= SUBSTRING(cFieldValue BEFORE '"');
+						SET addholder 			= cFieldValue;
+						SET addholder			= TRANSLATE(addholder,'"','');
+						SET name 				= SUBSTRING(addholder BEFORE ' ');
+						SET isValid 			= FALSE ;
+					ELSE
+						SET errorFields = errorFields||'X-Additional-Info | Error Reason: Pattern Validation Failed';
+						SET errorFor= 'X-Additional-Info | Error Reason: Pattern Validation Failed';
+						LEAVE X;
+					END IF;	
+				END IF;
+				
+			  	
+				--SET cFieldValue = addholder;
+				
+				IF MatchValueWithRegExp(XAdditionalInfo,cFieldValue) = TRUE THEN 
+
+					
+					IF NOT(UCASE(name) IN ('LEDGERID','OFFLINERETRYIND','PODCSFORCEPOSTTXNIND','PREBALANCINGIND',
+						'TOKENPRESENTIND')) THEN
+							SET errorFields = errorFields||'X-Additional-Info | Error Reason: Value not as per the ENUM';
+							SET errorFor= 'X-Additional-Info | Error Reason: Value not as per the ENUM';
+					END IF;
+
+				ELSE
+					SET errorFields = errorFields||'X-Additional-Info | Error Reason: Pattern Validation Failed';
+					SET errorFor= 'X-Additional-Info | Error Reason: Pattern Validation Failed';
+					
+				END IF;
+			
+				IF LENGTH(cFieldValue) > 121  THEN
+				SET errorFields = errorFields||'X-Additional-Info | Error Reason: Length not in range';
+				SET errorFor= 'X-Additional-Info | Error Reason: Length not in range';
+				END IF;
+			
+			END WHILE;
+			
+			END IF;
+			
+			IF CONTAINS(errorFor, 'X-Additional-Info | Error Reason: Value not as per the ENUM')= TRUE THEN
+				CALL createGeneralSchemaException(refToEnv,'X-Additional-Info | Error Reason: Value not as per the ENUM');
+			END IF;
+			
+			IF CONTAINS(errorFor, 'X-Additional-Info | Error Reason: Pattern Validation Failed')= TRUE THEN
+				CALL createGeneralSchemaException(refToEnv,'X-Additional-Info | Error Reason: Pattern Validation Failed');
+			END IF;
+			
+			IF CONTAINS(errorFor, 'X-Additional-Info | Error Reason: Length not in range')= TRUE THEN
+				CALL createGeneralSchemaException(refToEnv,'X-Additional-Info | Error Reason: Length not in range');
+			END IF;
+			
+			SET errorFor='';
+			SET name='';
+			SET value='';
+			SET fieldLength=0;	
+			
+	
+	END IF;
+	
+	
+	--Validating Channel--
+	SET cFieldValue = inRef."X-Channel";
+	IF NOT(EXISTS(inRef."X-Channel"[])) OR cFieldValue = '' OR cFieldValue IS NULL THEN
+
+		SET errorFields = errorFields || 'X-Channel: Missing, ';
+		CALL createMandatoryFieldException(refToEnv,'X-Channel: Missing');
+	ELSE
+		IF MatchValueWithRegExp(XChannelPattern,cFieldValue)<> 'true' THEN
+
+			SET errorFields = errorFields || 'X-Channel: Pattern Validation Failed, ';
+			CALL createGeneralSchemaException(refToEnv,'X-Channel | Error Reason: Pattern Validation Failed');
+		END IF;
+		IF LENGTH(cFieldValue) > 25 OR LENGTH(cFieldValue) < 2 THEN
+
+			SET errorFields = errorFields || 'X-Channel: Length not in range, ';
+			CALL createGeneralSchemaException(refToEnv,'X-Channel | Error Reason: Length not in range');
+		END IF;
+	END IF;
+
+	------------------------------------------
+	--Validating channel alternateidentifier--
+	------------------------------------------
+	IF EXISTS(inRef."X-Channel-Alternate-Id"[]) THEN
+		SET isValid 			= TRUE ;
+			
+			SET altIdInfo = inRef."X-Channel-Alternate-Id";
+			
+			IF ENDSWITH(altIdInfo, '"]') <> TRUE OR STARTSWITH(altIdInfo, '["') <> TRUE THEN
+
+				SET errorFields = errorFields||'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+				SET errorFor= 'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+			ELSE
+				SET fieldLength=LENGTH(altIdInfo);
+			  	SET fieldLength=fieldLength-2;
+			  	SET altIdInfo = SUBSTRING(altIdInfo FROM 2 FOR fieldLength) ;
+
+				Y:WHILE isValid DO
+						SET name='';
+					IF CONTAINS(altIdInfo,',') THEN
+						SET cFieldValue 		= SUBSTRING(altIdInfo BEFORE ',');
+						IF STARTSWITH(cFieldValue,'"') AND ENDSWITH(cFieldValue,'"') THEN 
+							SET cFieldValue			= SUBSTRING(cFieldValue AFTER '"');
+							SET cFieldValue			= SUBSTRING(cFieldValue BEFORE '"');
+							SET addholder 			= cFieldValue;
+							SET addholder			= TRANSLATE(addholder,'"','');
+							SET name 				= SUBSTRING(addholder BEFORE ' ');
+							SET altIdInfo 			= SUBSTRING(altIdInfo AFTER ',');
+						ELSE
+							SET errorFields = errorFields||'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+							SET errorFor= 'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+							LEAVE Y;
+						END IF;	
+							
+							
+					ELSE
+						SET cFieldValue				= altIdInfo;
+						IF STARTSWITH(cFieldValue,'"') AND ENDSWITH(cFieldValue,'"') THEN 
+							SET cFieldValue			= SUBSTRING(cFieldValue AFTER '"');
+							SET cFieldValue			= SUBSTRING(cFieldValue BEFORE '"');
+							SET addholder 			= cFieldValue;
+							SET addholder			= TRANSLATE(addholder,'"','');
+							SET name 				= SUBSTRING(addholder BEFORE ' ');
+							SET isValid 			= FALSE ;
+						ELSE
+							SET errorFields = errorFields||'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+							SET errorFor= 'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+							LEAVE Y;
+						END IF;	
+					END IF;
+					
+		
+					
+					IF MatchValueWithRegExp(XChannelAlternateId,cFieldValue) = TRUE THEN
+					
+						IF NOT(name IN ('CASHIERID','CUSTOMERID','EMPLOYEEID','MACHINEID',
+							'TERMINALID','USERID','FUNCTIONALUNITID')) THEN
+						 SET errorFields = errorFields||'X-Channel-Alternate-Id | Error Reason: Value not as per the ENUM';
+						  SET errorFor = 'X-Channel-Alternate-Id | Error Reason: Value not as per the ENUM';
+						END IF;
+						 
+						
+					ELSE
+						SET errorFields = errorFields||'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+						SET errorFor = 'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed';
+					END IF;
+				
+				IF LENGTH(cFieldValue) > 121  THEN
+					SET errorFields = errorFields||'X-Channel-Alternate-Id | Error Reason: Length not in range';
+					SET errorFor = 'X-Channel-Alternate-Id | Error Reason: Length not in range';
+				END IF;
+				
+				END WHILE;
+			END IF;
+		
+			IF CONTAINS(errorFor, 'X-Channel-Alternate-Id | Error Reason: Value not as per the ENUM')= TRUE THEN
+				CALL createGeneralSchemaException(refToEnv,'X-Channel-Alternate-Id | Error Reason: Value not as per the ENUM');
+			END IF;
+			IF CONTAINS(errorFor, 'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed')= TRUE THEN
+				CALL createGeneralSchemaException(refToEnv,'X-Channel-Alternate-Id | Error Reason: Pattern Validation Failed');
+			END IF;	
+			IF CONTAINS(errorFor, 'X-Channel-Alternate-Id | Error Reason: Length not in range')= TRUE THEN
+				CALL createGeneralSchemaException(refToEnv,'X-Channel-Alternate-Id | Error Reason: Length not in range');
+			END IF;	
+			
+			SET errorFor='';
+			SET name='';
+			SET value='';	
+	END IF;	
+	
+	--Validate X-Journey-Id--
+	SET cFieldValue=inRef."X-Journey-Id";
+	IF EXISTS(inRef."X-Journey-Id"[]) THEN
+		IF MatchValueWithRegExp(XJourneyIdPattern,cFieldValue) <> 'true' THEN
+
+			SET errorFields = errorFields || 'X-Journey-Id: Pattern Validation Failed, ';
+			CALL createGeneralSchemaException(refToEnv,'X-Journey-Id | Error Reason: Pattern Validation Failed');
+		END IF;
+	END IF;
+	
+	--Validating Virtual-Environment--
+	SET cFieldValue = inRef."X-Virtual-Environment";
+	IF NOT(EXISTS(inRef."X-Virtual-Environment"[])) OR cFieldValue = '' OR cFieldValue IS NULL THEN
+		SET errorFields = errorFields || 'X-Virtual-Environment: Missing, ';
+		CALL createMandatoryFieldException(refToEnv,'X-Virtual-Environment: Missing');
+	ELSE
+		IF MatchValueWithRegExp(XVirtualEnvironment,cFieldValue)<> 'true' THEN
+			SET errorFields = errorFields || 'X-Virtual-Environment | Error Reason: Pattern Validation Failed';
+			CALL createGeneralSchemaException(refToEnv,'X-Virtual-Environment | Error Reason: Pattern Validation Failed');
+		END IF;
+		IF LENGTH(cFieldValue) > 20 OR LENGTH(cFieldValue) < 1 THEN
+			SET errorFields = errorFields || 'X-Virtual-Environment | Error Reason: Length not in range';
+			CALL createGeneralSchemaException(refToEnv,'X-Virtual-Environment | Error Reason: Length not in range');
+		END IF;
+	END IF;
+	
+	--Validating Schema-Version--
+	SET cFieldValue = inRef."X-Schema-Version";
+	-- Calling service to set refToEnv.SchemaVerValOff = 'YES' if SchemaVersion validation not required
+	IF NOT EXISTS(refToEnv.SchemaVerValOff[]) THEN
+		IF NOT(EXISTS(inRef."X-Schema-Version"[])) OR cFieldValue = '' OR cFieldValue IS NULL THEN
+			SET errorFields = errorFields || 'X-Schema-Version: Missing';
+			CALL createMandatoryFieldException(refToEnv,'X-Schema-Version: Missing');
+		ELSE
+			-- if the calling service uses a SG and set all the values in the list refToEnv.ReqSchemaVer[] to validate the values
+			IF EXISTS(refToEnv.ReqSchemaVer[]) THEN
+				IF (cFieldValue NOT IN (refToEnv.ReqSchemaVer[])) THEN 
+					SET errorFields = errorFields || 'X-Schema-Version | Error Reason: Value not as per the ENUM';
+					CALL createGeneralSchemaException(refToEnv,'X-Schema-Version | Error Reason: Value not as per the ENUM');
+				END IF;	
+			-- if the calling service is a REST API which doesn't use SG and wants a default validation for 1.0	
+			ELSEIF NOT(cFieldValue IN ('1.0') ) THEN
+				SET errorFields = errorFields || 'X-Schema-Version | Error Reason: Value not as per the ENUM';
+				CALL createGeneralSchemaException(refToEnv,'X-Schema-Version | Error Reason: Value not as per the ENUM');		
+			END IF;
+		END IF;
+	END IF;	
+	
+	--Validate X-Source-System-Id--
+	SET cFieldValue=inRef."X-Source-System-Id";
+	IF NOT(EXISTS(inRef."X-Source-System-Id"[])) OR cFieldValue='' OR cFieldValue IS NULL THEN
+
+		SET errorFields = errorFields || 'X-Source-System-Id: Missing, ';
+		CALL createMandatoryFieldException(refToEnv,'X-Source-System-Id: Missing');
+	ELSE
+		IF MatchValueWithRegExp(XSourceSystemIdPattern,cFieldValue) <> 'true' THEN
+
+			SET errorFields = errorFields || 'X-Source-System-Id: Pattern Validation Failed, ';
+			CALL createGeneralSchemaException(refToEnv,'X-Source-System-Id | Error Reason: Pattern Validation Failed');
+		END IF;
+		IF LENGTH(cFieldValue) > 60 OR LENGTH(cFieldValue) < 1 THEN
+
+			SET errorFields = errorFields || 'X-Source-System-Id: Length Not as expected, ';
+			CALL createGeneralSchemaException(refToEnv,'X-Source-System-Id | Error Reason: Length not in range');
+		END IF;
+	END IF;
+	
+	
+		--Validate X-Create-Date-Time--
+	-------------------------------
+	SET cFieldValue=inRef."X-Create-Date-Time";
+	IF NOT(EXISTS(inRef."X-Create-Date-Time"[])) OR cFieldValue = '' OR cFieldValue IS NULL THEN
+		SET errorFields=errorFields||'X-Create-Date-Time: Missing';
+		CALL createMandatoryFieldException(refToEnv,'X-Create-Date-Time: Missing');
+	ELSEIF (MatchValueWithRegExp (XCreateDateTime, cFieldValue) OR MatchValueWithRegExp (XCreateDateTime2, cFieldValue)) <> TRUE THEN
+		SET errorFields=errorFields||'X-Create-Date-Time | Error Reason: Pattern Validation Failed';
+		CALL createGeneralSchemaException(refToEnv,'X-Create-Date-Time | Error Reason: Pattern Validation Failed');
+	END IF;
+	
+	--Validate X-IP-Address--
+	SET cFieldValue=inRef."X-Ip-Address";
+	IF EXISTS(inRef."X-Ip-Address"[]) THEN
+		IF MatchValueWithRegExp(XIPAddressPattern,cFieldValue) <> 'true' THEN
+
+			SET errorFields = errorFields || 'X-IP-Address: Pattern Validation Failed, ';
+			CALL createGeneralSchemaException(refToEnv,'X-IP-Address | Error Reason:  Pattern Validation Failed');
+		END IF;
+		IF LENGTH(cFieldValue) > 39 OR LENGTH(cFieldValue) < 7 THEN
+
+			SET errorFields = errorFields || 'X-IP-Address: Length not in range ';
+			CALL createGeneralSchemaException(refToEnv,'X-IP-Address | Error Reason: Length not in range');
+		END IF;
+	END IF;			
+	
+	--Validate X-Idempotency-Key--
+	SET cFieldValue=inRef."X-Idempotency-Key";
+	IF EXISTS(inRef."X-Idempotency-Key"[]) THEN
+		IF MatchValueWithRegExp(XIdempotencykeyPattern,cFieldValue) <> 'true' THEN
+
+			SET errorFields = errorFields || 'X-Idempotency-Key: Pattern Validation Failed ';
+			CALL createGeneralSchemaException(refToEnv,'X-Idempotency-Key | Error Reason: Pattern Validation Failed');
+		END IF;
+	END IF;
+	
+	--Validate X-Is-Resubmission is boolean--
+	SET cFieldValue= UCASE(inRef."X-Is-Resubmission");
+	IF EXISTS(inRef."X-Is-Resubmission"[]) THEN
+		IF NOT(cFieldValue = 'TRUE' OR cFieldValue = 'FALSE') THEN
+
+			SET errorFields = errorFields || 'X-Is-Resubmission: Error Reason: Value not as per the type';
+			CALL createGeneralSchemaException(refToEnv,'X-Is-Resubmission | Error Reason: Value not as per the type');
+		END IF;
+
+	END IF;
+	
+	
+	
+	--Throw an Exception if the fields Failed Validation
+	IF errorFields <> '' THEN
+		SET refToEnv.SvcStatus = 'Error';
+		SET refToEnv.AuditSource = 'ErrorAudit';
+		THROW USER EXCEPTION MESSAGE 2952 VALUES(errorFields);
+	END IF;
+END;
+	
+/*************************************************************************************
+* Procedure Name: createMandatoryFieldException
+* Description	: This procedure is to throw error Error for the Field that is missing 
+*                  but is mandatory in the request Schema
+**************************************************************************************/
+CREATE PROCEDURE createMandatoryFieldException (INOUT refToEnv REFERENCE, IN tagName CHARACTER)
+BEGIN
+	DECLARE refToProviderFaultinfo REFERENCE TO refToEnv;
+	CREATE LASTCHILD OF refToEnv AS refToProviderFaultinfo NAME 'ProviderFaultInfo';
+	SET refToProviderFaultinfo.Key 		= 'ESB_MandatoryDataMissing';
+	SET refToProviderFaultinfo.httpCode = 400;
+	SET refToProviderFaultinfo.Column 	= tagName;
+	SET refToProviderFaultinfo.Append 	='Yes';
+	MOVE refToProviderFaultinfo TO refToEnv.ProviderFaultInfo;
+END;
+
+/*************************************************************************************
+* Procedure Name: createGeneralSchemaException
+* Description: 	  This procedure is to throw error for the field whose value is not as
+				  the schema/swagger definition
+**************************************************************************************/
+CREATE PROCEDURE createGeneralSchemaException (INOUT refToEnv REFERENCE, IN tagName CHARACTER)
+BEGIN
+	DECLARE refToProviderFaultinfo REFERENCE TO refToEnv;
+	CREATE LASTCHILD OF refToEnv AS refToProviderFaultinfo NAME 'ProviderFaultInfo';
+	SET refToProviderFaultinfo.Key 		= 'ESB_ValidationError';
+	SET refToProviderFaultinfo.httpCode = 400;
+	SET refToProviderFaultinfo.Column 	= tagName;
+	SET refToProviderFaultinfo.Append 	='Yes';
+	MOVE refToProviderFaultinfo TO refToEnv.ProviderFaultInfo;
+
+END;

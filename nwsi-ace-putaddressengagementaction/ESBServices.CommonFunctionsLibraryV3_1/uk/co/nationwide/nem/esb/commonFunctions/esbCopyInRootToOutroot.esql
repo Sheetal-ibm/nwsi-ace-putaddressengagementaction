@@ -1,0 +1,49 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+--****************************************************************************
+--** Description OF the Procedure 
+--** =========================================================================
+--** This Procedure copies the input soap element to the enviroment
+--****************************************************************************
+
+CREATE PROCEDURE copyInrootToEnv (IN Inroot REFERENCE,INOUT Environment REFERENCE)
+	BEGIN
+    ---------------------------------------------------
+	--Declare folder options    --
+	---------------------------------------------------			
+    DECLARE options INTEGER BITOR(FolderBitStream, ValidateNone);
+    ---------------------------------------------------
+	--Declare SOAP message in the Environment as blob --
+	---------------------------------------------------		        
+    SET Environment.InRootBlob = ASBITSTREAM(Inroot.SOAP,,1208,,,,options);
+	END;
+
+--****************************************************************************
+--** Description OF the Procedure 
+--** =========================================================================
+--** This Procedure copies Soap messsage in enviroment to outreference.
+--****************************************************************************	
+CREATE PROCEDURE copyEnvToOutroot (IN refEnvIn REFERENCE,IN refReqNamespaceIn NAMESPACE,IN refServiceHdrNamespaceIn NAMESPACE,IN refTransStatusNamespaceIn NAMESPACE,IN refRequestName CHARACTER, IN refResponseName CHARACTER,IN StatusVal CHARACTER, INOUT refOut REFERENCE) 
+		
+	BEGIN
+    ---------------------------------------------------
+	--Declare namespaces and parse folder options    --
+	---------------------------------------------------	
+	DECLARE options INTEGER BITOR(FolderBitStream, ValidateNone);
+    DECLARE reqns NAMESPACE refReqNamespaceIn;
+    DECLARE hdrns NAMESPACE refServiceHdrNamespaceIn;
+    DECLARE statusns NAMESPACE refTransStatusNamespaceIn; 
+    ------------------------------------------------------
+	--Create out reference element from Environment--
+	-----------------------------------------------------
+    CREATE LASTCHILD OF refOut Domain 'SOAP' PARSE(refEnvIn.InRootBlob,,1208,,,,options);   
+    ------------------------------------------------------
+	--Change the request name to response name--
+	-----------------------------------------------------   
+    SET refOut.SOAP.Body.reqns:{refRequestName} NAME = refResponseName;	
+    --------------------------------------------------------------------------------------------------------------
+	-- Create the transaction status elment after service header and set the value of status from input parameter--
+	-------------------------------------------------------------------------------------------------------------     
+    CREATE NEXTSIBLING OF refOut.SOAP.Body.reqns:{refResponseName}.hdrns:serviceHeader NAMESPACE hdrns  NAME 'transactionStatus';
+ 	SET refOut.SOAP.Body.reqns:{refResponseName}.hdrns:transactionStatus.statusns:status = StatusVal;
+	END;

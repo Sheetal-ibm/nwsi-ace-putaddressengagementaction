@@ -1,0 +1,41 @@
+/* ==========================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+=============================================================================================
+*********************************************************************************************
+** File Version History
+*********************************************************************************************
+** Change ID 	  WorkItemId		  CID 		   Date 		   Description  	Test cycle
+** ----------- 	 ------------		------- 	---------- 	     ---------------   -----------
+**   TFR 3			277540 			C412459      20/11/2019 	      Initial Version     DEV
+**												
+*********************************************************************************************
+** Description of the ESQL
+** ==========================================================================================
+** The module decides when to call RSCE to send a portrait event, which depends on the value of 
+** moreProcessing blob received from UIPD.
+*********************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+CREATE COMPUTE MODULE PutAddressEngagementAction_moreProcessingPresent
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToEnvSrvData REFERENCE TO Environment.ESBServiceData;
+		
+		IF (InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = 207) THEN
+			SET refToEnvSrvData.PartialSuccess.UIPD = 'Yes';
+		END IF;
+		
+		-- Makes a call to RSCE if there's no moreProcessing blob in the UIPD's response
+		IF NOT EXISTS(refToEnvSrvData.moreProcessingSCOA[]) AND NOT EXISTS(refToEnvSrvData.contactPointRoleSoftLock[])
+		   AND EXISTS(refToEnvSrvData.addressChange[]) THEN	
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

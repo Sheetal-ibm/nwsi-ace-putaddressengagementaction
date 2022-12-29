@@ -1,0 +1,342 @@
+
+-- * ==========================================================================
+-- *
+-- * Licensed Materials - Property of Nationwide Building Society
+-- *
+-- * Nationwide Enterprise Middleware DC
+-- *
+-- * ===========================================================================
+-- *
+-- *****************************************************************************
+-- ** File Version History
+-- ****************************************************************************************************************************************
+-- ** DefectID/ChangeID CID Date Description Test cycle
+-- ** ----------------- -------- ---------- ----------------------------------------------------------------------------------------
+-- ** Initial C410038 19/09/2019 Initial Version of log4jv2 Code Dev
+-- ****************************************************************************************************************************************
+BROKER SCHEMA uk.co.nationwide.nem.esb.logging
+
+DECLARE options CONSTANT INTEGER BITOR(FolderBitStream, ValidateNone);
+
+CREATE Function getLevel (
+IN serviceName CHARACTER
+)RETURNS INTEGER
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.esb.logging.LoggingUtility.getLogLevel";
+
+CREATE Function javaLog (
+IN serviceName CHARACTER,
+IN loggingContent CHARACTER
+)
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.esb.logging.LoggingUtility.logging";
+
+CREATE PROCEDURE prepHdrContent (IN Environment REFERENCE, IN InputRoot REFERENCE)
+BEGIN
+
+    IF (Environment.Variables.logging.level IS NULL) THEN
+        DECLARE level INTEGER;
+		CALL getLevel(ApplicationLabel) INTO level;
+		SET Environment.Variables.logging.level = level;
+		IF (Environment.Variables.logging.level = 0) THEN
+            RETURN; --log level set to OFF so exit straight away;
+		ELSE
+			IF (Environment.Variables.logging.level=400) THEN SET Environment.Variables.logging.level.Val='INFO';
+				ELSEIF (Environment.Variables.logging.level=200) THEN SET Environment.Variables.logging.level.Val='ERROR';
+					ELSEIF (Environment.Variables.logging.level=500) THEN SET Environment.Variables.logging.level.Val='DEBUG';
+						ELSE SET Environment.Variables.logging.level.Val='UNKNOWN FORMAT';
+			END IF;
+			
+			--Pre-populate logging data array with five element entries.
+			SET Environment.Variables.logging.[1].temp = 'temp';
+			SET Environment.Variables.logging.[2].temp = 'temp';
+			SET Environment.Variables.logging.[3].temp = 'temp';
+			SET Environment.Variables.logging.[4].temp = 'temp';
+            SET Environment.Variables.logging.[5].temp = 'temp';
+						
+			IF (Environment.ESBServiceData.creationDateTimeSubStr IS NULL) THEN
+				DECLARE charDate CHARACTER;
+				-----------------------------------------------------------------------------
+				--Set the date and time for logging, if not already exists in the environment
+				-----------------------------------------------------------------------------
+				IF (Environment.ESBServiceData.serviceHeader.messageInfo.createDateTime IS NOT NULL AND
+					CAST(Environment.ESBServiceData.serviceHeader.messageInfo.createDateTime AS CHARACTER) <> '') THEN
+	
+					SET charDate = CAST(Environment.ESBServiceData.serviceHeader.messageInfo.createDateTime AS CHARACTER);
+					SET Environment.ESBServiceData.creationDateTimeSubStr = SUBSTRING(charDate AFTER ''''
+					FOR (POSITION('''' IN charDate REPEAT 2) - POSITION('''' IN charDate) - 1));
+	
+				ELSE
+	
+					SET charDate = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd HH:mm:ss');
+					SET Environment.ESBServiceData.creationDateTimeSubStr = charDate;
+	
+				END IF;
+			END IF;
+
+			--------------------------------
+			--Logging as per the requirement
+			--------------------------------
+			SET Environment.common.logging.firstPart = ','||COALESCE(Environment.ESBServiceData.creationDateTimeSubStr,'')||
+			','||COALESCE(Environment.ESBServiceData.LogID,'')||
+			','||COALESCE(Environment.Variables.logging.level.Val,'');
+
+			--','||Environment.ESBServiceData.logPosition||
+	
+			SET Environment.common.logging.secondPart = ','||COALESCE(Environment.ESBServiceData.serviceHeader.messageInfo.journeyID,'')||
+			','||COALESCE(ApplicationLabel,'');
+	
+			SET Environment.common.logging.lastPart = ','||COALESCE(Environment.ESBServiceData.functionalIdentifier,'')||
+			','||COALESCE(BrokerName,'')||
+			','||COALESCE(ExecutionGroupLabel,'');
+						
+		END IF;
+
+	END IF;
+
+END;
+
+CREATE PROCEDURE prepBodyContent (IN Environment REFERENCE, IN InputRoot REFERENCE, IN logPosition INTEGER, 
+IN sourceSysId CHARACTER, IN destSysId CHARACTER)
+BEGIN
+
+	DECLARE wholeMsgBlob BLOB;
+
+	DECLARE j,ccsid, encd Integer;
+
+	SET encd = COALESCE(InputRoot.Properties.Encoding,437);
+	SET ccsid = COALESCE(InputRoot.Properties.CodedCharSetId,1208);
+
+	IF (EXISTS(Environment.ExceptionList[]) AND logPosition = 5 ) THEN
+		SET wholeMsgBlob = ASBITSTREAM(Environment.ExceptionList,encd,ccsid,,,,options);
+
+	ELSE
+		IF FIELDNAME(InputRoot.*[<])='BLOB' THEN
+			--already a BLOB (See REST SG pattern) so simply save
+			SET wholeMsgBlob = InputRoot.BLOB.BLOB;
+		ELSE	
+			SET j = CARDINALITY("InputRoot".*[]);
+			SET wholeMsgBlob = ASBITSTREAM(InputRoot.*[j],encd,ccsid,,,,options);
+		END IF;
+	END IF;
+
+	IF logPosition = 2 THEN
+		DELETE FIELD Environment.Variables.logging[2];
+		DELETE FIELD Environment.Variables.logging[3];
+	END IF;
+
+    DECLARE logDataElement REFERENCE TO Environment.Variables.logging.[logPosition];
+
+	SET logDataElement.blob = wholeMsgBlob;
+	SET logDataElement.ccsid = ccsid;
+	SET logDataElement.encd = encd;
+	SET logDataElement.secondAndLastPart = Environment.common.logging.secondPart||','||
+	COALESCE(sourceSysId,'')||','||COALESCE(destSysId,'')||','||Environment.common.logging.lastPart;
+
+END;
+
+CREATE PROCEDURE processBlob (IN Environment REFERENCE, IN logPosition INTEGER, INOUT logStatement CHARACTER, IN logDataElement REFERENCE)
+BEGIN
+
+	DECLARE wholeMsgChar CHARACTER;
+
+	SET logStatement = Environment.common.logging.firstPart||','||COALESCE('P'||CAST(logPosition AS CHARACTER),'')||','||
+	logDataElement.secondAndLastPart;
+
+	SET wholeMsgChar = COALESCE(CAST(logDataElement.blob AS CHARACTER
+	CCSID logDataElement.ccsid
+	ENCODING logDataElement.encd),'');
+
+	SET logStatement = logStatement || ',' || wholeMsgChar;
+
+END;
+
+CREATE PROCEDURE log4jv2logging (IN Environment REFERENCE, IN InputRoot REFERENCE, IN sourceSysId CHARACTER, IN destSysId CHARACTER)
+BEGIN
+
+	DECLARE str CHARACTER;
+	DECLARE count, logPosition INTEGER;
+	
+
+	CALL prepHdrContent (Environment, InputRoot);
+
+	CASE Environment.Variables.logging.level
+		WHEN 200 THEN -- ERROR
+			SET logPosition = CAST(SUBSTRING(Environment.ESBServiceData.logPosition AFTER 'P') AS INTEGER);
+			CALL prepBodyContent (Environment, InputRoot, logPosition, sourceSysId, destSysId);
+			/* Updated below for IIB 9-10 Upgraded services where P5 is not present in Services
+				but present in Service Gateways. So that Error can be logged for all P1 to P4 */	
+			CASE logPosition
+				WHEN 5 THEN -- P5 so log out P1 - 3 also
+						CALL logStoredHdrAndBodyStatements (Environment);
+						SET Environment.FLAG_5 = TRUE;
+				WHEN 4 THEN -- If P5 error occurred also log out P4
+					/* Added below function call and commented below code.
+					   This is to fix logging in case of logging mode as ERROR
+					   To add P1, P2 and P3 logging too in case of Error with P4 logging. */
+						IF (UPPER(Environment.SvcStatus) = 'ERROR') THEN
+							CALL logStoredHdrAndBodyStatements (Environment);
+								IF Environment.FLAG_5 = TRUE THEN
+                        	 		DECLARE logDataElement REFERENCE TO Environment.Variables.logging.[logPosition];                  
+					    			CALL processBlob (Environment, logPosition, str, logDataElement);
+					    	 		CALL javaLog(ApplicationLabel, str);
+								END IF;
+						END IF;
+                    --last log statement for transaction so free stored statement memory
+                    CALL removeStoredHdrAndBodyStatements(Environment);
+		
+			END CASE;
+
+		WHEN 400 THEN -- INFO
+	      	SET logPosition = CAST(SUBSTRING(Environment.ESBServiceData.logPosition AFTER 'P') AS INTEGER);
+			CALL prepBodyContent (Environment, InputRoot, logPosition, sourceSysId, destSysId);
+			
+			CASE logPosition
+				WHEN 5 THEN -- P5 so log out P1 - 3 also			
+		      
+                    CALL logStoredHdrAndBodyStatements (Environment);
+
+				WHEN 4 THEN -- If P5 error occurred also log out P4
+                    IF (UPPER(Environment.SvcStatus) = 'ERROR') THEN
+	
+                        SET Environment.common.logging.firstPart = ','||COALESCE(Environment.ESBServiceData.creationDateTimeSubStr,'')||
+                        ','||COALESCE(Environment.ESBServiceData.LogID,'')||',ERROR';
+	
+                        DECLARE logDataElement REFERENCE TO Environment.Variables.logging.[logPosition];                  
+                        CALL processBlob (Environment, logPosition, str, logDataElement);
+                        CALL javaLog(ApplicationLabel, str);
+	
+                        SET Environment.common.logging.firstPart = ','||COALESCE(Environment.ESBServiceData.creationDateTimeSubStr,'')||
+                        ','||COALESCE(Environment.ESBServiceData.LogID,'')||',INFO';
+	
+                    ELSE
+
+                        SET str = generateHdrOnlyStatement (Environment , sourceSysId , destSysId );		
+                        CALL javaLog(ApplicationLabel, str);
+				  	
+                    END IF;
+                    --last log statement for transaction so free stored statement memory
+                    CALL removeStoredHdrAndBodyStatements(Environment);
+                                        
+				ELSE
+					SET str = generateHdrOnlyStatement (Environment , sourceSysId , destSysId );		
+					CALL javaLog(ApplicationLabel, str);
+				
+            END CASE;
+
+        WHEN 500 THEN -- DEBUG
+            SET logPosition = CAST(SUBSTRING(Environment.ESBServiceData.logPosition AFTER 'P') AS INTEGER);
+            CALL prepBodyContent (Environment, InputRoot, logPosition, sourceSysId, destSysId);
+            DECLARE logDataElement REFERENCE TO Environment.Variables.logging.[logPosition];                  
+            CASE logPosition 
+                
+                WHEN 5 THEN
+                    IF(NOT(EXISTS(Environment.Variables.logging.P5.logged[]))) THEN
+                        -- don't enter this block a second time
+				        SET Environment.Variables.logging.P5.logged=TRUE;
+                        CALL processBlob (Environment, logPosition, str, logDataElement);
+                        CALL javaLog(ApplicationLabel, str);
+                    END IF;
+                
+                WHEN 4 THEN -- If P5 error occurred also log out P4
+                    IF (UPPER(Environment.SvcStatus) = 'ERROR') THEN
+                    	
+                        SET Environment.common.logging.firstPart = ','||COALESCE(Environment.ESBServiceData.creationDateTimeSubStr,'')||
+                        ','||COALESCE(Environment.ESBServiceData.LogID,'')||',ERROR';
+                  
+                        CALL processBlob (Environment, logPosition, str, logDataElement);
+                        CALL javaLog(ApplicationLabel, str);
+                
+                        SET Environment.common.logging.firstPart = ','||COALESCE(Environment.ESBServiceData.creationDateTimeSubStr,'')||
+                        ','||COALESCE(Environment.ESBServiceData.LogID,'')||',DEBUG';
+                    
+                    ELSE
+                    	
+	                    CALL processBlob (Environment, logPosition, str, logDataElement);
+	                    CALL javaLog(ApplicationLabel, str);
+                        
+                    END IF;
+                    --last log statement for transaction so free stored statement memory
+                    CALL removeStoredHdrAndBodyStatements(Environment);
+                  
+                ELSE
+		
+                    CALL processBlob (Environment, logPosition, str, logDataElement);
+                    CALL javaLog(ApplicationLabel, str);
+                  
+            END CASE;
+
+		WHEN 0 THEN -- OFF
+			-- do nothing
+		ELSE
+			--catch for all other log levels
+			SET str = generateHdrOnlyStatement (Environment , sourceSysId , destSysId );		
+			SET str = str||','||'unsupported log level';
+			CALL javaLog(ApplicationLabel, str);
+	
+		END CASE;
+
+END;
+	
+CREATE PROCEDURE logStoredHdrAndBodyStatements (IN Environment REFERENCE)
+BEGIN
+    DECLARE str CHARACTER;
+	
+    IF(NOT(EXISTS(Environment.Variables.logging.P5.logged[]))) THEN
+        -- don't enter this block a second time
+        SET Environment.Variables.logging.P5.logged=TRUE;
+        
+        DECLARE count INTEGER 1;
+        DECLARE logDataElement REFERENCE TO Environment.Variables.logging.[count];
+	  			
+        WHILE LASTMOVE(logDataElement) DO
+        	IF EXISTS(logDataElement.secondAndLastPart[]) THEN
+	            SET str = null;
+	            CALL processBlob (Environment, count, str, logDataElement);		  	
+	            CALL javaLog(ApplicationLabel, str);
+        	END IF;
+            SET count = count + 1;
+        	MOVE logDataElement NEXTSIBLING;
+        END WHILE;
+    END IF;
+          	
+END;
+
+CREATE FUNCTION generateHdrOnlyStatement (IN Environment REFERENCE,IN sourceSysId CHARACTER, IN destSysId CHARACTER) RETURNS CHARACTER
+BEGIN
+	DECLARE str CHARACTER '';
+	
+	SET str = Environment.common.logging.firstPart||','||COALESCE(Environment.ESBServiceData.logPosition,'')||','||
+          Environment.common.logging.secondPart||','||COALESCE(sourceSysId,'')||','||COALESCE(destSysId,'') ||','||
+          Environment.common.logging.lastPart ;
+				          
+	RETURN str;
+		
+END;
+
+CREATE PROCEDURE removeStoredHdrAndBodyStatements (IN Environment REFERENCE)
+BEGIN
+    DECLARE logDataElement REFERENCE TO Environment.Variables.logging.[1];
+        
+    WHILE LASTMOVE(logDataElement) DO
+        DELETE FIELD logDataElement;
+	    MOVE logDataElement NEXTSIBLING;
+	END WHILE;
+    
+END;
+
+CREATE PROCEDURE log4jv2loggingExceptionList (IN Environment REFERENCE, IN InputRoot REFERENCE, IN InputExceptionList REFERENCE, 
+IN sourceSysId CHARACTER, IN destSysId CHARACTER)
+BEGIN
+
+       IF EXISTS(InputExceptionList.*[]) THEN 
+              CREATE LASTCHILD OF Environment DOMAIN 'XMLNSC' NAME 'ExceptionList';   
+              SET Environment.ExceptionList = InputExceptionList;
+       END IF;
+
+       CALL log4jv2logging (Environment, InputRoot, sourceSysId, destSysId);
+
+END;   
+	
+	
+	

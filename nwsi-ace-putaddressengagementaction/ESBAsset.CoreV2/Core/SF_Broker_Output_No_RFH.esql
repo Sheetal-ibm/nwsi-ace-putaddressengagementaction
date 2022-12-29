@@ -1,0 +1,77 @@
+BROKER SCHEMA Core
+PATH LIB_Core; -- This allows use of the core db procedures
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name            Date    	Description
+-- 			  All		Rich Jones		29/06/05	Initial Version
+-- AA00000093 All		Rich Jones		26/10/05	Corrected the cDatabaseWrite
+-- AA00000478 All		Rich Jones		28/11/05	Added the namespaces for the MQRFH2
+-- AA00000512 All		Rich Jones		28/11/05	Removed namespaces
+-- AA00000582 All		Rich Jones		19/12/05	Corrected the cDatabaseWrite function
+-- AA00000576 All		Rich Jones		25/01/06	Changed the code due to db changes
+-- 116075	  ALL		Shaun Dennett	05/06/09	Fixed to correctly output the message to the table
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used at the end of request flows where the back end system cannot support RFH headers
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Broker_Output_No_RFH_Store_RFH_Header_In_Data_Store
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyEntireMessage();
+		
+		Declare oleRef		  Reference To InputLocalEnvironment;
+		Declare myRef 		  Reference To OutputRoot;
+		Declare DB_IN_PARAMS  Reference To OutputLocalEnvironment.DB_IN_PARAMS; -- Used in database write
+		Declare SQL_STATEMENT Char ''; -- Insert sql used in passthru
+		Declare BITusr Char;
+		Declare BITmsg Char;
+
+		-- Map usr data		
+		-- Have to make sure the bit of RFH is cast as XML so the bitstream can deal with it properly
+		CREATE LASTCHILD OF oleRef.SCRATCH AS myRef DOMAIN 'XML';
+		Set myRef.usr = InputRoot.MQRFH2.usr;
+		Set BITusr    = CAST(ASBITSTREAM(myRef) AS CHAR CCSID InputRoot.MQMD.CodedCharSetId);
+		Set myRef.msg = InputBody;
+		--et BITmsg    = CAST(ASBITSTREAM(myRef.msg) AS CHAR CCSID InputRoot.MQMD.CodedCharSetId);
+		Set BITmsg = CAST(ASBITSTREAM(InputBody CCSID InputRoot.MQMD.CodedCharSetId) AS CHAR CCSID InputRoot.MQMD.CodedCharSetId);  
+		
+		
+		
+		--Set OutputLocalEnvironment = NULL;
+		
+		-- Store the RFH Header in RESPONSE_CONTROL table
+		Declare MsgId Char InputRoot.MQMD.MsgId;
+		
+		Create LastChild Of DB_IN_PARAMS Name 'REQ_MSG_ID' Value SUBSTRING(MsgId From 3 for (Length(MsgId) -3));
+		Create LastChild Of DB_IN_PARAMS Name 'RFH_USR'    Value Coalesce(BITusr, NULL);
+		
+		-- If the request is batch mode then the original message needs to be saved in case of failure
+		If InputRoot.MQRFH2.usr.serviceType = 'BATCH' OR 
+			InputRoot.MQRFH2.usr.meta.serviceType  = 'BATCH'
+		then
+			Create LastChild Of DB_IN_PARAMS Name 'MESSAGE_DATA' Value Coalesce(BITmsg, NULL);
+		Else -- it's not written to RESPONSE_CONTROL table so set to NULL
+			Create LastChild Of DB_IN_PARAMS Name 'MESSAGE_DATA' Value NULL;
+		End If;
+		Create LastChild Of DB_IN_PARAMS Name 'SYS_INSERT_TSTMP' Value CURRENT_TIMESTAMP;
+		
+		Set SQL_STATEMENT = 'Insert into ASSET.RESPONSE_CONTROL' ||
+				            '(REQ_MSG_ID,  RFH_USR, MESSAGE_DATA, SYS_INSERT_TSTMP)
+				             Values (?,?,?,?)';
+		
+		CALL cDatabaseWrite(SQL_STATEMENT, 'ERR:00005', DB_IN_PARAMS);
+		
+		-- Delete the RFH Header
+		SET OutputRoot.MQRFH2 = NULL;
+		set OutputRoot.MQMD.CorrelId = InputRoot.MQMD.MsgId;
+		RETURN TRUE;
+	END;
+	
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

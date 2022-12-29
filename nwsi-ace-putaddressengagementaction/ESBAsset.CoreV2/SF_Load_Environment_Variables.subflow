@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:GetEnv.msgnode="GetEnv.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SF_Load_Environment_Variables.subflow"
+    nsPrefix="SF_Load_Environment_Variables.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="SF_Load_Environment_Variables" bundleName="SF_Load_Environment_Variables" pluginId="Core"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/Core/icons/full/obj16/SF_Load_Environment_Variables.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/Core/icons/full/obj30/SF_Load_Environment_Variables.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Used in every input sub-flow to load the environment variables from the database into the message area."/>
+    <composition>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="106,268" label="%Revision">
+        <translation xmi:type="utility:ConstantString" string="Revision"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="37,93">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="SF_Load_Environment_Variables" pluginId="Core"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="668,94">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="SF_Load_Environment_Variables" pluginId="Core"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="489,97" dataSource="ESBDB" computeExpression="esql://routine/Core#SF_Load_Environment_Values.Main" computeMode="exception" treatWarningsAsErrors="true" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="Load_Environment_Values"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="82,95" filterExpression="esql://routine/Core#SF_Load_Environment_Variables_Filter.Main">
+        <translation xmi:type="utility:ConstantString" string="Do Environment Variables need loading"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="349,209" computeExpression="esql://routine/Core#SF_Load_Environment_Variables_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="Move Environment Variables"/>
+      </nodes>
+      <nodes xmi:type="GetEnv.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="284,214" srcSystem="true">
+        <translation xmi:type="utility:ConstantString" string="GetEnv"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.In"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.In"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

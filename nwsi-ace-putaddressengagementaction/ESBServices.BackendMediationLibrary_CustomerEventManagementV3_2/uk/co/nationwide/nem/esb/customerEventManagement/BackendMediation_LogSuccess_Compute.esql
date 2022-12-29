@@ -1,0 +1,41 @@
+/* =========================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+* 
+============================================================================================ 
+********************************************************************************************
+** File Version History
+********************************************************************************************
+** Defect ID    	CID        		  Date        	 Description       		Test cycle
+**----------- 	---------------    -----------     ----------------- 		----------- 
+**   TFR2       C417151/C412459     01/08/2019      Initial Version   			Dev
+********************************************************************************************
+** Description of the modules contained in the file.
+** =========================================================================================
+** This module deals with logging of the status of MQPUT on the SOAP webservice
+** CustomerEventManagement_v3_RecordSignificantCustomerEvent input queue.  
+********************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.customerEventManagement
+
+PATH uk.co.nationwide.nem.esb.commonFunctions,uk.co.nationwide.nem.esb.logging;
+
+CREATE COMPUTE MODULE BackendMediation_LogSuccess_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.ESBServiceData.logPosition = 'P3';	
+		
+		SET OutputRoot.XMLNSC.RSCEMQ.Status  = 'SUCCESS';
+		SET OutputRoot.XMLNSC.RSCEMQ.Message = 'Message put on RSCE queue successful';	
+																
+		-----------------------
+		-- Logging the Status--
+		-----------------------
+		CALL log4jv2logging(Environment,OutputRoot,'CustomerEventManagement_v3_RecordSignificantCustomerEvent','ESB');
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,98 @@
+BROKER SCHEMA Core
+-- Enterprise Service Bus Implementation Accelerator Source Code
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Alan Hedley			03/11/2009	Initial Version
+--			  All		Allan Zhang 		02/26/2009
+---------------------------------------------------------------------------------------
+-- Description:
+-- Build OutputRoot with an MQMD header followed by the input message as a CDATA section
+---------------------------------------------------------------------------------------
+CREATE COMPUTE MODULE SF_File_Input_BuildMessage
+	
+	Declare ClearCaseRevision CHAR('%Revision');
+		
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CALL CopyMessageHeaders();
+		
+		DECLARE tempStr CHAR;
+		
+		--Create an MQMD message header
+		SET OutputRoot.MQMD.StrucId			= MQMD_STRUC_ID;
+		SET OutputRoot.MQMD.Version			= MQMD_CURRENT_VERSION;
+		SET OutputRoot.MQMD.Format			= MQFMT_STRING;				
+		
+		SET OutputRoot.MQMD.Persistence		= MQPER_PERSISTENT;
+		SET OutputRoot.MQMD.SourceQueue		= 'FILE_INPUT';		
+		
+		-- The MQMD Put Date and Time need to be set up because there may be downstream processing that includes an
+		-- SF_Broker_Output subflow , and the MQOutput node within there may use MessageContext=SetAll, so 
+		-- will re-use existing MQMD details and NOT generate new Put Date and Time.
+		-- So set up Put date and Time as the GMT time that the File was processed through this subflow
+		SET tempStr = CAST(CURRENT_GMTTIMESTAMP AS CHAR);
+		-- starting at byte 15 excludes the GMTTIMESTAMP ' bit		
+		SET OutputRoot.MQMD.PutDate = SUBSTRING(tempStr FROM 15 FOR 4) ||		
+		                              SUBSTRING(tempStr FROM 20 FOR 2) ||
+		                              SUBSTRING(tempStr FROM 23 FOR 2);		
+		
+		SET OutputRoot.MQMD.PutTime = SUBSTRING(tempStr FROM 26 FOR 2) ||		
+		                              SUBSTRING(tempStr FROM 29 FOR 2) ||
+		                              SUBSTRING(tempStr FROM 32 FOR 2) ||		                              
+		                              SUBSTRING(tempStr FROM 35 FOR 2);		
+						
+		-- Release 1.3.1
+		-- For BLOB parser, remain the logic to put InputRoot.BLOB.BLOB into CDATA section. 
+		-- For the parser other than BLOB, keep the output as the same as input, since if the the message in the file
+		-- can be parse correctly, it does not need to be put in CDATA section.
+		
+		DECLARE blobRef REFERENCE TO InputRoot.BLOB.BLOB;
+		DECLARE xmlnsRef REFERENCE TO InputRoot.XMLNS;
+		DECLARE xmlnscRef REFERENCE TO InputRoot.XMLNSC;
+		DECLARE xmlRef REFERENCE TO InputRoot.XML;
+		DECLARE mrmRef REFERENCE TO InputRoot.MRM;
+				
+		CASE 
+			WHEN LASTMOVE(blobRef) THEN
+				CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNS';
+				SET OutputRoot.XMLNS.Data = '<![CDATA[' || CAST(blobRef AS CHAR CCSID 1208) || ']]>';
+			WHEN LASTMOVE(xmlnsRef) THEN			
+				SET OutputRoot.XMLNS = InputRoot.XMLNS;
+			WHEN LASTMOVE(xmlnscRef) THEN			
+				SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
+			WHEN LASTMOVE(xmlRef) THEN			
+				SET OutputRoot.XML = InputRoot.XML;
+			WHEN LASTMOVE(mrmRef) THEN
+				--SET OutputRoot.MQMD.Format	= MQFMT_NONE;			
+				SET OutputRoot.MRM = InputRoot.MRM;		
+		END CASE;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+END MODULE;
+

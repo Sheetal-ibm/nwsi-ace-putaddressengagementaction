@@ -1,0 +1,15 @@
+BROKER SCHEMA Canonical
+
+/****************************************************************************************************************
+ * This file is used to store namespace declarations use in associated schemas esql files						*                                                                     
+ *                                                                                                              *
+ ****************************************************************************************************************
+ * Change History                                                                                               *
+ *                                                                                                              *
+ * Date   	Name			Defect 	Module			Description                                      			*
+ * 11/10/06 Stephen Cox		N/A		All				Created														*
+ * 01/06/09 Shaun Dennett	113954	All				Removed project references												*
+ ****************************************************************************************************************/
+
+DECLARE can NAMESPACE 'http://Canonical.eai.ibm.com';
+DECLARE cs NAMESPACE 'http://common.eai.ibm.com';

@@ -1,0 +1,151 @@
+/* =====================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+========================================================================================================
+********************************************************************************************************
+** File Version History
+********************************************************************************************************
+** Change ID 	  WorkItemId	     CID 		       Date 		   Description 			Test cycle
+** ----------- 	 ------------	--------------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 		C417151/C412459  	17/11/2019 	      Initial Version 	       DEV
+**	 TFR Dedup					   C417151			22/09/2020		Def#963, RSCE put failure  SIT
+**																	Partial Success - DP Failure 								
+********************************************************************************************************
+** Description of the ESQL
+** =====================================================================================================
+** The module within this ESQL transforms the response received from UIPD and creates the service 
+** response in JSON format as per the service swagger. 
+********************************************************************************************************/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH uk.co.nationwide.nem.esb.patterns;
+
+CREATE COMPUTE MODULE PutAddressEngagementAction_Main_TransformToServiceResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToOutData,refToMoreProcessing,refToErrors
+				,refToErrItem,refToAccMoved,refToAccNotMoved REFERENCE TO OutputRoot;
+		DECLARE refToEnv									 REFERENCE TO Environment; 
+		DECLARE refToEnvSrvData  							 REFERENCE TO Environment.ESBServiceData;
+		DECLARE refToEnvVar		 							 REFERENCE TO Environment.Variables;
+		DECLARE refToUIPDResp	 							 REFERENCE TO InputRoot.JSON.Data;
+		DECLARE key 										 CHARACTER SvcOperationName;
+					
+		CREATE LASTCHILD OF OutputRoot DOMAIN('JSON');
+		CREATE LASTCHILD OF OutputRoot.JSON AS refToOutData NAME 'Data';
+		
+		SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = 200;
+		
+		--Service returns partial success if UIPD returns partial success
+		IF EXISTS(refToEnvSrvData.PartialSuccess.UIPD[]) THEN
+			
+			SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = 207;
+			
+			CREATE LASTCHILD OF refToOutData AS refToErrors IDENTITY (JSON.Array)errors;
+			-- retrieve the error details from config file 		
+			CALL retrieveCacheSubTree(refToEnv,'ERROR_LOOKUP',Environment.Operation);
+			
+			IF EXISTS(refToUIPDResp.errors[]) THEN
+				FOR refToEachError AS refToUIPDResp.errors.Item[] DO
+					IF CONTAINS(refToEachError.code, 'NEM.ESB.IPM.207.001') THEN
+						SET key = SvcOperationName || '_UIPD_PartialSuccess';
+						CREATE LASTCHILD OF refToErrors AS refToErrItem NAME 'Item';
+						SET refToErrItem.code 	    = refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_CODE;
+						SET refToErrItem.message    = refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_MESSAGE;
+						SET refToErrItem.logErrorId = COALESCE(refToEnv.ESBServiceData.logErrorId,UUIDASCHAR);
+					END IF;
+					IF CONTAINS(refToEachError.code,'NEM.ESB.IPM.207.002') THEN
+						SET key = SvcOperationName || '_UIPD_PartialSuccess_TSYS';
+						CREATE LASTCHILD OF refToErrors AS refToErrItem NAME 'Item';
+						SET refToErrItem.code 	    = refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_CODE;
+						SET refToErrItem.message    = refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_MESSAGE;
+						SET refToErrItem.logErrorId = COALESCE(refToEnv.ESBServiceData.logErrorId,UUIDASCHAR);
+					END IF;		
+					IF CONTAINS(refToEachError.code,'NEM.ESB.IPM.207.003') THEN
+						SET key = SvcOperationName || '_UIPD_PartialSuccess_InvalidCommunicationPoint';
+						CREATE LASTCHILD OF refToErrors AS refToErrItem NAME 'Item';
+						SET refToErrItem.code 	    = refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_CODE;
+						SET refToErrItem.message    = refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_MESSAGE;
+						SET refToErrItem.logErrorId = COALESCE(refToEnv.ESBServiceData.logErrorId,UUIDASCHAR);
+					END IF;					
+				END FOR;
+			END IF;
+			
+		END IF;
+		
+		-- Partial Success - RSCE MQ/validation Failure Scenario - Adding an error structure as firstchild in the output JSON response  
+		IF EXISTS(refToEnvSrvData.PartialSuccess.RSCE[]) THEN
+			
+			SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = 207;
+			SET key = SvcOperationName || '_RSCE_PartialSuccess';
+			
+			IF NOT EXISTS(OutputRoot.JSON.Data.errors[]) THEN
+				CREATE FIRSTCHILD OF OutputRoot.JSON.Data NAME 'errors';
+				SET OutputRoot.JSON.Data.errors TYPE = JSON.Array;
+				CREATE LASTCHILD OF OutputRoot.JSON.Data.errors AS refToErrItem NAME 'Item';
+			ELSE	
+				CREATE LASTCHILD OF OutputRoot.JSON.Data.errors AS refToErrItem NAME 'Item';
+			END IF;	
+			
+			-- retrieve the error details from config file 		
+			CALL retrieveCacheSubTree(refToEnv,'ERROR_LOOKUP',Environment.Operation);
+			
+			-- Defect#963, Partial Success error structure created under the right tag
+			SET refToErrItem.code 	    = COALESCE(refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_CODE,'NEM.ESB.IPM.207.101');
+			SET refToErrItem.message    = COALESCE(refToEnv.ERROR_LOOKUP.{key}.Item.ERROR_MESSAGE,'Partial Success - The service could not' 
+													|| ' put the message in customer event queue');
+			SET refToErrItem.logErrorId = COALESCE(refToEnv.ESBServiceData.logErrorId,UUIDASCHAR);
+
+		END IF;
+		
+		IF EXISTS (refToUIPDResp.involvedPartySoftLock[]) THEN
+			SET refToOutData.involvedPartySoftLock = refToUIPDResp.involvedPartySoftLock;
+		END IF;
+			
+		IF EXISTS (refToUIPDResp.contactPreferences[]) THEN
+			
+			SET refToOutData.contactPreferences[] = refToUIPDResp.contactPreferences[];
+							
+			-- Iterate over contact preferences to collate Journal Data
+			FOR refToEachContactPrefItem AS refToUIPDResp.contactPreferences.Item[] DO
+				IF EXISTS (refToEachContactPrefItem.moveAccountStatus[]) THEN
+					-- Iterate over each account to collate Journal Data
+					FOR refToEachAcc AS refToEachContactPrefItem.moveAccountStatus.Item[] DO
+						IF EXISTS (refToEachAcc.reasonCode[]) AND CAST(refToEachAcc.reasonCode AS INTEGER) = 0 THEN
+							CREATE LASTCHILD OF refToEnvVar.AccountsUpdated AS refToAccMoved NAME 'Account'; 
+							SET refToAccMoved.(XMLNSC.Attribute)AccNo = refToEachAcc.accountReference;
+							SET refToAccMoved.AccountHostLocation     = refToEachAcc.accountHostLocation;
+							SET refToAccMoved.AccountSubTypeCode      = refToEachAcc.accountSubTypeCode;
+						ELSE 
+							CREATE LASTCHILD OF refToEnvVar.AccountsNotUpdated AS refToAccNotMoved NAME 'Account';
+							SET refToAccNotMoved.(XMLNSC.Attribute)AccNo = refToEachAcc.accountReference;
+							SET refToAccNotMoved.AccountHostLocation	 = refToEachAcc.accountHostLocation;
+							SET refToAccNotMoved.AccountSubTypeCode 	 = refToEachAcc.accountSubTypeCode;
+							SET refToAccNotMoved.Reason  			   	 = refToEachAcc.reasonCode;
+						END IF;
+					END FOR;
+				END IF;
+			END FOR;
+		
+		END IF;	
+		
+		-- Updating the fieldname from moreProcessing to moreProcessingSCOA in service response
+		FOR refToRespContactPrefItem AS refToOutData.contactPreferences.Item[] DO
+			MOVE refToMoreProcessing TO refToRespContactPrefItem.moreProcessing;
+			IF LASTMOVE(refToMoreProcessing) THEN
+				CREATE NEXTSIBLING OF refToMoreProcessing NAME 'moreProcessingSCOA' VALUE refToMoreProcessing;
+				SET refToMoreProcessing = NULL;
+			END IF;
+		END FOR;
+		
+		SET Environment.SvcStatus = 'Success';
+		
+		RETURN TRUE;
+		
+	END;
+END MODULE;

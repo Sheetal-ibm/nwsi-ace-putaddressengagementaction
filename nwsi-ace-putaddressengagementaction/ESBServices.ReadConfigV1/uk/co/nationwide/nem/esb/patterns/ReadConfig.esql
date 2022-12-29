@@ -1,0 +1,250 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.patterns
+
+DECLARE cachedMappingTable SHARED ROW;
+DECLARE cachedMonitor SHARED ROW;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module checks the cache availability to poll file 
+--****************************************************************************
+CREATE COMPUTE MODULE CheckCacheAvailability
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE cachePopulate CHAR;
+		DECLARE refToEnv REFERENCE TO Environment;
+		-----------------------------------------------------------------------------
+		--if cache validity is found then route to application ,if not then poll file.
+		-----------------------------------------------------------------------------
+		IF COALESCE(cachedMonitor.CACHE_LIST.isValid,'')='TRUE' THEN 
+			IF NOT(EXISTS(Environment.CacheName[])) THEN
+			   SET Environment.Propagate='TRUE';
+			   PROPAGATE TO TERMINAL 'out';
+			   RETURN FALSE;
+			END IF; 
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+		ELSE
+			SET Environment.Propagate='TRUE';
+			PROPAGATE TO TERMINAL 'out';
+			RETURN FALSE;
+		END IF;  
+		RETURN TRUE;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module updates the cache whenever required 
+--****************************************************************************
+CREATE COMPUTE MODULE UpdateCache
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	   DECLARE retType CHAR CreateCacheTree(InputLocalEnvironment,Environment.TreeResult);
+	   DECLARE refToEnv REFERENCE TO Environment;
+	  
+	   IF COALESCE(Environment.Propagate,'')='TRUE' THEN
+	   		SET Environment.CacheName= RetrieveCacheNameAndIncrementThread();
+			SET Environment.TreeResult=NULL;
+			
+			RETURN TRUE;
+	   ELSE
+	   	   CALL removeCache();
+	   END IF;
+	   RETURN FALSE;
+	END;
+END MODULE;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module removes cache whenever required
+--****************************************************************************
+CREATE PROCEDURE removeCache()
+ BEGIN
+ 	 SyncThread:BEGIN ATOMIC
+ 	 DECLARE cacheName CHAR COALESCE(cachedMonitor.CACHE_LIST.CurrentCache,'NOCACHE');
+ 	 DECLARE listCacheToDel ROW;
+ 	 DECLARE refToCacheTemp REFERENCE TO cachedMonitor;
+ 	 DECLARE cacheFlag BOOLEAN FALSE; 
+ 	 DECLARE tempName CHAR;
+     DECLARE refToCache REFERENCE TO cachedMappingTable.CACHE_LIST.*[1];
+     DECLARE iCounter INTEGER 1;
+     WHILE LASTMOVE(refToCache) DO
+       
+     	IF FIELDNAME(refToCache) <> cacheName 
+     		AND (cachedMonitor.CACHE_LIST.{FIELDNAME(refToCache)}.ThreadCount IS NULL 
+     		OR cachedMonitor.CACHE_LIST.{FIELDNAME(refToCache)}.ThreadCount=0) THEN
+       		SET tempName=FIELDNAME(refToCache);
+       	 	SET cachedMonitor.CACHE_LIST.{tempName}=NULL;
+    
+       	 	SET listCacheToDel.cachelist[iCounter]=tempName;
+       	 	         
+       	 	SET iCounter=iCounter+1;
+       	END IF;
+       	  
+       	MOVE refToCache NEXTSIBLING;
+
+     END WHILE;
+       
+     MOVE refToCacheTemp TO listCacheToDel.cachelist;
+     WHILE LASTMOVE(refToCacheTemp) DO
+     	DECLARE cacheToDel CHAR FIELDVALUE(refToCacheTemp);
+        IF EXISTS(cachedMappingTable.CACHE_LIST.{cacheToDel}[])  THEN
+       	 	SET cachedMappingTable.CACHE_LIST.{cacheToDel}= NULL;
+       	END IF;
+       	MOVE refToCacheTemp NEXTSIBLING REPEAT NAME;
+     END WHILE;
+   END SyncThread;
+END;
+ 
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module populates cache from the file
+--****************************************************************************
+
+CREATE FUNCTION PopulatesCache(IN refToLocal REFERENCE,IN refToInput REFERENCE ) RETURNS CHAR
+BEGIN
+	DECLARE tempServiceRequest ROW;
+	DECLARE options INTEGER BITOR(FolderBitStream, ValidateNone);
+	BEGIN ATOMIC
+		IF cachedMappingTable.fileLastDateModified IS NOT NULL 
+		AND refToLocal.File.Read.LastModified > cachedMappingTable.fileLastDateModified THEN
+	    	SET cachedMappingTable = NULL;
+        END IF;
+		IF NOT(EXISTS(cachedMappingTable.CACHE_LIST.isValid[])) THEN
+			SET tempServiceRequest.ServiceRequestBitStream = ASBITSTREAM(refToInput.BLOB.BLOB,,1208,,,,options);
+		    CREATE LASTCHILD OF tempServiceRequest.ReferenceData DOMAIN 'JSON' PARSE(tempServiceRequest.ServiceRequestBitStream,,1208,,,,options);
+		    DECLARE refXmlData REFERENCE TO tempServiceRequest.ReferenceData.REFERENCE_DATA;
+		    SET cachedMappingTable.CACHE_LIST[] = refXmlData.CACHE_LIST[];
+		    SET cachedMappingTable.fileLastDateModified = refToLocal.File.Read.LastModified;
+		    SET cachedMappingTable.CACHE_LIST.isValid='TRUE';
+		END IF;		    
+		RETURN 'SUCCESS';
+	END;
+END;
+
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module retrieves cache from file 
+--****************************************************************************
+CREATE FUNCTION retrieveCache(INOUT refToEnv REFERENCE) RETURNS CHAR
+BEGIN
+	SET refToEnv.CACHE_LIST[]=cachedMappingTable.CACHE_LIST[];
+	RETURN 'SUCCESS';
+END;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module retrieves cache sub tree 
+--****************************************************************************
+CREATE PROCEDURE retrieveCacheSubTree(INOUT refToEnv REFERENCE,IN cacheName CHAR,IN tableName CHAR,IN operationName CHAR)
+BEGIN
+	SET refToEnv.{tableName}=cachedMappingTable.CACHE_LIST.{cacheName}.{operationName}.CACHE_VALUE.{tableName};
+END;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module retrieves value for cache key 
+--****************************************************************************
+CREATE FUNCTION retrieveCacheValue(IN cacheName CHAR,IN tableName CHAR,IN operationName CHAR,IN key CHAR) RETURNS CHAR
+BEGIN
+	RETURN cachedMappingTable.CACHE_LIST.{cacheName}.{operationName}.CACHE_VALUE.{tableName}.{key};
+END;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module retreives cache and increment thread 
+--****************************************************************************
+
+CREATE FUNCTION RetrieveCacheNameAndIncrementThread() RETURNS CHAR
+BEGIN
+	IF EXISTS(cachedMonitor.CACHE_LIST.CurrentCache[]) THEN
+		SyncThread:BEGIN ATOMIC
+	  	   DECLARE cCurCache CHAR cachedMonitor.CACHE_LIST.CurrentCache;
+	       DECLARE cCount INTEGER cachedMonitor.CACHE_LIST.{cCurCache}.ThreadCount;
+	       IF cCount IS NULL THEN
+	       	 SET cCount=0;
+	       END IF;
+	       SET cCount=cCount+1;
+	       SET cachedMonitor.CACHE_LIST.{cCurCache}.ThreadCount=cCount;
+	       RETURN cachedMonitor.CACHE_LIST.CurrentCache;
+      	END SyncThread;
+	  	
+     ELSE 
+	 	RETURN 'hydrate cache';
+	 END IF;
+END;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module decrement cache and nullify if required
+--****************************************************************************
+CREATE FUNCTION DecrementCacheAndNullifyCacheIfRequired(IN cacheName CHAR) RETURNS CHAR
+BEGIN
+	SyncThread:BEGIN ATOMIC
+		DECLARE cCountDecrement INTEGER cachedMonitor.CACHE_LIST.{cacheName}.ThreadCount;
+	    SET cCountDecrement=cCountDecrement-1;
+	    SET cachedMonitor.CACHE_LIST.{cacheName}.ThreadCount=cCountDecrement;
+	    IF cCountDecrement = 0 AND cachedMonitor.CACHE_LIST.CurrentCache <> cacheName THEN
+	    	SET cachedMonitor.CACHE_LIST.{cacheName}=NULL;
+	       	SET cachedMappingTable.CACHE_LIST.{cacheName}=NULL;
+	    END IF;
+    END SyncThread;
+	RETURN 'end';
+END;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module creates cache tree 
+--****************************************************************************
+CREATE FUNCTION CreateCacheTree(IN refToLocal REFERENCE,IN refToInput REFERENCE ) RETURNS CHAR
+BEGIN
+	SyncThread:BEGIN ATOMIC
+		IF cachedMonitor.CACHE_LIST.fileLastDateModified IS NOT NULL THEN
+			IF refToLocal.File.Read.LastModified > cachedMonitor.CACHE_LIST.fileLastDateModified THEN
+		 		CALL genCache(refToLocal,refToInput);
+		 	END IF;
+		ELSE
+		 	CALL genCache(refToLocal,refToInput);
+        END IF;		    
+		RETURN 'SUCCESS';
+    END SyncThread;
+END;
+
+--****************************************************************************
+--** Description OF the Module
+--** =========================================================================
+--** This module generates cache
+--****************************************************************************
+CREATE PROCEDURE genCache(IN refToLocal REFERENCE,IN refToInput REFERENCE)
+BEGIN
+	DECLARE tempServiceRequest ROW;
+	DECLARE options INTEGER BITOR(FolderBitStream, ValidateNone);
+	DECLARE cCurDepth INTEGER cachedMonitor.CACHE_LIST.CURDEPTH;
+	IF cCurDepth IS NULL OR cCurDepth =10 THEN
+		SET cCurDepth=0;
+	END IF;
+	SET tempServiceRequest.ServiceRequestBitStream = ASBITSTREAM(refToInput.BLOB.BLOB,,1208,,,,options);
+	CREATE LASTCHILD OF tempServiceRequest.ReferenceData DOMAIN 'JSON' PARSE(tempServiceRequest.ServiceRequestBitStream,,1208,,,,options);
+	DECLARE refXmlData REFERENCE TO tempServiceRequest.ReferenceData.JSON.Data.REFERENCE_DATA;
+	DECLARE cGetCacheName CHAR;
+	SET cCurDepth = cCurDepth+1;
+	SET cachedMonitor.CACHE_LIST.CURDEPTH=cCurDepth;
+	SET cachedMonitor.CACHE_LIST.CurrentCache='Cache'||CAST(cCurDepth AS CHAR);
+	SET cGetCacheName = cachedMonitor.CACHE_LIST.CurrentCache;
+	SET cachedMappingTable.CACHE_LIST.{cGetCacheName}[] = refXmlData.CACHE_LIST[];
+	SET cachedMonitor.CACHE_LIST.fileLastDateModified = refToLocal.File.Read.LastModified;
+	SET cachedMonitor.CACHE_LIST.isValid='TRUE';
+	
+END;

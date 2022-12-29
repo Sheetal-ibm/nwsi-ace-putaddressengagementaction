@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:SF_Broker_Output_Basic.subflow="SF_Broker_Output_Basic.subflow" xmlns:QueueBasedCorrelation_SF_Store_Headers_To_Q.subflow="QueueBasedCorrelation/SF_Store_Headers_To_Q.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="QueueBasedCorrelationForSOAP/SF_SOAP_Output_Corr.subflow" 
+nsPrefix="QueueBasedCorrelationForSOAP_SF_SOAP_Output_Corr.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.queueManagerName" name="queueManagerName" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.queueName" name="queueName"  defaultValueLiteral="BackEndIn">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<translation xmi:type="utility:TranslatableString" key="SF_SOAP_Output_Corr" bundleName="QueueBasedCorrelationForSOAP/SF_SOAP_Output_Corr" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_SOAP_Output_Corr.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_SOAP_Output_Corr.gif"/>
+<composition>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="57,191">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="QueueBasedCorrelationForSOAP/SF_SOAP_Output_Corr" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="122,191" computeExpression="esql://routine/QueueBasedCorrelationForSOAP#SF_SOAP_Output_Corr_ConstructMQMD.Main" computeMode="destinationAndMessage">
+<translation xmi:type="utility:ConstantString" string="ConstructMQMD"/>
+</nodes>
+<nodes xmi:type="SF_Broker_Output_Basic.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="220,192" queueName="BackEndIn" transactionMode="yes">
+<translation xmi:type="utility:ConstantString" string="SF_Broker_Output_Basic"/>
+</nodes>
+<nodes xmi:type="QueueBasedCorrelation_SF_Store_Headers_To_Q.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="349,192" Specified_Correl_Msg_Expiry="true">
+<translation xmi:type="utility:ConstantString" string="SF_Store_Headers_To_Q"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="498,192">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="QueueBasedCorrelationForSOAP/SF_SOAP_Output_Corr" pluginId="flowAPIgenerated"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+<propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.mq.MQOutputQueueManagerEditor" configurable="true" describedAttribute="Property.queueManagerName">
+<propertyName xmi:type="utility:TranslatableString" key="Property.queueManagerName" bundleName="ComIbmMQOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.mq.MQQueueNameEditor" configurable="true" describedAttribute="Property.queueName">
+<propertyName xmi:type="utility:TranslatableString" key="Property.queueName" bundleName="ComIbmMQOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyOrganizer>
+<attributeLinks promotedAttribute="Property.queueManagerName" overriddenNodes="FCMComposite_1_3">
+<overriddenAttribute href="SF_Broker_Output_Basic.subflow#Property.queueManagerName"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.queueName" overriddenNodes="FCMComposite_1_3">
+<overriddenAttribute href="SF_Broker_Output_Basic.subflow#Property.queueName"/>
+</attributeLinks>
+<stickyBoard/>
+</eClassifiers>
+</ecore:EPackage>

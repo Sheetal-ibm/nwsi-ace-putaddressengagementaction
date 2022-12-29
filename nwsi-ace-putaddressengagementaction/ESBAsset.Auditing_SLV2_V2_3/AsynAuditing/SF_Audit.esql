@@ -1,0 +1,212 @@
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+-- 			  All		Neha Kuchhal		14/08/15	Changes According to Increment-2 Requirement 
+----------------------------------------------------------------------------------------------------
+-- Description:
+-- Get all AuditEntries and set them in an XML message. This message will be sent to
+-- the Audit Queue on which a background flow is listening.
+--
+-- In this ESQL file, there are 2 kinds of Auditing Data Structure.
+-- 
+-- One is under the Environment element:
+--
+-- Environment
+--      + -- AuditData
+--               + -- AuditEntry[]
+--                         + -- CONTEXT_ID
+--                         + -- AUDIT_SOURCE_SYS
+--                         + -- AUDIT_SOURCE_SUBSYS
+--                         + -- AUDIT_TYPE_ID
+--                         + -- START_TSTMP
+--                         + -- JOURNAL_FLAG
+--						   + -- SERVER_NAME
+--						   + -- APPENDIX
+--                         + -- AuditDetail
+--                         |         + -- Data[]
+--                         |                + -- Name
+--                         |                + -- Value
+--
+-- This structure is created by the user code. Then, the SF_Audit sub flow
+-- will create individual messages by the structure. The structure of every
+-- message will be under the OutputRoot.XMLNSC element.
+---------------------------------------------------------------------------------------
+
+-----------------------------
+--Broker Schema declaration--
+-----------------------------
+
+BROKER SCHEMA AsynAuditing
+
+---------------
+--Path Clause--
+--------------- 
+PATH uk.co.nationwide.nem.esb.commonFunctions;
+
+CREATE COMPUTE MODULE SF_Audit_Send_Out_Audit_Info
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	
+	---------------------------------------------------------------------------------------
+	-- Description:
+	-- A user property for indicating whether the whole Environment.AuditData should be
+	-- reset when the Audit Message is sent out.
+	---------------------------------------------------------------------------------------
+	DECLARE Reset_AuditData EXTERNAL BOOLEAN TRUE;
+	
+	
+	
+	---------------------------------------------------------------------------------------
+	-- Description:
+	-- Main Function
+	---------------------------------------------------------------------------------------
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		------------------------------------
+		--Declare references and variables--
+		------------------------------------
+		
+		DECLARE refToInHdr REFERENCE TO Environment.ESBServiceData.SecurityHeader;
+		DECLARE refToOutHdr,refToAuditEnv,refToOutBody REFERENCE TO OutputRoot;
+		DECLARE refToOutSvcHdr,refToReq REFERENCE TO OutputRoot;
+		DECLARE AuditEntryMsg,AuditEntryRef REFERENCE TO OutputRoot;
+		DECLARE AuditDetailRef REFERENCE TO AuditEntryRef;
+		DECLARE EntryCount INTEGER 0;
+		
+		-------------------------------------------------		
+		-- Check whether there is an AuditEntry at least.
+		-------------------------------------------------		
+		
+		SET EntryCount = CARDINALITY(Environment.AuditData.AuditEntry[]);
+		IF EntryCount = 0 THEN
+			IF Reset_AuditData THEN
+				CALL ResetAuditData(Environment);
+			END IF;
+			RETURN FALSE;
+		END IF;
+		
+		DECLARE i INTEGER;
+		
+		---------------------
+		-- Check AuditTypeId
+		---------------------
+		
+		SET i = 1;
+		WHILE i <= EntryCount DO
+			DECLARE AuditEntryRef REFERENCE TO Environment.AuditData.AuditEntry[i];
+			IF AuditEntryRef.AUDIT_TYPE_ID IS NULL THEN
+				Throw User Exception Values (
+					 'ESB',
+					 'FAILURE: Incorrect Audit Entry data - AuditTypeId must not be NULL.',
+					 'ERR:00117',
+					 'soap:Server');
+			END IF;
+			SET i = i + 1;
+		END WHILE;
+		
+		--------------------------
+		--Creating Audit Request--
+		--------------------------
+		CREATE LASTCHILD OF OutputRoot.XMLNSC AS refToAuditEnv NAMESPACE ns_SOAP_ENV NAME 'Envelope';
+		CREATE LASTCHILD OF refToAuditEnv AS refToOutHdr NAMESPACE ns_SOAP_ENV NAME 'Header';
+		CREATE LASTCHILD OF refToAuditEnv AS refToOutBody NAMESPACE ns_SOAP_ENV NAME 'Body';
+		CREATE LASTCHILD OF refToOutBody AS refToReq NAMESPACE ns_AM_V2_IAM NAME 'createAuditEvent';
+		
+		----------------------------------------------------
+		--Propagating Security headers into output tree--
+		----------------------------------------------------
+		
+		IF LASTMOVE(refToInHdr) THEN
+				CALL PropagateSecurityRequestHeader(refToInHdr,refToOutHdr);
+		END IF;		       
+			
+		--------------------------------------------
+		--Copying environment in to service header--
+		--------------------------------------------
+		
+		CREATE LASTCHILD OF refToReq AS refToOutSvcHdr NAMESPACE ns_AM_V2_IAM_CAE NAME 'serviceHeader';
+		IF NOT (EXISTS(Environment.ESBServiceData.serviceHeader.messageInfo.journeyID[])) THEN
+           SET Environment.ESBServiceData.serviceHeader.messageInfo.journeyID      =   '00000000-0000-0000-0000-000000000000';                  																											
+        END IF;				
+		CALL EnvironmentToServiceHeaders(refToOutSvcHdr , Environment);
+		
+		----------------------------
+		-- Handle AuditEntry[] List.
+		----------------------------		
+		SET i = 1;
+			WHILE i <= EntryCount DO				
+		MOVE  AuditEntryRef  TO Environment.AuditData.AuditEntry[i];								
+				
+		----------------------------
+		--Create Audit Event Message
+		----------------------------
+		CREATE LASTCHILD OF refToReq  AS AuditEntryMsg NAMESPACE ns_AM_V2_IAM_CAE NAME 'auditInformation';
+		IF(NOT (EXISTS(AuditEntryRef.CONTEXT_ID[])) OR AuditEntryRef.CONTEXT_ID = '00000000-0000-0000-0000-000000000000' OR AuditEntryRef.CONTEXT_ID = '')THEN		
+                 SET AuditEntryRef.CONTEXT_ID 					= 'SAML-00000000-0000-0000-0000-000000000000';
+        END IF;
+        				
+		SET AuditEntryMsg.ns_Tr_Util_Aud:contextId 				= AuditEntryRef.CONTEXT_ID;
+		SET AuditEntryMsg.ns_Tr_Util_Aud:originatingSystem 		= AuditEntryRef.AUDIT_SOURCE_SYS;
+		SET AuditEntryMsg.ns_Tr_Util_Aud:eventSource 			= AuditEntryRef.AUDIT_SOURCE_SUBSYS;
+		SET AuditEntryMsg.ns_Tr_Util_Aud:auditTypeId 			= AuditEntryRef.AUDIT_TYPE_ID; 
+		SET AuditEntryMsg.ns_Tr_Util_Aud:eventTimestamp 		= AuditEntryRef.START_TSTMP;
+		SET AuditEntryMsg.ns_Tr_Util_Aud:isJournal 				= AuditEntryRef.JOURNAL_FLAG;
+		SET AuditEntryMsg.ns_Tr_Util_Aud:serverName 			= AuditEntryRef.SERVER_NAME;
+		SET AuditEntryMsg.ns_Tr_Util_Aud:additionalRefId 		= AuditEntryRef.PROCESS_ID;		
+		
+		----------------------	
+		-- Set the AuditDetail
+		----------------------		
+			MOVE AuditDetailRef TO AuditEntryRef.AuditDetail;
+			IF LASTMOVE(AuditDetailRef) THEN -- AuditDetail exists.
+				DECLARE ItemCount INTEGER 0;
+				SET ItemCount = CARDINALITY(AuditEntryRef.AuditDetail.Data[]);
+				DECLARE j INTEGER 1;
+				WHILE j <= ItemCount DO
+					SET AuditEntryMsg.ns_Tr_Util_Aud:eventData[j].ns_Tr_Util_Aud:name = AuditDetailRef.Data[j].Name;
+					SET AuditEntryMsg.ns_Tr_Util_Aud:eventData[j].ns_Tr_Util_Aud:value = AuditDetailRef.Data[j].Value;
+						
+					SET j = j + 1;
+				END WHILE;
+			END IF;
+				
+			SET AuditEntryMsg.ns_Tr_Util_Aud:appendix = AuditEntryRef.APPENDIX;
+				
+			PROPAGATE TO TERMINAL 'out';
+				
+			SET i = i + 1;
+		END WHILE;
+		
+		----------------------------	
+		--Reset the whole AuditData
+		----------------------------
+		
+			IF Reset_AuditData THEN
+				CALL ResetAuditData(Environment);
+			END IF;
+			
+			RETURN FALSE;
+		END;
+	
+	END MODULE;

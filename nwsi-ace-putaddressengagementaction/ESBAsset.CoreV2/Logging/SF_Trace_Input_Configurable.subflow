@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:SF_Load_Environment_Variables.subflow="SF_Load_Environment_Variables.subflow" xmlns:GetEnv.msgnode="GetEnv.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="Logging/SF_Trace_Input_Configurable.subflow" 
+nsPrefix="Logging_SF_Trace_Input_Configurable.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.LOG_LABEL" name="LOG_LABEL" lowerBound="1"  defaultValueLiteral="0">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.FilePath1" name="FilePath1"  defaultValueLiteral="c:/temp/logs/BROKER_IO_LOG.txt">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.FilePath2" name="FilePath2"  defaultValueLiteral="c:/temp/logs/BROKER_IO_LOG.txt">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.FilePath3" name="FilePath3"  defaultValueLiteral="c:/temp/logs/BROKER_IO_LOG.txt">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<translation xmi:type="utility:TranslatableString" key="SF_Trace_Input_Configurable" bundleName="Logging/SF_Trace_Input_Configurable" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_Trace_Input_Configurable.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_Trace_Input_Configurable.gif"/>
+<shortDescription xmi:type="utility:ConstantString" string="Writes the input message to a log file"/>
+<longDescription xmi:type="utility:ConstantString" string="Flow responsible for the following:&#xA;· Reading the operating system environment variables&#xA;· Checking if logging is enabled&#xA;· Writing to the log file if logging is enabled"/>
+<composition>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="89,-1" rotation="TOP_TO_BOTTOM">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="Logging/SF_Trace_Input_Configurable" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="75,721" rotation="TOP_TO_BOTTOM">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="Logging/SF_Trace_Input_Configurable" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="11,83" rotation="TOP_TO_BOTTOM" filterExpression="esql://routine/Logging#SF_Trace_Input_Variables_need_loading.Main">
+<translation xmi:type="utility:ConstantString" string="Do_Enironment.Variables_need_loading?"/>
+</nodes>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="788,18" rotation="TOP_TO_BOTTOM" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="743,578" rotation="TOP_TO_BOTTOM" destination="file" filePath="c:/temp/logs/BROKER_IO_LOG.txt" pattern="Broker Trace {Input} - ${CURRENT_GMTDATE}, ${CURRENT_GMTTIME} ${Environment.Variables.BasicText}">
+<translation xmi:type="utility:ConstantString" string="BasicTrace"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="401,140" rotation="TOP_TO_BOTTOM" computeExpression="esql://routine/Logging#SF_Trace_Input_Move_ENV_From_Root_to_Environment_Variables.Main">
+<translation xmi:type="utility:ConstantString" string="Move_ENV_From_Root_to_Environment.Variables"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="772,370" rotation="TOP_TO_BOTTOM" filterExpression="esql://routine/Logging#SF_Trace_Input_Level_Basic.Main">
+<translation xmi:type="utility:ConstantString" string="Basic"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="462,366" rotation="TOP_TO_BOTTOM" filterExpression="esql://routine/Logging#SF_Trace_Input_Level_Message.Main">
+<translation xmi:type="utility:ConstantString" string="Message"/>
+</nodes>
+<nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="566,483" rotation="TOP_TO_BOTTOM" destination="file" filePath="c:/temp/logs/BROKER_IO_LOG.txt" pattern="Broker Trace {Input} - ${CURRENT_GMTDATE}, ${CURRENT_GMTTIME}&#xD;&#xA;&#xD;&#xA;${Body}">
+<translation xmi:type="utility:ConstantString" string="MessageBody"/>
+</nodes>
+<nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="288,481" rotation="TOP_TO_BOTTOM" destination="file" filePath="c:/temp/logs/BROKER_IO_LOG.txt" pattern="Broker Trace {Input} - ${CURRENT_GMTDATE}, ${CURRENT_GMTTIME}&#xD;&#xA;${Environment}&#xD;&#xA;${Properties}&#xD;&#xA;${Root} ">
+<translation xmi:type="utility:ConstantString" string="MessageAndHeader"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="173,451" rotation="TOP_TO_BOTTOM" filterExpression="esql://routine/Logging#SF_Trace_Input_Level_MessageAndHeaders.Main">
+<translation xmi:type="utility:ConstantString" string="MessageAndHeaders"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="778,483" rotation="TOP_TO_BOTTOM" computeExpression="esql://routine/Logging#SF_Trace_Input_Level_DetermineMessageType.Main">
+<translation xmi:type="utility:ConstantString" string="DetermineMessageType"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="248,286" rotation="TOP_TO_BOTTOM" computeExpression="esql://routine/Logging#SF_Trace_Input_Level_FlowLevelCheck.Main">
+<translation xmi:type="utility:ConstantString" string="FlowLevelCheck"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="3,182" rotation="TOP_TO_BOTTOM" filterExpression="esql://routine/Logging#SF_Trace_Input_Level_Do_we_load_trace_setting_from_the_database.Main">
+<translation xmi:type="utility:ConstantString" string="Do we load trace setting from the database"/>
+</nodes>
+<nodes xmi:type="SF_Load_Environment_Variables.subflow:FCMComposite_1" xmi:id="FCMComposite_1_14" location="433,242" rotation="TOP_TO_BOTTOM">
+<translation xmi:type="utility:ConstantString" string="SF_Load_Environment_Variables"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_17" location="89,361" rotation="TOP_TO_BOTTOM" filterExpression="esql://routine/Logging#SF_Trace_Input_Configurable_ConfigurableTraceTest.Main">
+<translation xmi:type="utility:ConstantString" string="ConfigurableTraceTest"/>
+</nodes>
+<nodes xmi:type="GetEnv.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="356,98">
+<translation xmi:type="utility:ConstantString" string="GetEnv"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_4" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in">
+<bendPoints>1,90,671,-41</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in">
+<bendPoints>-126,-17,132,-62</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+<bendPoints>-79,153,312,-197</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+<bendPoints>-135,168,647,-176</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in">
+<bendPoints>-117,194,665,-150</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in">
+<bendPoints>-80,163,311,-187</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+<bendPoints>-99,93,-94,-82</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in">
+<bendPoints>-62,90,-57,-85</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_25" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_26" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_27" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_28" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_29" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in">
+<bendPoints>239,-30,-370,-50</bendPoints>
+</connections>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_30" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.In"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_31" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Out" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+<propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.LOG_LABEL">
+<propertyName xmi:type="utility:TranslatableString" key="Property.LOG_LABEL" bundleName="Logging/SF_Trace_Input_Configurable" pluginId="flowAPIgenerated"/>
+<propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.FilePath1">
+<propertyName xmi:type="utility:TranslatableString" key="Property.FilePath1" bundleName="SF_Trace_Input_Configurable" pluginId="Logging"/>
+<propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.FilePath2">
+<propertyName xmi:type="utility:TranslatableString" key="Property.FilePath2" bundleName="SF_Trace_Input_Configurable" pluginId="Logging"/>
+<propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.FilePath3">
+<propertyName xmi:type="utility:TranslatableString" key="Property.FilePath3" bundleName="SF_Trace_Input_Configurable" pluginId="Logging"/>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyOrganizer>
+<attributeLinks promotedAttribute="Property.FilePath1" overriddenNodes="FCMComposite_1_6">
+<overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.FilePath2" overriddenNodes="FCMComposite_1_9">
+<overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.FilePath3" overriddenNodes="FCMComposite_1_10">
+<overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+</attributeLinks>
+<stickyBoard/>
+</eClassifiers>
+</ecore:EPackage>

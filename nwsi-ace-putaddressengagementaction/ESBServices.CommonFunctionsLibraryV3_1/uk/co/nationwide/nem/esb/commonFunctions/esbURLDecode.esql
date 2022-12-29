@@ -1,0 +1,28 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+/*===========================================================================================
+ *
+ * Licensed Materials - Property of Nationwide Building Society
+ *
+ * Nationwide Enterprise Middleware DC
+ *
+ * 
+============================================================================================= 
+*********************************************************************************************
+** File Version History
+*********************************************************************************************
+** Defect	ID		CID		   Date		    Description		Test cycle
+** -----------  ---------    ----------	---------------      ----------- 
+				    C415063	  05/06/18	    Initial Version   Dev
+*********************************************************************************************
+** Description OF the modules contained in the file.
+** ========================================================================================
+** The procedure contained within this file is a common utility procedure that 
+**   generates an IBAN number for given sort code and account number
+*********************************************************************************************/
+
+/*====================================================================================================
+
+======================================================================================================*/
+CREATE FUNCTION getDecodedValue(IN str CHAR) RETURNS CHAR
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.urldecode.FieldDecoder.Decode";

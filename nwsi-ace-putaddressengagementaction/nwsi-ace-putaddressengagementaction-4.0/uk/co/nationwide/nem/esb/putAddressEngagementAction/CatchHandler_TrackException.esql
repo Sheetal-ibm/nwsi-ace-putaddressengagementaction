@@ -1,0 +1,53 @@
+/* =====================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+========================================================================================================
+********************************************************************************************************
+** File Version History
+********************************************************************************************************
+** Change ID 	  WorkItemId	     CID 		       Date 		   Description 			Test cycle
+** ----------- 	 ------------	--------------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 		C417151/C412459  	25/11/2019 	      Initial Version 	       DEV
+**												
+********************************************************************************************************
+** Description of the ESQL
+** =====================================================================================================
+** The ESQL module handles any exceptions that might occur when message was rolled back
+** during the error message creation from a previous exception.
+********************************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH uk.co.nationwide.nem.esb.logging;
+
+
+CREATE COMPUTE MODULE CatchHandler_TrackException
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refToOutError  REFERENCE TO OutputRoot;
+			
+		SET Environment.ESBServiceData.logPosition 	= 'P5';
+		SET Environment.ESBServiceData.logErrorId 	= COALESCE(Environment.ESBServiceData.logErrorId,UUIDASCHAR);
+		CALL log4jv2loggingExceptionList(Environment,InputRoot,InputExceptionList,'ESB',Environment.ESBServiceData.sourceSystemID);
+		
+		SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" = 500;
+		
+        -- HLD5a New Error Template        
+		CREATE LASTCHILD OF OutputRoot.JSON.Data AS refToOutError IDENTITY (JSON.Array)errors;
+		SET refToOutError.Item[1].code 			 = 'NEM.ESB.IPM.500.100';
+		SET refToOutError.Item[1].message 		 = 'Internal Server Error';
+		SET refToOutError.Item[1].logErrorId     = Environment.ESBServiceData.logErrorId;
+		
+		-- Appending Status to FID for logging at ServiceGatewayOut
+		SET Environment.ESBServiceData.functionalIdentifier = Environment.ESBServiceData.functionalIdentifier || ', ' || 'INTERNAL';
+		
+		--Setting service status for logging purpose		
+		SET Environment.SvcStatus	=	'Error';
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;
+

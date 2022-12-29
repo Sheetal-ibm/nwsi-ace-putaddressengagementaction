@@ -1,0 +1,281 @@
+BROKER SCHEMA AsynAuditing
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+
+----------------------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+-- 			  All		Neha Kuchhal		14/08/15	Changes According to Increment-2 Requirement 
+----------------------------------------------------------------------------------------------------
+
+-- Description:
+-- In this ESQL file, the Auditing Data Structure is under the Environment element.
+-- The structure is like below:
+-- Environment
+--      + -- AuditData
+--               + -- AuditEntry[]
+--                         + -- CONTEXT_ID
+--                         + -- AUDIT_SOURCE_SYS
+--                         + -- AUDIT_SOURCE_SUBSYS
+--                         + -- AUDIT_TYPE_ID
+--                         + -- START_TSTMP
+--                         + -- JOURNAL_FLAG
+--						   + -- SERVER_NAME
+--						   + -- APPENDIX
+--                         + -- AuditDetail
+--                         |         + -- Data[]
+--                         |                + -- Name
+--                         |                + -- Value
+--                         + -- EntryFlag
+--
+-- * The element 'EntryFlag' is only used for retrieve an AuditEntry, 
+-- * it won't be propagated in the message.
+---------------------------------------------------------------------------------------
+
+
+
+
+---------------------------------------------------------------------------------------
+-- Description:
+-- A constant string for the Timestamp format.
+---------------------------------------------------------------------------------------
+DECLARE AUDITING_TIMESTAMP_FORMAT EXTERNAL CHARACTER 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS';
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Create an AuditEntry field as the last child of the Environment.AuditData field.
+-- If the Environment.AuditData field does not exist, create it and set the common
+-- data for it.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE CreateAuditEntry(IN env REFERENCE, IN ContextId CHAR, IN EventSource CHAR, IN AuditTypeId CHAR, IN IsJournal CHAR, IN Appendix BLOB, OUT AuditEntryRef REFERENCE)
+BEGIN
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	------------------------------------------
+	-- If AuditData does not exist, create it.
+	------------------------------------------
+	
+	DECLARE AuditDataRef REFERENCE TO env;
+	DECLARE EventTimestamp CHAR CAST(CURRENT_TIMESTAMP AS CHAR FORMAT AUDITING_TIMESTAMP_FORMAT);
+	MOVE AuditDataRef TO env.AuditData;
+	IF NOT LASTMOVE(AuditDataRef) THEN
+		CREATE LASTCHILD OF env AS AuditDataRef NAME 'AuditData';
+	END IF;
+	
+	--------------------------------------------------------
+	-- Create an AuditEntry and set it to the AuditEntryRef.
+	--------------------------------------------------------
+	
+	CREATE LASTCHILD OF AuditDataRef AS AuditEntryRef NAME 'AuditEntry';
+	SET AuditEntryRef.CONTEXT_ID = ContextId;
+	SET AuditEntryRef.AUDIT_SOURCE_SYS = 'ESB';	
+	SET AuditEntryRef.AUDIT_SOURCE_SUBSYS = EventSource;
+	SET AuditEntryRef.AUDIT_TYPE_ID = AuditTypeId;
+	SET AuditEntryRef.START_TSTMP = EventTimestamp;
+	SET AuditEntryRef.JOURNAL_FLAG = IsJournal;
+	SET AuditEntryRef.SERVER_NAME = ExecutionGroupLabel;
+	SET AuditEntryRef.APPENDIX = CAST(Appendix AS CHARACTER CCSID 1208 ENCODING 437);	
+	
+END;
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Set a flag to an AuditEntry. It can be used for looking the AuditEntry by this
+-- flag after this.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE SetFlagToEntry(IN AuditEntryRef REFERENCE, IN EntryFlag CHAR)
+BEGIN
+	SET AuditEntryRef.EntryFlag = EntryFlag;
+END;
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Retrieve the AuditEntry by the flag set previously.
+-- If not found, the AuditEntryRef will point to Environment.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE RetrieveAuditEntryByFlag(IN env REFERENCE, IN EntryFlag CHAR, OUT AuditEntryRef REFERENCE)
+BEGIN
+	MOVE AuditEntryRef TO env;
+	
+	DECLARE AuditDataRef REFERENCE TO env;
+	MOVE AuditDataRef TO env.AuditData;
+	IF LASTMOVE(AuditDataRef) THEN
+		DECLARE EntryCount INTEGER 0;
+		SET EntryCount = CARDINALITY(AuditDataRef.AuditEntry[]);
+		DECLARE i INTEGER 1;
+		WHILE i <= EntryCount DO
+			IF AuditDataRef.AuditEntry[i].EntryFlag = EntryFlag THEN
+				MOVE AuditEntryRef TO AuditDataRef.AuditEntry[i];
+				RETURN;
+			END IF;
+			
+			SET i = i + 1;
+		END WHILE;
+	END IF;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Judge whether the Reference is pointing at the AuditEntry field with the correct
+-- flag.
+---------------------------------------------------------------------------------------
+CREATE FUNCTION IsEntryWithFlag(IN AuditEntryRef REFERENCE, IN EntryFlag CHAR) RETURNS BOOLEAN
+BEGIN
+	IF FIELDNAME(AuditEntryRef) = 'AuditEntry' THEN
+		IF AuditEntryRef.EntryFlag = EntryFlag THEN
+			RETURN TRUE;
+		END IF;
+	END IF;
+	
+	RETURN FALSE;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Update the AuditStatus of the AuditEntry.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE UpdateAuditEntryStatus(IN AuditEntryRef REFERENCE, IN AuditStatus CHAR)
+BEGIN
+	SET AuditEntryRef.AuditStatus = AuditStatus;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Update the MsgId of the AuditEntry.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE UpdateAuditEntryMsgId(IN AuditEntryRef REFERENCE, IN MsgId BLOB)
+BEGIN
+	SET AuditEntryRef.MsgId = MsgId;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Update the CorrelId of the AuditEntry.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE UpdateAuditEntryCorrelId(IN AuditEntryRef REFERENCE, IN CorrelId BLOB)
+BEGIN
+	SET AuditEntryRef.CorrelId = CorrelId;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Update the Appendix of the AuditEntry.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE UpdateAuditEntryAppendix(IN AuditEntryRef REFERENCE, IN Appendix CHAR)
+BEGIN
+	SET AuditEntryRef.Appendix = Appendix;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Add an AuditDetail data to the AuditEntry.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE AddAuditDetail(IN AuditEntryRef REFERENCE, IN Name CHAR, IN Value CHAR)
+BEGIN
+	-- If AuditDetail does not exist, create it.
+	DECLARE AuditDetailRef REFERENCE TO AuditEntryRef;
+	MOVE AuditDetailRef TO AuditEntryRef.AuditDetail;
+	IF NOT LASTMOVE(AuditDetailRef) THEN
+		CREATE LASTCHILD OF AuditEntryRef AS AuditDetailRef NAME 'AuditDetail';
+	END IF;
+	
+	-- Append a 'Data' item, and set the name and value.
+	DECLARE ItemRef REFERENCE TO AuditDetailRef;
+	CREATE LASTCHILD OF AuditDetailRef AS ItemRef NAME 'Data';
+	SET ItemRef.Name = Name;
+	SET ItemRef.Value = Value;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			22/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Clear all AuditEntries.
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE ResetAuditData(IN env REFERENCE)
+BEGIN
+	-- Remove the whole AuditData stucture.
+	SET env.AuditData = NULL;
+	
+	-- Re-create the AuditData element.
+	CREATE LASTCHILD OF env NAME 'AuditData';
+END;

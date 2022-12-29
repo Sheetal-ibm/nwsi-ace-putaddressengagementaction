@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:Logging_SF_Trace_Output.subflow="Logging/SF_Trace_Output.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SF_Broker_Output_Reply.subflow" 
+nsPrefix="SF_Broker_Output_Reply.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.transactionMode" name="transactionMode" lowerBound="1" eType="//@eClassifiers.1"   defaultValueLiteral="automatic"/>
+<translation xmi:type="utility:TranslatableString" key="SF_Broker_Output_Reply" bundleName="SF_Broker_Output_Reply" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_Broker_Output_Reply.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_Broker_Output_Reply.gif"/>
+<shortDescription xmi:type="utility:ConstantString" string="Used at the end of reply flows"/>
+<longDescription xmi:type="utility:ConstantString" string="It is responsible for the following:&#xA;· Extracting the reply to queue details from the RFH header.&#xA;· Restoring the original RFH header (if there was one)&#xA;· Calling SF Broker Output&#xA;"/>
+<composition>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="106,257" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="550,110">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="SF_Broker_Output_Reply" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="90,102" computeExpression="esql://routine/Core#SF_Broker_Output_Reply_Restore_Original_RFH_Headers.Main">
+<translation xmi:type="utility:ConstantString" string="Restore_Original_RFH_Headers"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="15,102">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="SF_Broker_Output_Reply" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="285,106" queueName="DO NOT LOOK HERE" destinationMode="reply" messageContext="default">
+<translation xmi:type="utility:ConstantString" string="Reply_To_Queue"/>
+</nodes>
+<nodes xmi:type="Logging_SF_Trace_Output.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="424,110">
+<translation xmi:type="utility:ConstantString" string="SF_Trace_Output"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+<propertyDescriptor groupName="Group.Basic" describedAttribute="Property.transactionMode">
+<propertyName xmi:type="utility:TranslatableString" key="Property.transactionMode" bundleName="ComIbmMQOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+</propertyDescriptor>
+</propertyOrganizer>
+<attributeLinks promotedAttribute="Property.transactionMode" overriddenNodes="FCMComposite_1_4">
+<overriddenAttribute href="ComIbmMQOutput.msgnode#Property.transactionMode"/>
+</attributeLinks>
+<stickyBoard/>
+</eClassifiers>
+<eClassifiers xmi:type="ecore:EEnum">
+<eLiterals xmi:id="transactionMode.automatic" name="automatic" />
+<eLiterals xmi:id="transactionMode.yes" name="yes" value="1"/>
+<eLiterals xmi:id="transactionMode.no" name="no" value="2"/>
+</eClassifiers>
+</ecore:EPackage>

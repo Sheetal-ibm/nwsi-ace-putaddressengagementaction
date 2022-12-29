@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="9f5dd9b3-d86c-48c3-bf50-92e0b9dbb87d" activeEnvironment="Default" name="RATL_V1_STUB" resourceRoot="" soapui-version="5.5.0" abortOnError="false" runType="SEQUENTIAL" encryptionMode="Not encrypted" updated="2.8.2 2019-08-27T17:04:01Z" xmlns:con="http://eviware.com/soapui/config">
+  <con:settings><con:setting id="ProjectSettings@hermesConfig">${#System#user.home}\.hermes</con:setting></con:settings>
+  <con:interface xsi:type="con:WsdlInterface" id="841584bc-7570-4f60-b74b-37c9ee1c225e" wsaVersion="NONE" name="IRATLAdaptorBinding" type="wsdl" bindingName="{http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/}IRATLAdaptorBinding" soapVersion="1_2" anonymous="optional" definition="file:/C:/MLR/Sprint%208/ESBServices.RATLAdaptorMessageSetV3/ESBServices.RATLAdaptorMessageSetV3/uk/co/nationwide/v1/contract/ratladaptor/ratlexecute/RATLExecute.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <con:settings/>
+    <con:definitionCache type="TEXT" rootPart="file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\v1\contract\ratladaptor\ratlexecute\RATLExecute.wsdl">
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\v1\contract\ratladaptor\ratlexecute\RATLExecute.wsdl</con:url>
+        <con:content><![CDATA[<wsdl:definitions name="RATLExecute" targetNamespace="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/" xmlns:wsdl_1="http://uk/co/nationwide/contract/RATLAdaptor/v1/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:documentation>
+    <wsdl:appinfo source="WMQI_APPINFO">
+      <MRWSDLAppInfo imported="true">
+        <binding hasEncoding="false" imported="true" name="IRATLAdaptorBinding" originalBindingStyle="document"/>
+      </MRWSDLAppInfo>
+    </wsdl:appinfo>
+  </wsdl:documentation>
+  <wsdl:import location="../../../../contract/ratladaptor/v1/RATLAdaptor.wsdl" namespace="http://uk/co/nationwide/contract/RATLAdaptor/v1/"/>
+  <wsdl:binding name="IRATLAdaptorBinding" type="wsdl_1:IRATLAdaptor">
+    <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="Execute">
+      <soap12:operation soapAction="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/Execute/"/>
+      <wsdl:input>
+        <soap12:body parts="parameters" use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body parts="parameters" use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="RATLAdaptorFault">
+        <soap12:fault name="RATLAdaptorFault" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="RATLAdaptor">
+    <wsdl:port binding="tns:IRATLAdaptorBinding" name="IRATLAdaptorPort">
+      <soap12:address location="http://uk/co/nationwide/RATLAdaptor/v1"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content>
+        <con:type>http://schemas.xmlsoap.org/wsdl/</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\contract\ratladaptor\v1\RATLAdaptor.wsdl</con:url>
+        <con:content><![CDATA[<wsdl:definitions name="RATLAdaptor" targetNamespace="http://uk/co/nationwide/contract/RATLAdaptor/v1/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://uk/co/nationwide/contract/RATLAdaptor/v1/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:documentation>
+    <wsdl:appinfo source="WMQI_APPINFO">
+      <MRWSDLAppInfo imported="true">
+        <generatedMXSD location="RATLAdaptor_InlineSchema1.mxsd"/>
+      </MRWSDLAppInfo>
+    </wsdl:appinfo>
+  </wsdl:documentation>
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://uk/co/nationwide/contract/RATLAdaptor/v1/" xmlns:cns="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" xmlns:ratl="http://uk/co/nationwide/RATLAdaptor/v1/">
+      <xsd:import namespace="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" schemaLocation="../../../ima/bps/services/definitions/coredatatypes/v1/CoreDatatypes.mxsd"/>
+      <xsd:import namespace="http://uk/co/nationwide/RATLAdaptor/v1/" schemaLocation="../../../ratladaptor/v1/RATLAdaptorTypes.mxsd"/>
+      <xsd:include schemaLocation="RATLAdaptor_InlineSchema1.mxsd"/>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="ExecuteRequest">
+    <wsdl:part element="tns:Execute" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="ExecuteResponse">
+    <wsdl:part element="tns:ExecuteResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="RATLAdaptorFault">
+    <wsdl:part element="tns:RATLAdaptorFault" name="RATLAdaptorFault"/>
+  </wsdl:message>
+  <wsdl:portType name="IRATLAdaptor">
+    <wsdl:operation name="Execute">
+      <wsdl:input message="tns:ExecuteRequest"/>
+      <wsdl:output message="tns:ExecuteResponse"/>
+      <wsdl:fault message="tns:RATLAdaptorFault" name="RATLAdaptorFault"/>
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>]]></con:content>
+        <con:type>http://schemas.xmlsoap.org/wsdl/</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\ima\bps\services\definitions\coredatatypes\v1\CoreDatatypes.mxsd</con:url>
+        <con:content><![CDATA[<xsd:schema elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" version="1.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cenum="http://uk/co/nationwide/ima/bps/Services/Definitions/Enumerations/v1/" xmlns:cns="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" xmlns:xsd_1="http://uk/co/nationwide/ima/bps/PrimitiveDatatypes/v1/">
+  <xsd:import namespace="http://uk/co/nationwide/ima/bps/Services/Definitions/Enumerations/v1/" schemaLocation="../../enumerations/v1/Enumerations.mxsd"/>
+  <xsd:import namespace="http://uk/co/nationwide/ima/bps/PrimitiveDatatypes/v1/" schemaLocation="../../../../primitivedatatypes/v1/PrimitiveDatatypes.mxsd"/>
+  <xsd:complexType name="MessageInfo">
+    <xsd:annotation>
+      <xsd:documentation>Identify  the message uniquely for logging and integration purpose.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="journeyID" type="xsd_1:UUID"/>
+      <xsd:element name="sourceSystemID" type="xsd_1:String256"/>
+      <xsd:element name="createDateTime" type="xsd_1:DateTime"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="AdditionalInfo">
+    <xsd:annotation>
+      <xsd:documentation>Additional Information that may be required to be passed from the consumer, as a special case, to manage the integration. This name value pair needs to be agreed at the time of design</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="name" type="xsd_1:String256"/>
+      <xsd:element name="value" type="xsd_1:String256"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="AlternateIdentifer">
+    <xsd:annotation>
+      <xsd:documentation>The alternateIdentifier is used to pass any other identifiers related to the channel. For example, staffID, employeeID etc</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="type" type="cenum:AlternateIdentifierType"/>
+      <xsd:element name="identifier" type="xsd_1:String256"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ChannelInfo">
+    <xsd:annotation>
+      <xsd:documentation>To capture different elements related to the Consumer channel. This information can be used for AUDIT purpose if required.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="channel" type="xsd_1:String50"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="alternateIdentifier" type="cns:AlternateIdentifer"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ServiceHeader">
+    <xsd:sequence>
+      <xsd:element name="messageInfo" type="cns:MessageInfo"/>
+      <xsd:element name="channelInfo" type="cns:ChannelInfo"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="additionalInfo" type="cns:AdditionalInfo"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="Result">
+    <xsd:annotation>
+      <xsd:documentation>optional complex type to add result information that can be used by composite services.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="behaviour" type="cenum:BehaviourType">
+        <xsd:annotation>
+          <xsd:documentation>Optional at the moment, to be used in processes and services to indicate certain behaviours. Reserved for future use</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="overallSeverityLevel" type="cenum:SeverityType">
+        <xsd:annotation>
+          <xsd:documentation>Maximum severity level, for all errors within the stack</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ExtensionPoint">
+    <xsd:annotation>
+      <xsd:documentation>Array of Any elements, used in Fault and StatusResponse</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:any maxOccurs="unbounded" minOccurs="0" namespace="##any" processContents="lax"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="BaseDescriptor">
+    <xsd:annotation>
+      <xsd:documentation>Base complex type that includes Code(String13) and Description(String1000). The following complex types are created as an extension of it:
+
+Fault
+
+Stack</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="code" type="xsd_1:String13">
+        <xsd:annotation>
+          <xsd:documentation>Error Code in the NEM Canonical Error Format XXX.XXX.99999</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="description" type="xsd_1:String1000">
+        <xsd:annotation>
+          <xsd:documentation>Error Description</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:group name="EventMetadata">
+    <xsd:annotation>
+      <xsd:documentation>group used to cover source, severity and category, it is used within Stack and Fault complex types</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="source" type="xsd_1:String256">
+        <xsd:annotation>
+          <xsd:documentation>Source of the event or error, it can be the name of the operation, a system name or other identifier used to locate the source of the error
+
+Examples: 
+
+ServiceName.Operation.[activity]
+
+SoRname
+
+RowID</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="severity" type="cenum:SeverityType">
+        <xsd:annotation>
+          <xsd:documentation>severity of the error</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="category" type="cenum:CategoryType">
+        <xsd:annotation>
+          <xsd:documentation>category of the error</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:group>
+  <xsd:complexType name="Stack">
+    <xsd:annotation>
+      <xsd:documentation>Type used as base for all stack elements, doesn't include timestamp</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="cns:BaseDescriptor">
+        <xsd:sequence>
+          <xsd:group minOccurs="0" ref="cns:EventMetadata">
+            <xsd:annotation>
+              <xsd:documentation>Not visible in the XML Instances, used to group, source, severity and category attributes.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:group>
+          <xsd:element minOccurs="0" name="context" type="cns:ExtensionPoint">
+            <xsd:annotation>
+              <xsd:documentation>Extension bucket to be used to place specific types defined in targetNamespace</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="TransactionStatus">
+    <xsd:annotation>
+      <xsd:documentation>Type used to return business errors occurred when invoking an operation.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="status" type="cenum:ResponseStatusType">
+        <xsd:annotation>
+          <xsd:documentation>returns the status of the transaction</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="result" type="cns:Result">
+        <xsd:annotation>
+          <xsd:documentation>Optional at the moment, to be used in processes and services to indicate certain behaviours. Reserved for future use</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="stack" type="cns:Stack"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="Fault">
+    <xsd:annotation>
+      <xsd:documentation>Type used as base for all exceptions, includes time stamp</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="cns:BaseDescriptor">
+        <xsd:sequence>
+          <xsd:group minOccurs="0" ref="cns:EventMetadata">
+            <xsd:annotation>
+              <xsd:documentation>Not visible in the XML Instances, used to group, source, severity and category attributes.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:group>
+          <xsd:element minOccurs="0" name="timeStamp" type="xsd_1:DateTime">
+            <xsd:annotation>
+              <xsd:documentation>date and time when the error occur</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element minOccurs="0" name="context" type="cns:ExtensionPoint">
+            <xsd:annotation>
+              <xsd:documentation>Extension bucket to be used to place specific types defined in targetNamespace</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+</xsd:schema>]]></con:content>
+        <con:type>http://www.w3.org/2001/XMLSchema</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\ima\bps\services\definitions\enumerations\v1\Enumerations.mxsd</con:url>
+        <con:content><![CDATA[<xsd:schema elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/ima/bps/Services/Definitions/Enumerations/v1/" version="1.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cenum="http://uk/co/nationwide/ima/bps/Services/Definitions/Enumerations/v1/">
+  <xsd:simpleType name="AlternateIdentifierType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="CASHIERID"/>
+      <xsd:enumeration value="CUSTOMERID"/>
+      <xsd:enumeration value="EMPLOYEEID"/>
+      <xsd:enumeration value="MACHINEID"/>
+      <xsd:enumeration value="TERMINALID"/>
+      <xsd:enumeration value="USERID"/>
+      <xsd:enumeration value="FUNCTIONALUNITID"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SeverityType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Error"/>
+      <xsd:enumeration value="Critical"/>
+      <xsd:enumeration value="Warning"/>
+      <xsd:enumeration value="Info"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BehaviourType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="ABORT"/>
+      <xsd:enumeration value="CANCOMPENSATE"/>
+      <xsd:enumeration value="CANOVERRIDE"/>
+      <xsd:enumeration value="CANRETRY"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="CategoryType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="COMPLETEFAILURE"/>
+      <xsd:enumeration value="INPUTERROR"/>
+      <xsd:enumeration value="OUTCOMEUNKNOWN"/>
+      <xsd:enumeration value="PARTIALFAILURE"/>
+      <xsd:enumeration value="TIMEOUT"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ResponseStatusType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="INVALIDDATA"/>
+      <xsd:enumeration value="PARTIALSUCCESS"/>
+      <xsd:enumeration value="REJECTED"/>
+      <xsd:enumeration value="SUCCESS"/>
+      <xsd:enumeration value="TRANSPORTFAILURE"/>
+      <xsd:enumeration value="PROTOCOLFAILURE"/>
+      <xsd:enumeration value="NOTFOUND"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>]]></con:content>
+        <con:type>http://www.w3.org/2001/XMLSchema</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\ima\bps\primitivedatatypes\v1\PrimitiveDatatypes.mxsd</con:url>
+        <con:content><![CDATA[<xsd:schema elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/ima/bps/PrimitiveDatatypes/v1/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsd_1="http://uk/co/nationwide/ima/bps/PrimitiveDatatypes/v1/">
+  <xsd:annotation>
+    <xsd:documentation/>
+  </xsd:annotation>
+  <xsd:simpleType name="UUID">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="DateTime">
+    <xsd:annotation>
+      <xsd:documentation>An indication of a particular date and time expressed with a precision of one millisecond. IBM Unique ID: IDM09900</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:dateTime"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="String256">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 256 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="256"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String50">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="50"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String13">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="13"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String1000">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="1000"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>]]></con:content>
+        <con:type>http://www.w3.org/2001/XMLSchema</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\ratladaptor\v1\RATLAdaptorTypes.mxsd</con:url>
+        <con:content><![CDATA[<xsd:schema elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/RATLAdaptor/v1/" version="1.2" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cns="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" xmlns:cnsa="http://uk/co/nationwide/Adaptor/Definitions/v1/" xmlns:ratl="http://uk/co/nationwide/RATLAdaptor/v1/">
+  <xsd:import namespace="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" schemaLocation="../../ima/bps/services/definitions/coredatatypes/v1/CoreDatatypes.mxsd"/>
+  <xsd:import namespace="http://uk/co/nationwide/Adaptor/Definitions/v1/" schemaLocation="../../adaptor/definitions/v1/CommonTypes.mxsd"/>
+  <xsd:complexType name="RATLRow">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="item" type="cnsa:Item">
+        <xsd:annotation>
+          <xsd:documentation>The placeholder for the response tags</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:ID"/>
+    <xsd:attribute name="parentId" type="xsd:IDREF"/>
+  </xsd:complexType>
+  <xsd:complexType name="RATLInput">
+    <xsd:annotation>
+      <xsd:documentation>Type  to be used for name-value pairs - Leading and trailing spaces are removed</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="row" type="ratl:RATLRow"/>
+    </xsd:sequence>
+    <xsd:attribute form="qualified" name="operation" type="cnsa:String20">
+      <xsd:annotation>
+        <xsd:documentation>Represent the name of the operation as per CIS interface, usually relates to ISPEC version.-</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:complexType>
+  <xsd:complexType name="RATLAdaptorRequest">
+    <xsd:annotation>
+      <xsd:documentation>Type  to be used for messages request</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element form="qualified" name="requestHeader" type="cns:ServiceHeader"/>
+      <xsd:element form="qualified" name="RATLAdaptorInput" type="ratl:RATLInput"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="RATLOutput">
+    <xsd:sequence>
+      <xsd:element form="qualified" name="statusResponse" type="cns:TransactionStatus"/>
+      <xsd:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="row" type="ratl:RATLRow">
+        <xsd:annotation>
+          <xsd:documentation>The message row</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attribute name="adaptorId" type="cnsa:String20"/>
+  </xsd:complexType>
+  <xsd:complexType name="RATLAdaptorResponse">
+    <xsd:annotation>
+      <xsd:documentation>Type  to be used for messages responses</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element form="qualified" name="responseHeader" type="cns:ServiceHeader"/>
+      <xsd:element form="qualified" name="RATLAdaptorOutput" type="ratl:RATLOutput"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>]]></con:content>
+        <con:type>http://www.w3.org/2001/XMLSchema</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\adaptor\definitions\v1\CommonTypes.mxsd</con:url>
+        <con:content><![CDATA[<xsd:schema elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/Adaptor/Definitions/v1/" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cnsa="http://uk/co/nationwide/Adaptor/Definitions/v1/">
+  <xsd:simpleType name="String250">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="250"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String20">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="20"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="Item">
+    <xsd:annotation>
+      <xsd:documentation>Type  to be used for name-value pairs - Leading and trailing spaces are removed</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element form="qualified" name="name" type="cnsa:String20">
+        <xsd:annotation>
+          <xsd:documentation>Item name, no trailing blanks allowed</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element form="qualified" name="value" type="cnsa:String250">
+        <xsd:annotation>
+          <xsd:documentation>value corresponding to the item identified by his name</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attribute name="isMoreBlobRef" type="xsd:boolean">
+      <xsd:annotation>
+        <xsd:documentation>Allows the item to be specified as a MoreBlob reference, to articulate and manage the CIS More Blob functionality.
+
+Possible values are "true" and "false".
+
+When attribute is not specified the Item will be treated as a normal field.
+
+When attribute is defined as true, and no Item value is provided then the More Blob functionality will work as a first request call, when value is specified the reference provided will be used as starting row for the subsequent returned rows.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:complexType>
+  <xsd:simpleType name="YesNoIndType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Y"/>
+      <xsd:enumeration value="N"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="PositiveInt">
+    <xsd:restriction base="xsd:int">
+      <xsd:minInclusive value="0"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>]]></con:content>
+        <con:type>http://www.w3.org/2001/XMLSchema</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\MLR\Sprint%208\ESBServices.RATLAdaptorMessageSetV3\ESBServices.RATLAdaptorMessageSetV3\uk\co\nationwide\contract\ratladaptor\v1\RATLAdaptor_InlineSchema1.mxsd</con:url>
+        <con:content><![CDATA[<xsd:schema targetNamespace="http://uk/co/nationwide/contract/RATLAdaptor/v1/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cns="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" xmlns:ratl="http://uk/co/nationwide/RATLAdaptor/v1/" xmlns:tns="http://uk/co/nationwide/contract/RATLAdaptor/v1/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <xsd:import namespace="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" schemaLocation="../../../ima/bps/services/definitions/coredatatypes/v1/CoreDatatypes.mxsd"/>
+  <xsd:import namespace="http://uk/co/nationwide/RATLAdaptor/v1/" schemaLocation="../../../ratladaptor/v1/RATLAdaptorTypes.mxsd"/>
+  <xsd:element name="Execute" type="ratl:RATLAdaptorRequest">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="///@mrObject.3" schemaObject="/0/Execute;XSDElementDeclaration"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:element name="ExecuteResponse" type="ratl:RATLAdaptorResponse">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="///@mrObject.4" schemaObject="/0/ExecuteResponse;XSDElementDeclaration=1"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:element name="RATLAdaptorFault" type="cns:Fault">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="///@mrObject.5" schemaObject="/0/RATLAdaptorFault;XSDElementDeclaration=2"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>]]></con:content>
+        <con:type>http://www.w3.org/2001/XMLSchema</con:type>
+      </con:part>
+    </con:definitionCache>
+    <con:endpoints>
+      <con:endpoint>http://V100403:9093/RATLAdaptor/v1</con:endpoint>
+      <con:endpoint>http://uk/co/nationwide/RATLAdaptor/v1</con:endpoint>
+    </con:endpoints>
+    <con:operation id="38982bf7-3e06-4489-8e48-5ee7d5c2c942" isOneWay="false" action="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/Execute/" name="Execute" bindingOperationName="Execute" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional">
+      <con:settings/>
+      <con:call id="ae92b47b-07fe-468e-9f0a-6322330eecbb" name="Request 1">
+        <con:settings/>
+        <con:encoding>UTF-8</con:encoding>
+        <con:endpoint>http://uk/co/nationwide/RATLAdaptor/v1</con:endpoint>
+        <con:request><![CDATA[<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:v1="http://uk/co/nationwide/contract/RATLAdaptor/v1/" xmlns:v11="http://uk/co/nationwide/RATLAdaptor/v1/" xmlns:v12="http://uk/co/nationwide/ima/bps/Services/Definitions/CoreDatatypes/v1/" xmlns:v13="http://uk/co/nationwide/Adaptor/Definitions/v1/">\r
+   <soap:Header/>\r
+   <soap:Body>\r
+      <v1:Execute>\r
+         <v11:requestHeader>\r
+            <v12:messageInfo>\r
+               <!--Optional:-->\r
+               <v12:journeyID>?</v12:journeyID>\r
+               <v12:sourceSystemID>?</v12:sourceSystemID>\r
+               <v12:createDateTime>?</v12:createDateTime>\r
+            </v12:messageInfo>\r
+            <v12:channelInfo>\r
+               <v12:channel>?</v12:channel>\r
+               <!--Zero or more repetitions:-->\r
+               <v12:alternateIdentifier>\r
+                  <v12:type>?</v12:type>\r
+                  <v12:identifier>?</v12:identifier>\r
+               </v12:alternateIdentifier>\r
+            </v12:channelInfo>\r
+            <!--Zero or more repetitions:-->\r
+            <v12:additionalInfo>\r
+               <v12:name>?</v12:name>\r
+               <v12:value>?</v12:value>\r
+            </v12:additionalInfo>\r
+         </v11:requestHeader>\r
+         <v11:RATLAdaptorInput v11:operation="?">\r
+            <!--Zero or more repetitions:-->\r
+            <v11:row id="?" parentId="?">\r
+               <!--Zero or more repetitions:-->\r
+               <v11:item isMoreBlobRef="?">\r
+                  <v13:name>?</v13:name>\r
+                  <v13:value>?</v13:value>\r
+               </v11:item>\r
+            </v11:row>\r
+         </v11:RATLAdaptorInput>\r
+      </v1:Execute>\r
+   </soap:Body>\r
+</soap:Envelope>]]></con:request>
+        <con:credentials>
+          <con:selectedAuthProfile>No Authorization</con:selectedAuthProfile>
+          <con:authType>No Authorization</con:authType>
+        </con:credentials>
+        <con:jmsConfig JMSDeliveryMode="PERSISTENT"/>
+        <con:jmsPropertyConfig/>
+        <con:wsaConfig mustUnderstand="NONE" version="200508" action="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/IRATLAdaptor/ExecuteRequest"/>
+        <con:wsrmConfig version="1.2"/>
+      </con:call>
+    </con:operation>
+  </con:interface>
+  <con:mockService id="03112356-5571-464a-a59e-efbcc45d553d" port="9095" path="/RATLAdaptor/v1" host="localhost" name="RATL_V1_STUB" bindToHostOnly="false" docroot="">
+    <con:settings>
+      <con:setting id="com.eviware.soapui.impl.wsdl.mock.WsdlMockService@require-soap-action">false</con:setting>
+    </con:settings>
+    <con:properties>
+      <con:property>
+        <con:name>StubMessageStore</con:name>
+        <con:value>\\dvafimgw01\StubMessageStore\RATL_V1_STUB</con:value>
+      </con:property>
+    </con:properties>
+    <con:constraints>
+      <con:congestion>0</con:congestion>
+      <con:inputBandwidth>-1</con:inputBandwidth>
+      <con:outputBandwidth>-1</con:outputBandwidth>
+      <con:maxThreadPoolCapacity>20</con:maxThreadPoolCapacity>
+      <con:coreThreadPoolCapacity>5</con:coreThreadPoolCapacity>
+      <con:virtError>
+        <con:start>0</con:start>
+        <con:endless>true</con:endless>
+      </con:virtError>
+    </con:constraints>
+    <con:dataSources/>
+    <con:headerValidator type="NONE"/>
+    <con:mockOperation name="Execute" id="67fb9bce-3bfb-4bb0-b770-fc3d9c4e0d2e" interface="IRATLAdaptorBinding" operation="Execute">
+      <con:settings/>
+      <con:defaultResponse>200</con:defaultResponse>
+      <con:dispatchStyle>SCRIPT</con:dispatchStyle>
+      <con:dispatchPath>import com.nbs.nemdc.testframework.script.StubRunner;
+import com.nbs.nemdc.testframework.script.factory.StubRunnerFactory;
+import com.nbs.nemdc.testframework.utility.HTTPData;
+
+//For some reason, setting the StubMessageStore on the command line doesn't set the mock service StubMessageStore property (which is used by the framework).
+//So grab the property if it's been passed in via the CLI and set the service property.
+def stubMsgStoreProperty = context.expand( '${#Project#StubMessageStore}' )
+if (stubMsgStoreProperty) {
+context.getMockService().setPropertyValue("StubMessageStore",stubMsgStoreProperty);
+}
+log.info("StubMessageStore property: " + context.getMockService().getPropertyValue("StubMessageStore"));
+ 
+
+// run the stub, and get a framework response
+def response = new HTTPData() 
+StubRunner sr = StubRunnerFactory.getStubRunner("RATL_V1_STUB");
+response = sr.executeSOAPStub(context, mockRequest, mockOperation)
+
+ 
+
+// set the http status code on the Mock Response message
+def mockResponse = mockOperation.getMockResponseByName(response.httpStatusCode)
+mockResponse.setResponseHttpStatus(Integer.parseInt(response.httpStatusCode))
+
+ 
+
+// set the stub response content
+requestContext.responseMessage = response.xml
+
+ 
+
+// select the Mock Response messsage based on the httpStatusCode, and respond
+return response.httpStatusCode</con:dispatchPath>
+      <con:dispatchXPath/>
+      <con:routeScript/>
+      <con:response name="200" id="011c8ebb-f953-4e5e-8285-05b9f6d2162e" httpResponseStatus="200" encoding="UTF-8" dataSource="">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+        <con:wsaConfig mustUnderstand="NONE" version="200508" action="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/IRATLAdaptor/ExecuteResponse"/>
+      </con:response>
+      <con:response name="500" id="011c8ebb-f953-4e5e-8285-05b9f6d2162e" httpResponseStatus="500" encoding="UTF-8" dataSource="">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+        <con:wsaConfig mustUnderstand="NONE" version="200508" action="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/IRATLAdaptor/ExecuteResponse"/>
+      </con:response>
+      <con:dispatchConfig/>
+      <con:response name="403" id="342b3e09-e0d2-46f0-a2c1-c159f181b4ef" httpResponseStatus="403" encoding="UTF-8" compressedBodyContent="aced00057372002f636f6d2e657669776172652e736f617075692e696d706c2e737570706f72742e436f6d7072657373656456616c7565000b8b02c748eeab0200025a000a636f6d707265737365645b0004646174617400025b4278700070" dataSource="">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+        <con:wsaConfig mustUnderstand="NONE" version="200508" action="http://uk/co/nationwide/v1/contract/RATLAdaptor/RATLExecute/IRATLAdaptor/ExecuteResponse"/>
+      </con:response>
+    </con:mockOperation>
+  </con:mockService>
+  <con:savedRecentRuns>1</con:savedRecentRuns>
+  <con:properties/>
+  <con:wssContainer/>
+  <con:databaseConnectionContainer/>
+  <con:jmsConnectionContainer/>
+  <con:oAuth2ProfileContainer/>
+  <con:oAuth1ProfileContainer/>
+  <con:reporting>
+    <con:xmlTemplates/>
+    <con:parameters/>
+  </con:reporting>
+  <con:authRepository/>
+  <con:tags/>
+</con:soapui-project>

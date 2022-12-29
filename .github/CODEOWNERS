@@ -1,0 +1,9 @@
+# Default to requiring a review from any SpeedLayer team member
+* @nationwide-building-society/speedlayer
+
+# Changes to the build require an approver from SLDO
+Jenkinsfile @nationwide-building-society/speedlayer-devops
+
+# Changes to the CI configuration require an approver from SLDO
+/ci @nationwide-building-society/speedlayer-devops
+

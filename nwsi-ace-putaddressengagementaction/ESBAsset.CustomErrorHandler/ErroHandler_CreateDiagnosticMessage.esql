@@ -1,0 +1,189 @@
+DECLARE IsSpecific EXTERNAL CHARACTER '';
+
+CREATE COMPUTE MODULE ErroHandler_CreateDiagnosticMessage
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+					
+					
+					DECLARE outRef REFERENCE TO OutputRoot; 
+					DECLARE I Integer; 
+					DECLARE J Integer; 
+					DECLARE date_pattern 	CHAR 'yyyyMMdd';
+					DECLARE time_pattern 	CHAR 'HHmmssSS';
+					SET J = CARDINALITY("InputRoot".*[]);  
+					SET I = 1; 
+					 
+					-- Copying(Properties,MQMD,other headers) the Message Tree except for  
+					-- the Body to the Output. 
+					/* Commented as part of OB IR3 SEPT Release : 
+					while loop copying whole inputroot to outputroot 
+					and bcs of that HTTPResponseHeader is also getting copied. 
+					This lead to fail in sys_Exception MQMD to put data on queue.*/
+					
+--					While I < J do 
+--						SET OutputRoot.*[I] = InputRoot.*[I]; 
+--						SET I=I+1; 
+--					End While; 
+					
+					IF(EXISTS(OutputRoot.HTTPInputHeader[])) THEN 
+						SET OutputRoot.HTTPInputHeader = NULL;
+					END IF;
+					-- Sets the Output Diagnostic Message's Format to be XML. 
+					SET "OutputRoot"."Properties"."MessageFormat" = 'XMLNSC';  
+					SET OutputRoot.MQMD.Expiry = -1; 
+					
+					CREATE LASTCHILD OF OutputRoot.XMLNSC AS outRef NAME 'exceptionReport';
+					-- Source of the message, which caused the error. 
+				--	SET outRef.ServiceName =  Environment.Service.Name;
+				--	SET outRef.OperationName =  Environment.Service.Operation.Name;
+					
+					 
+					-- If isSpecific is True Specific Diagnostic Information is Generated. 
+					If UCASE(IsSpecific) = 'TRUE' then  
+								
+								-- Point to the First Child to the ExceptionList Root. 
+								DECLARE Location,text character; 
+								DECLARE Diagnostics character; 
+								DECLARE Number INTEGER;
+								DECLARE DiagnosticsInfo character; 
+								DECLARE Width Integer; 
+								SET Width = 1; 
+								DECLARE Path REFERENCE TO InputExceptionList.*[Width]; 
+								-- Check whether the Width of the Exception Tree is more and Proceed. 
+								--While LastMove(Path) do 
+								IF(LASTMOVE(Path)) THEN 
+								
+										SET Diagnostics = ''; 
+										SET DiagnosticsInfo = ''; 
+										-----------------------------------------------------------------------
+										---C39099 : Increment 4---
+										--- Added a LASTMOVE statement to the While condition.
+										--- The original condition is kept intact and an 'AND' has been added.
+										--- This change was done to ensure control doesn't indefinitely loop.
+										-----------------------------------------------------------------------
+										While LASTMOVE(Path) AND (FieldName(Path) = 'RecoverableException' 
+																	OR FieldName(Path) = 'DatabaseException' 
+																	OR FieldName(Path) = 'ConversionException' 
+																	OR FieldName(Path) = 'ParserException' 
+																	OR FieldName(Path) = 'UserException') 
+										DO 
+											IF Length(Path.Label) > 0 THEN 
+												SET Location = Path.Label; 
+											End if; 
+											IF Length(Path.Text) > 0 THEN 
+												SET Diagnostics = Diagnostics || Path.Text || '. '; 
+												SET text = Path.Text;
+											End if; 
+											IF Length(CAST(Path.Number AS CHARACTER)) > 0 THEN 
+												SET Number = Path.Number; 
+											End if; 
+											MOVE Path Lastchild; 
+										END WHILE; 
+									 
+										-- Construct the Specific Diagnostic Message. 
+										MOVE Path Parent; 
+										-- Determine the source of message which caused the error. 
+										--SET outRef.Detail[Width].ExceptionType = FieldName(Path); 
+										SET outRef.errorCode 			= Path.Number; 
+										SET outRef.severity 			= Path.Severity; 
+										SET outRef.component			= Location; 
+										SET outRef.errorNumber			= Number;
+										SET outRef.errorText			= text;
+										--SET outRef.errorDesc			= Diagnostics; 
+										MOVE Path FirstChild; 
+									 
+										-- while loop included to generalize coding to ensure future  
+										-- compatiblity in case of change in tree structure and to move  
+										-- the insert's Field. 
+										-----------------------------------------------------------------------
+										---C39099 : Increment 4---
+										--- Added a LASTMOVE statement to the While condition.
+										--- The original condition is kept intact and an 'AND' has been added.
+										--- This change was done to ensure control doesn't indefinitely loop.
+										-----------------------------------------------------------------------
+										While LASTMOVE(Path) AND (FieldName(Path) <> 'Insert') DO 
+											MOVE Path NextSibling; 
+										End while; 
+										 
+										-- while loop to traverse all the inserts and construct the  
+										-- additional diagnostic  
+										--message. 
+										While LastMove(Path) do
+											 
+											IF Length(Path.Text) > 0 THEN 
+												SET DiagnosticsInfo = DiagnosticsInfo || Path.Text || '. '; 
+											End if;
+											 
+											MOVE Path NextSibling; 
+											
+										End while; 
+										--SET outRef.errorDesc 			= DiagnosticsInfo; 
+										SET outRef.errorDesc 			= 'Error Text';
+										SET outRef.queueName        	= COALESCE(InputRoot.MQMD.SourceQueue,'UNKNOWN');
+										SET outRef.originalMsgId    	= COALESCE(InputRoot.MQMD.MsgId,'UNKNOWN');
+										SET outRef.originalCorrelId 	= COALESCE(InputRoot.MQMD.CorrelId,'UNKNOWN');
+										SET outRef.exceptionText 		= InputExceptionList;
+										
+--										IF EXISTS(InputRoot.MQMD[])  THEN
+--											SET outRef.global_id = InputRoot.XMLNSC.*[<].serviceHeader.journeyId;
+--											SET outRef.putDate = CAST(InputRoot.MQMD.PutDate AS CHARACTER FORMAT date_pattern);  
+--											SET outRef.putTime = CAST(InputRoot.MQMD.PutTime AS CHARACTER FORMAT time_pattern);  
+--											
+--										ELSE	
+--											SET outRef.global_id = InputRoot.SOAP.Body.*[<].*[<].serviceHeader.journeyId;
+--											SET outRef.putDate = CAST(InputRoot.Properties.CreationTime AS CHARACTER FORMAT date_pattern);  
+--											SET outRef.putTime = CAST(InputRoot.Properties.CreationTime AS CHARACTER FORMAT time_pattern);  
+--										END IF;	
+										
+										
+										
+										SET outRef.originalMsgId    = COALESCE(InputRoot.MQMD.MsgId,SUBSTRING(CAST(Environment.Service.Transport.ReplyIdentifier AS CHARACTER) FROM 3 FOR 24));
+										SET outRef.originalCorrelId = COALESCE(InputRoot.MQMD.CorrelId,SUBSTRING(CAST(Environment.Service.Transport.ReplyIdentifier AS CHARACTER) FROM 3 FOR 24));
+										
+									
+								END IF;
+									--SET OutputRoot.XMLNSC.Error.Detail[Width].MessageState =  cast(bitstream(InputBody) as CHAR ccsid 437); 
+--								
+--									SET Width = Width +1; 
+--									MOVE Path TO InputExceptionList.*[Width]; 
+--								End while; 
+								
+								-- Else part to generate diagnostic message which has the structure  
+								-- of all the trees as  
+								--when the exception had occured  
+--					ELSEIF(UCASE(IsSpecific) = 'FALSE')THEN 
+--						
+--								SET I = 1; 
+--								While I < J do  
+--									SET OutputRoot.XMLNSC.Error.{FIELDNAME(InputRoot.*[I])} = InputRoot.*[I];  
+--									SET I = I + 1;  
+--								End while;  
+--								SET OutputRoot.XMLNSC.Error.Environment = Environment;  
+--								SET OutputRoot.XMLNSC.Error.LocalEnvironment = InputLocalEnvironment;  
+--								SET OutputRoot.XMLNSC.Error.MessageState =  
+--								  cast(bitstream(InputBody) as CHAR ccsid 437); 
+--								SET OutputRoot.XMLNSC.Error.ExceptionList = InputExceptionList; 
+								
+					END IF; 
+					
+					--SET OutputRoot.XMLNSC.Error.TimeStamp =  SUBSTRING(CAST(CURRENT_TIMESTAMP AS CHAR) FROM 12 FOR 23); 
+					-- Flag set to Indicate Exception processing has occured in the flow. 
+					SET Environment.Variables.ErrorFlag = 'Y';
+					
+					RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

@@ -1,0 +1,41 @@
+BROKER SCHEMA Core
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+-------------------------------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Alan Hedley 		03/11/2009	Initial Version
+--
+-------------------------------------------------------------------------------------------------------------
+-- Description:
+-- Return true if ESB_TRACE_OUTPUT = 1 
+-- so that downstream node will log the output file directory/name details and message, to a file
+-------------------------------------------------------------------------------------------------------------
+
+CREATE FILTER MODULE "SF_File_Output_Output_Trace_Required"
+
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		If Environment.Variables.ENV.ESB_TRACE_OUTPUT = '1' Then
+			RETURN TRUE;
+		Else
+			RETURN FALSE;
+		End If;	
+	END;
+
+END MODULE;

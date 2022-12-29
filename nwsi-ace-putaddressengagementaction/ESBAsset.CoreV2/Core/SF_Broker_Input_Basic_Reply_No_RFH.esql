@@ -1,0 +1,49 @@
+BROKER SCHEMA Core
+ -- This allows use of the core db procedures
+CREATE COMPUTE MODULE SF_Broker_Input_Basic_Reply_No_RFH_Reconstruct_RFH_Header
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+		--CALL CopyEntireMessage();
+    	Declare correlId Char CAST(InputRoot.MQMD.CorrelId AS CHAR);
+    	Declare throwOnNoRowsTrue Boolean True;
+				              	             
+		Set correlId 		 = SUBSTRING(correlId From 3 for (Length(correlId) -3));
+		SET Environment.Variables.theUSR[] = 
+				(SELECT RC.RFH_USR, RC.MESSAGE_DATA, RC.SYS_INSERT_TSTMP, RC.SYS_UPDATE_TSTMP
+				 FROM Database.ASSET.RESPONSE_CONTROL AS RC
+				 WHERE RC.REQ_MSG_ID = correlId);
+		IF Environment.Variables.theUSR.RFH_USR IS NULL THEN
+			THROW USER EXCEPTION VALUES
+			('ESB', 'FAILED: Unable to restore RFH Header from RESPONSE CONTROL',
+			 'ERR:0000',
+			 'soap:Server'); 
+		ELSE
+            -- Parse the USR folder retrieved from the database read
+            Declare tempRFHUsr BLOB CAST(Environment.Variables.theUSR.RFH_USR AS BLOB CCSID 437);
+            Create LastChild of OutputRoot Domain 'XML' Parse(tempRFHUsr);
+            Set Environment.Variables.parsedUSR  = OutputRoot.XML;
+            -- Recontruct RFH header
+          	CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'MQRFH2';
+		    Set OutputRoot.MQRFH2.usr = Environment.Variables.parsedUSR.usr;
+            Set OutputRoot.XML = NULL;
+
+        END IF;
+		SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

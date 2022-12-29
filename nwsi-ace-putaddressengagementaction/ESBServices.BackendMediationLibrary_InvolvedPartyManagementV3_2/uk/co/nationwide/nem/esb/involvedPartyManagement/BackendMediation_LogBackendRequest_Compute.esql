@@ -1,0 +1,68 @@
+/* =========================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+* 
+============================================================================================ 
+********************************************************************************************
+** File Version History
+********************************************************************************************
+** Defect ID    CID         Date        	Description       	           Test cycle
+**----------- ---------  -----------     ----------------- 		           ----------- 
+**             C412459    01/08/2019      Initial Version   		        Dev
+               C432489    09/04/2020      Validation and Log4jV2 changes    Dev
+********************************************************************************************
+** Description of the modules contained in the file.
+** =========================================================================================
+** This module is responsible for handling the REST API erorrs returned during 
+** invocation of the operations under the ISpec InvolvedPartyManagement_v3.
+********************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.involvedPartyManagement
+PATH uk.co.nationwide.nem.esb.commonFunctions,uk.co.nationwide.nem.esb.logging;
+
+CREATE COMPUTE MODULE BackendMediation_LogBackendRequest_Compute
+CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToLocalEnv,refToMsg REFERENCE TO InputLocalEnvironment;
+		DECLARE refToEnv 			   REFERENCE TO Environment;
+		DECLARE version CHARACTER REPLACE(InputLocalEnvironment.Destination.REST.Request.Parameters."X-Schema-Version",'.','_');
+		DECLARE Operation CHARACTER Environment.Variables.STATIC.Operation;
+		DECLARE oprName CHARACTER REPLACE(Operation,'Update','Put');
+				 				
+		SET Environment.ESBServiceData.logPosition = 'P2';
+		SET Environment.ESBServiceData.IPM_Schema = version;
+		
+		-- Logic to log HTTPInputHeaders
+		CREATE LASTCHILD OF OutputLocalEnvironment.Log AS refToMsg DOMAIN 'JSON' NAME 'Message'; 
+		CREATE LASTCHILD OF refToMsg.Data NAME 'Parameters';
+		SET refToMsg.Data.Parameters =  refToLocalEnv.Destination.REST.Request.Parameters;
+		CREATE LASTCHILD OF refToMsg.Data NAME 'Header';
+		SET refToMsg.Data.Header     =  InputRoot.HTTPRequestHeader;
+		CREATE LASTCHILD OF refToMsg.Data NAME 'Payload';
+		SET refToMsg.Data.Payload    =  InputRoot.*[<];
+																
+		-----------------------------------------------------
+		--Logging the Request to InvolvedPartyManagement_v3--
+		-----------------------------------------------------
+	    CALL log4jv2logging(refToEnv,OutputLocalEnvironment.Log,'ESB','InvolvedPartyManagement_v' || version || '_' || oprName);
+		
+		SET OutputLocalEnvironment.Log = NULL;		
+				
+		-------------------------------------------	
+		--Setting Backend url and request timeout--
+		-------------------------------------------
+		SET OutputLocalEnvironment 									= InputLocalEnvironment; 
+		SET OutputLocalEnvironment.Destination.REST.Request.BaseURL = Environment.Variables.STATIC.BackendURL;
+		
+        MOVE refToLocalEnv TO OutputLocalEnvironment.Destination.REST.Request;
+        SET refToLocalEnv.Timeout  	= CAST(Environment.Variables.STATIC.BackendTimeOut AS INTEGER);        
+		SET refToLocalEnv.Operation	= Operation;
+		
+		RETURN TRUE;
+		
+	END;
+	
+END MODULE;

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmRESTRequest.msgnode="ComIbmRESTRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement.subflow" nsPrefix="uk_co_nationwide_nem_esb_involvedPartyManagement_BackendMediation_InvolvedPartyManagement.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="BackendMediation_InvolvedPartyManagement" bundleName="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement" pluginId="ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2/icons/full/obj16/BackendMediation_InvolvedPartyManagement.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2/icons/full/obj30/BackendMediation_InvolvedPartyManagement.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="This subflow is used to invoke the rest service through REST request node."/>
+    <longDescription xmi:type="utility:ConstantString" string="This subflow helps in mediation with the REST based ESB service with the resource InvolvedPartyManagement_v3 for the operations included in the Ispec. Additionally the subfllow logs the request, setting the endpoint configuration, making a REST request, logging the response &amp; saving the HTTP Errors after making the REST request."/>
+    <version xmi:type="utility:ConstantString" string="1.0"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.ModelledError" location="648,260">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.ModelledError" bundleName="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement" pluginId="ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Errors defined as per the swagger spec"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRESTRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="271,158" definitionType="swagger_20" definitionFile="InvolvedPartyManagementV3.json" operationName="UpdateInvolvedPartyDetails" baseURL="http://localhost:7800" contentType="application/json; charset=utf-8" acceptCompressedResponses="true" messageDomainProperty="JSON" validateMaster="contentAndValue">
+        <translation xmi:type="utility:ConstantString" string="REST Request"/>
+        <shortDescription xmi:type="utility:ConstantString" string="REST Request to PutInvolvedParties REST API "/>
+        <longDescription xmi:type="utility:ConstantString" string="This node helps in making a call to the REST API of PutInvolvedParties.The endpoint URL &amp; timeout would be overriden by the previous compute node."/>
+        <parameters name="X-Virtual-Environment" expression=""/>
+        <parameters name="involvedPartyId" expression=""/>
+        <parameters name="X-Additional-Info" expression=""/>
+        <parameters name="X-Schema-Version" expression=""/>
+        <parameters name="X-Source-System-Id" expression=""/>
+        <parameters name="X-Channel-Alternate-Id" expression=""/>
+        <parameters name="X-Create-Date-Time" expression=""/>
+        <parameters name="X-Channel" expression=""/>
+        <parameters name="X-IP-Address" expression=""/>
+        <parameters name="X-Journey-Id" expression=""/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="664,159">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement" pluginId="ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="473,158" computeExpression="esql://routine/uk.co.nationwide.nem.esb.involvedPartyManagement#BackendMediation_LogBackendResponse_Compute.Main" computeMode="destination">
+        <translation xmi:type="utility:ConstantString" string="LogBackendResponse"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Loggging of Backend response"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node logs the 200 success response from the REST API."/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="477,259" computeExpression="esql://routine/uk.co.nationwide.nem.esb.involvedPartyManagement#BackendMediation_HandleHTTPFailures_Compute.Main" computeMode="destination">
+        <translation xmi:type="utility:ConstantString" string="HandleHTTPFailures"/>
+        <shortDescription xmi:type="utility:ConstantString" string="HTTP Error Status codes Handler"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node handles the HTTP Error Status codes , saves the data as per the error message format received."/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="152,157" computeExpression="esql://routine/uk.co.nationwide.nem.esb.involvedPartyManagement#BackendMediation_LogBackendRequest_Compute.Main" computeMode="destination">
+        <translation xmi:type="utility:ConstantString" string="LogBackendRequest"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Logging of the Backend Request Message &amp; Endpoint Configuration"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node logs the outgoing backedn request &amp; sets the endpoint configuration fetched from ENVIRONMENT_VALUES based on the values provided in the UDPs BackendURL, BackendTimeout."/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="85,157">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement" pluginId="ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="651,80">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.PartialSuccess" bundleName="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement" pluginId="ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output2" location="642,353">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.UnModelledError" bundleName="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement" pluginId="ESBServices.BackendMediationLibrary_InvolvedPartyManagementV3_2"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in">
+        <bendPoints>91,-2,-98,-103</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_8" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="OutTerminal.ModelledError" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output2" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

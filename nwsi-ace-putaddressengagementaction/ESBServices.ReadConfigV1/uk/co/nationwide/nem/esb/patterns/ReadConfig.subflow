@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileInput.msgnode="ComIbmFileInput.msgnode" xmlns:ComIbmFileRead.msgnode="ComIbmFileRead.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmThrow.msgnode="ComIbmThrow.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="uk/co/nationwide/nem/esb/patterns/ReadConfig.subflow" nsPrefix="uk_co_nationwide_nem_esb_patterns_ReadConfig.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.filenamePattern" name="filenamePattern" defaultValueLiteral="*">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.inputDirectory" name="inputDirectory">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.FileName" name="FileName" lowerBound="1" defaultValueLiteral="*">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.RelativeDirectory" name="RelativeDirectory" lowerBound="1" defaultValueLiteral="\Relative">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="ReadConfig" bundleName="uk/co/nationwide/nem/esb/patterns/ReadConfig" pluginId="ESBServices.ReadConfigV1"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/ESBServices.ReadConfigV1/icons/full/obj16/ReadConfig.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/ESBServices.ReadConfigV1/icons/full/obj30/ReadConfig.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Subflow to read the file configuration for handling environment values and error lookup values."/>
+    <longDescription xmi:type="utility:ConstantString" string="This Subflow wil read the config file containing backend url, timeout and error lookup entries and then saves the values in the cache so that calling application can use the same directly from cache."/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="271,312">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="uk/co/nationwide/nem/esb/patterns/ReadConfig" pluginId="ESBServices.ReadConfigV1"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="736,313">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="uk/co/nationwide/nem/esb/patterns/ReadConfig" pluginId="ESBServices.ReadConfigV1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="383,312" computeExpression="esql://routine/uk.co.nationwide.nem.esb.patterns#CheckCacheAvailability.Main" computeMode="exception">
+        <translation xmi:type="utility:ConstantString" string="CheckCacheAvailability"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="494,173" outputDataLocation="$Environment/TreeResult">
+        <translation xmi:type="utility:ConstantString" string="File Read"/>
+        <nsMappingTable nsPrefix="soa" namespace="http://schemas.xmlsoap.org/soap/envelope/"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="606,169" computeExpression="esql://routine/uk.co.nationwide.nem.esb.patterns#UpdateCache.Main" computeMode="exception">
+        <translation xmi:type="utility:ConstantString" string="UpdateCache"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="391,73" filterExpression="esql://routine/uk.co.nationwide.nem.esb.patterns#ReadConfig_Filter.Main">
+        <translation xmi:type="utility:ConstantString" string="Filter"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="730,85">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Error" bundleName="uk/co/nationwide/nem/esb/patterns/ReadConfig" pluginId="ESBServices.ReadConfigV1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="273,173" inputDirectory="\Relative">
+        <translation xmi:type="utility:ConstantString" string="File Input"/>
+      </nodes>
+      <nodes xmi:type="ComIbmThrow.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="619,254" messageNumber="2990" messageText="Config file not found at the directory specified">
+        <translation xmi:type="utility:ConstantString" string="Throw"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.FileRead" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileReadNodeFilePropertyEditor" configurable="true" describedAttribute="Property.filenamePattern">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.filenamePattern" bundleName="ComIbmFileRead" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+        <propertyDescriptor groupName="Group.FileRead" configurable="true" describedAttribute="Property.inputDirectory">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.inputDirectory" bundleName="ComIbmFileRead" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+          <propertyDescriptor groupName="Group.FileInput" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileInputNodeFilePropertyEditor" configurable="true" describedAttribute="Property.FileName">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.FileName" bundleName="uk/co/nationwide/nem/esb/patterns/ReadConfig" pluginId="ESBServices.ServiceLibrary"/>
+            <propertyDescriptor groupName="Group.FileInput" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileInputNodeDirPropertyEditor" configurable="true" describedAttribute="Property.RelativeDirectory">
+              <propertyName xmi:type="utility:TranslatableString" key="Property.RelativeDirectory" bundleName="uk/co/nationwide/nem/esb/patterns/ReadConfig" pluginId="ESBServices.ServiceLibrary"/>
+            </propertyDescriptor>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.filenamePattern" overriddenNodes="FCMComposite_1_2">
+      <overriddenAttribute href="ComIbmFileRead.msgnode#Property.filenamePattern"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.inputDirectory" overriddenNodes="FCMComposite_1_2">
+      <overriddenAttribute href="ComIbmFileRead.msgnode#Property.inputDirectory"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.FileName" overriddenNodes="FCMComposite_1_6">
+      <overriddenAttribute href="ComIbmFileInput.msgnode#Property.filenamePattern"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.RelativeDirectory" overriddenNodes="FCMComposite_1_6">
+      <overriddenAttribute href="ComIbmFileInput.msgnode#Property.inputDirectory"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

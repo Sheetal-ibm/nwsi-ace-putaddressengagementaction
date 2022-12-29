@@ -1,0 +1,211 @@
+BROKER SCHEMA Core
+-- Enterprise Service Bus Implementation Accelerator Source Code
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Rich Jones			09/08/05	Initial Version
+--			  All		Andy Howells		07/09/05  	If SOAP message strip out the body and
+--														put it in the XMLNS domain
+--			  All		Rich Jones			20/09/05	Input message is in XMLNS format and not BLOB
+--			  All 		Andy Howells		20/09/05  	Now looks at the InputRoot XMLNS domain
+--			  All		Rich Jones			27/09/05	Added a clearcase Revision label
+--			  All		Rich Jones			10/10/05	Changed the exception throws
+-- AA00000116 Schema Fail  Rich Jones		20/10/05	Added schema fail compute node to throw an exception on invalid messages
+-- AA00000504 Badly Formed Rich Jones		26/01/06	Added compute node
+-- AA00000613 Schema Fail  Rich Jones		08/02/06	Removed 'Error' from exception
+-- 101186     propsLocation Shaun Dennett	03/03/2009  Removed the hardcoded file name 
+---------------------------------------------------------------------------------------
+-- Description:
+-- Set the propsLocation variable
+---------------------------------------------------------------------------------------
+CREATE COMPUTE MODULE SF_Broker_Input_Set_propsLocation
+	
+	
+	DECLARE ValidationSchemaLocation EXTERNAL CHARACTER '';
+	
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		-- ********************************************************************************
+		
+		-- Declaration section
+		DECLARE soap11 NAMESPACE 'http://schemas.xmlsoap.org/soap/envelope/'; 
+		DECLARE soap12 NAMESPACE 'http://www.w3.org/2002/06/soap-envelope'; 		
+		DECLARE fieldName CHAR;
+		DECLARE fieldNameSpace CHAR;
+	
+				
+		DECLARE envRef    REFERENCE TO InputRoot;
+		DECLARE outputRef REFERENCE TO OutputRoot;
+		
+		DECLARE HasBody   BOOLEAN FALSE; 
+		DECLARE HasHeader BOOLEAN FALSE; 
+	
+		-- End of Declaration section
+		-- ********************************************************************************
+
+		CALL CopyMessageHeaders();
+		
+		-- Set the directory location where the xsd file are	 	
+		-- first look in the User Defined Variables , if non is found then 
+		-- look in the envoironemt variables
+		-- if still non foound then raise an exception
+		
+		--SET Environment.Variables.STATIC.propsLocation = ValidationSchemaLocation;
+		--useless after the schema validator is removed.
+--		IF ValidationSchemaLocation IS NOT NULL AND ValidationSchemaLocation <> '' THEN
+--			
+--			SET Environment.Variables.STATIC.propsLocation = ValidationSchemaLocation;
+--			
+--		ELSEIF Environment.Variables.ENV.SCHEMALOCATION IS NOT NULL THEN
+--			
+--			SET Environment.Variables.STATIC.propsLocation = Environment.Variables.ENV.SCHEMALOCATION;
+--			
+--		ELSE
+--			THROW USER EXCEPTION VALUES
+--				('ESB',
+--				 'FAILED: Could not find a location for the Validation node Schema XSDs in either the message flow User defined' ||
+--				 ' property : ValidationSchemaLocation or in the system Envionment variable : schemaLocation.  This' ||
+--				 ' value must be supplied for the asset validation node to work ' ,
+--				 'ERR:00083',
+--				 'soap:Server');
+--		END IF;
+		-- Pointing at XMLNS 
+		DECLARE soapBodyRef REFERENCE TO envRef.XMLNS;
+
+		-- Lets check if this is a SOAP Message - next line shoud now point at the SOAP envelope
+		MOVE soapBodyRef FIRSTCHILD TYPE 0x01000000;
+		
+		SET fieldName = FIELDNAME(soapBodyRef); 
+		
+		IF fieldName = 'Envelope' THEN 
+		
+			-- Should be pointing at SOAP Header
+			MOVE soapBodyRef FIRSTCHILD TYPE 0x01000000; 
+
+			-- Loop through the meesage and find the Body part
+			WHILE LASTMOVE(soapBodyRef) DO		
+				SET fieldName = FIELDNAME(soapBodyRef);
+				IF fieldName = 'Header' THEN
+				 	SET HasHeader = TRUE; 
+				END IF;
+				IF fieldName = 'Body' THEN
+					SET HasBody = TRUE;
+					-- Move into the actual SOAP Body
+					Move soapBodyRef FIRSTCHILD TYPE 0x01000000;
+					Create lastChild of outputRef DOMAIN 'XMLNS';	
+					Move outputRef LASTCHILD NAME 'XMLNS';				
+					Create lastChild of outputRef FROM soapBodyRef;		
+				END IF;
+				MOVE soapBodyRef NEXTSIBLING TYPE 0x01000000;
+			END WHILE;
+			
+			IF NOT(HasHeader) OR NOT(HasBody) THEN
+				THROW USER EXCEPTION VALUES
+				('ESB',
+				 'FAILED: There is no SOAP Header or SOAP Body in this message',
+				 'ERR:00082',
+				 'soap:Server');
+			END IF;
+			 
+		ELSE			
+			Set OutputRoot = InputRoot;
+		END IF;
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE SF_Broker_Input_Schema_Fail
+	
+	-- If the incoming message is invalid, the XMLSchemaValidate node will send a  errorReport message
+	-- down its log terminal. We need to capture this message and use it to throw an exception so that
+	-- our exception handling processes the problem.  We need to ensure a message is sent to the replyToQ 
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+		
+		Declare error Char;
+		Declare inRef Reference To InputRoot;
+		
+		Move inRef To inRef.XMLNS.errorReport.errorList;
+		
+		-- Use the last error element as this is the one that contains the error we're interested in
+		Set error = inRef.error[<];
+		
+		-- Throw an exception
+		THROW USER EXCEPTION VALUES
+			('ESB', 'FAILED: Schema validation has failed',
+			 'ERR:00090',
+			 'soap:Client',
+			  error);
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE SF_Broker_Input_Badly_Formed_XML
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+		
+		If Cardinality(InputRoot.ExceptionList.RecoverableException.[]) = 0 Then
+			-- Throw an exception
+			THROW USER EXCEPTION VALUES
+				('ESB', 'FAILED: Badly formed input message',
+				 'ERR:00108', 'soap:Client');
+		Else
+			-- Nothing as it's already an exception message
+		End If;	
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;

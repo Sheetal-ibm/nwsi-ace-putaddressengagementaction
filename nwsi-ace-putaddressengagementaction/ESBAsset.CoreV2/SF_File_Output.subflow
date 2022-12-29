@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SF_File_Output.subflow" 
+nsPrefix="SF_File_Output.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.outputDirectory" name="outputDirectory" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.outputFilename" name="outputFilename" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtp" name="fileFtp" lowerBound="1"  defaultValueLiteral="false">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtpServer" name="fileFtpServer" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtpRetainAfterPut" name="fileFtpRetainAfterPut" lowerBound="1"  defaultValueLiteral="false">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtpUser" name="fileFtpUser" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtpDirectory" name="fileFtpDirectory"  defaultValueLiteral=".">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtpTransferMode" name="fileFtpTransferMode" eType="//@eClassifiers.1"   defaultValueLiteral="BINARY"/>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtp.internal_npcompiler" name="fileFtp.internal_npcompiler" lowerBound="1" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.fileFtpRetainAfterPut.internal_npcompiler" name="fileFtpRetainAfterPut.internal_npcompiler" lowerBound="1" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<translation xmi:type="utility:TranslatableString" key="SF_File_Output" bundleName="SF_File_Output" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_File_Output.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_File_Output.gif"/>
+<composition>
+<nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="207,203" outputMode="archiveAndReplaceWithTimestamp" replaceDuplicateArchives="true" validateMaster="none">
+<translation xmi:type="utility:ConstantString" string="FileOutput"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="89,199">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="SF_File_Output" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="564,207">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="SF_File_Output" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="308,203" filterExpression="esql://routine/Core#SF_File_Output_Output_Trace_Required.Main">
+<translation xmi:type="utility:ConstantString" string="Output_Trace_Required?"/>
+</nodes>
+<nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="445,282" destination="file" filePath="/var/log/BROKER_FILE_OUTPUT_TRACE.LOG" pattern="Broker Trace {FileOutput} - ${CURRENT_GMTDATE},  ${CURRENT_GMTTIME}&#xD;&#xA;&#xD;&#xA;FileOutputPath: ${LocalEnvironment.WrittenDestination.File.Directory}  FileName: ${LocalEnvironment.WrittenDestination.File.Name}  Action: ${LocalEnvironment.WrittenDestination.File.Action}  Timestamp: ${LocalEnvironment.WrittenDestination.File.Timestamp}&#xD;&#xA;File Data:&#xD;&#xA;${Body}&#xD;&#xA;">
+<translation xmi:type="utility:ConstantString" string="Trace_Output"/>
+</nodes>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="48,46" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+<propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.outputDirectory">
+<propertyName xmi:type="utility:TranslatableString" key="Property.outputDirectory" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileOutputNodeFilePropertyEditor" configurable="true" describedAttribute="Property.outputFilename">
+<propertyName xmi:type="utility:TranslatableString" key="Property.outputFilename" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.FTP" compiler="com.ibm.etools.mft.ibmnodes.compilers.BooleanPropertyCompiler" configurable="true" describedAttribute="Property.fileFtp">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtp" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.FTP" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileFtpServerListenerPropertyEditor" configurable="true" describedAttribute="Property.fileFtpServer">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtpServer" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.FTP" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileFtpServerListenerBoolPropertyEditor" compiler="com.ibm.etools.mft.ibmnodes.compilers.BooleanPropertyCompiler" describedAttribute="Property.fileFtpRetainAfterPut">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtpRetainAfterPut" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.FTP" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileFtpStringListenerPropertyEditor" configurable="true" describedAttribute="Property.fileFtpUser">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtpUser" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.FTP" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileFtpStringListenerPropertyEditor" configurable="true" describedAttribute="Property.fileFtpDirectory">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtpDirectory" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.FTP" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileFtpModeListenerPropertyEditor" describedAttribute="Property.fileFtpTransferMode">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtpTransferMode" bundleName="ComIbmFileOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.InternalRuntimeGroup" configurable="true" userDefined="true" hidden="true" readOnly="true" describedAttribute="Property.fileFtp.internal_npcompiler">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtp.internal_npcompiler" bundleName="SF_File_Output" pluginId="flowAPIgenerated"/>
+<propertyDescriptor groupName="Group.InternalRuntimeGroup" configurable="true" userDefined="true" hidden="true" readOnly="true" describedAttribute="Property.fileFtpRetainAfterPut.internal_npcompiler">
+<propertyName xmi:type="utility:TranslatableString" key="Property.fileFtpRetainAfterPut.internal_npcompiler" bundleName="SF_File_Output" pluginId="flowAPIgenerated"/>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyOrganizer>
+<attributeLinks promotedAttribute="Property.outputDirectory" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.outputDirectory"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.outputFilename" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.outputFilename"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.fileFtp" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.fileFtp"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.fileFtpServer" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.fileFtpServer"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.fileFtpRetainAfterPut" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.fileFtpRetainAfterPut"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.fileFtpUser" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.fileFtpUser"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.fileFtpDirectory" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.fileFtpDirectory"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.fileFtpTransferMode" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmFileOutput.msgnode#Property.fileFtpTransferMode"/>
+</attributeLinks>
+<stickyBoard/>
+</eClassifiers>
+<eClassifiers xmi:type="ecore:EEnum">
+<eLiterals xmi:id="fileFtpTransferMode.ASCII" name="ASCII" />
+<eLiterals xmi:id="fileFtpTransferMode.BINARY" name="BINARY" value="1"/>
+</eClassifiers>
+</ecore:EPackage>

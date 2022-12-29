@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmWSInput.msgnode="ComIbmWSInput.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:uk_co_nationwide_nem_esb_patterns_ReadConfig.subflow="uk/co/nationwide/nem/esb/patterns/ReadConfig.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_ServiceGatewayIn.subflow" nsPrefix="uk_co_nationwide_si_esb_putAddressEngagementAction_SF_ServiceGatewayIn.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.OperationName" name="OperationName" lowerBound="1" defaultValueLiteral="PutAddressEngagementAction">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.filenamePattern" name="filenamePattern" defaultValueLiteral="*">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.inputDirectory" name="inputDirectory">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="SF_ServiceGatewayIn" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_ServiceGatewayIn" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/nwsi-ace-putaddressengagementaction-4.0/icons/full/obj16/SF_ServiceGatewayIn.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/nwsi-ace-putaddressengagementaction-4.0/icons/full/obj30/SF_ServiceGatewayIn.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Log and validate incoming request"/>
+    <longDescription xmi:type="utility:ConstantString" string="This subflow is used to log the incoming Business request and store the request in environment for furthur use in flow and loads the corresponding environment values based on in which environment(CIT/SIT/Prod etc) the service is deployed."/>
+    <version xmi:type="utility:ConstantString" string="v3_1"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Error" location="850,219">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Error" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_ServiceGatewayIn" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Error Terminal"/>
+        <longDescription xmi:type="utility:ConstantString" string="Error Terminal for the subflow"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="370,214" computeExpression="esql://routine/uk.co.nationwide.nem.esb.putAddressEngagementAction#ServiceGatewayIn_LogRequestMessage.Main" computeMode="destination" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="LogRequestMessage"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Saves the HTTPInput Parameters &amp; logs the incoming message "/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node saves the HTTPInput parameters to LocalEnvironment, the header data in environment &amp; logs the data from evironment at position P1."/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="634,217">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_ServiceGatewayIn" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Output Terminal"/>
+        <longDescription xmi:type="utility:ConstantString" string="Output Terminal of subflow component to where subflow redirects the output. The number of output terminals used in the subflow will determine the output paths for a subflow"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="208,217" URLSpecifier="/involved-party-management/v3/*" parseQueryString="true" messageDomainProperty="JSON">
+        <translation xmi:type="utility:ConstantString" string="HTTP Input"/>
+      </nodes>
+      <nodes xmi:type="uk_co_nationwide_nem_esb_patterns_ReadConfig.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="515,216">
+        <translation xmi:type="utility:ConstantString" string="ReadConfig"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="OutTerminal.Error" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.timeout" targetTerminalName="InTerminal.in">
+        <bendPoints>355,116,-293,104</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="OutTerminal.Error" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in">
+        <bendPoints>362,162,-286,150</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="OutTerminal.Error" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+        <bendPoints>349,-116,-299,-128</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.OperationName">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.OperationName" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_ServiceGatewayIn" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+        <propertyDescriptor groupName="Group.FileRead" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileReadNodeFilePropertyEditor" configurable="true" describedAttribute="Property.filenamePattern">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.filenamePattern" bundleName="ComIbmFileRead" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+          <propertyDescriptor groupName="Group.FileRead" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.file.FileNodesBrowseDirPropertyEditor" configurable="true" describedAttribute="Property.inputDirectory">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.inputDirectory" bundleName="ComIbmFileRead" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.filenamePattern" overriddenNodes="FCMComposite_1_2">
+      <overriddenAttribute href="uk/co/nationwide/nem/esb/patterns/ReadConfig.subflow#Property.filenamePattern"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.inputDirectory" overriddenNodes="FCMComposite_1_2">
+      <overriddenAttribute href="uk/co/nationwide/nem/esb/patterns/ReadConfig.subflow#Property.inputDirectory"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

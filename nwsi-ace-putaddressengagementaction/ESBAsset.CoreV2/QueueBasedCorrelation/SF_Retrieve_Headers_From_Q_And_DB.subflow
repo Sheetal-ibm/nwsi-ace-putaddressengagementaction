@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:QueueBasedCorrelation_SF_Retrieve_Headers_From_Q.subflow="QueueBasedCorrelation/SF_Retrieve_Headers_From_Q.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="QueueBasedCorrelation/SF_Retrieve_Headers_From_Q_And_DB.subflow" 
+nsPrefix="QueueBasedCorrelation_SF_Retrieve_Headers_From_Q_And_DB.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<translation xmi:type="utility:TranslatableString" key="SF_Retrieve_Headers_From_Q_And_DB" bundleName="QueueBasedCorrelation/SF_Retrieve_Headers_From_Q_And_DB" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_Retrieve_Headers_From_Q_And_DB.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_Retrieve_Headers_From_Q_And_DB.gif"/>
+<composition>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="44,79">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="QueueBasedCorrelation/SF_Retrieve_Headers_From_Q_And_DB" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="386,75">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="QueueBasedCorrelation/SF_Retrieve_Headers_From_Q_And_DB" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="257,147" dataSource="ESBDB" computeExpression="esql://routine/QueueBasedCorrelation#SF_Retrieve_Headers_From_Q_And_DB_Search_Database.Main" computeMode="destinationAndMessage">
+<translation xmi:type="utility:ConstantString" string="Search Database"/>
+</nodes>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="74,258" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<nodes xmi:type="QueueBasedCorrelation_SF_Retrieve_Headers_From_Q.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="114,79">
+<translation xmi:type="utility:ConstantString" string="SF_Retrieve_Headers_From_Q"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_7" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+</propertyOrganizer>
+<stickyBoard/>
+</eClassifiers>
+</ecore:EPackage>

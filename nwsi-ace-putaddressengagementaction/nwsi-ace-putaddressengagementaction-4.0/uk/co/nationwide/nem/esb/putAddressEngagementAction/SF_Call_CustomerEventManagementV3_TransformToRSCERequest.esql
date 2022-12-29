@@ -1,0 +1,198 @@
+/* =====================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+========================================================================================================
+********************************************************************************************************
+** File Version History
+********************************************************************************************************
+** Change ID 	  WorkItemId	     CID 		       Date 		   Description 			Test cycle
+** ----------- 	 ------------	--------------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 		C417151/C412459  	17/11/2019 	      Initial Version 	       DEV
+**	 TFR Dedup		283557		C417151				02/09/2020		  Def#931, UserID missing  SIT
+																	  in Portrait UI, new
+																	  engActionNote Who added											
+********************************************************************************************************
+** Description of the ESQL
+** =====================================================================================================
+** The module within this ESQL perform transformation of the request for the backend ESB service
+** CustomerEventManagement_v3_0_RecordSignificantCustomerEevent. 
+********************************************************************************************************/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH uk.co.nationwide.nem.esb.patterns,uk.co.nationwide.nem.esb.commonFunctions;
+
+
+CREATE COMPUTE MODULE SF_Call_CustomerEventManagementV3_TransformToRSCERequest
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToEnv 	   REFERENCE TO Environment;
+		DECLARE refToEnvVar	   REFERENCE TO Environment.Variables;
+		DECLARE refToESBSrvHdr REFERENCE TO refToEnv.ESBServiceData.serviceHeader;
+		DECLARE refToJrnlEvent REFERENCE TO refToEnvVar.journalData.XMLNSC.JournalEvent;
+		DECLARE jwtEid		   CHARACTER;
+		DECLARE refToOutEnv,refToOutSecHdr,refToOutHdr,refToOutRSCE,refToEngAction,refToEngActNote,refToEngIP REFERENCE TO OutputRoot;
+		
+		--< Prepare Data for BackendMediation lib with the data from ReadConfig subflow
+		SET  Environment.Variables.STATIC.BackendMQ 	= refToEnv.ENV_PARAMETERS.CustomerEventManagement_v3_RSCE_MQ ;
+		-->
+		
+		--Setting the message set,type & format in properties for validation 
+		IF UPPER(refToEnv.ENV_PARAMETERS.RSCEReqValidation) <> 'OFF' THEN
+			SET OutputRoot.Properties.MessageType 	= 'recordSignificantCustomerEvent';
+			SET OutputRoot.Properties.MessageSet	= 'ESBServices.BackendMediationLibrary_CustomerEventManagementV3_2MessageSet';
+			SET OutputRoot.Properties.MessageFormat = 'XMLNSC';	
+		END IF;	
+		
+		CREATE LASTCHILD OF OutputRoot.XMLNSC AS refToOutEnv NAMESPACE ns_SOAP_Env NAME 'Envelope';
+		SET refToOutEnv.(XMLNSC.NamespaceDecl)xmlns:soap = ns_SOAP_Env;	
+		
+		-------------------------------
+		-- Creating Security Headers --
+		-------------------------------
+		CREATE FIELD refToOutEnv.ns_SOAP_Env:Header.ns_wsse:Security.ns_wsse:BinarySecurityToken 
+			         AS refToOutSecHdr VALUE SUBSTRING(Environment.Request.Header.authorization AFTER 'Bearer ');
+		CREATE FIELD refToOutSecHdr.(XMLNSC.Attribute)ValueType VALUE valueType;
+		CREATE FIELD refToOutSecHdr.(XMLNSC.Attribute)EncodingType VALUE EncodingType;
+		
+		---------------------------------------
+		-- Transformation to RSCE_V3 Request --
+		---------------------------------------
+        CREATE LASTCHILD OF refToOutEnv.ns_SOAP_Env:Body AS refToOutRSCE NAMESPACE ns_CEM_IRSCE_v3 NAME 'recordSignificantCustomerEvent';
+        SET refToOutRSCE.(XMLNSC.NamespaceDecl)xmlns:xsi	   = ns_XML_Schema;	
+        SET refToOutRSCE.(XMLNSC.NamespaceDecl)xmlns:irec	   = ns_CEM_IRSCE_v3;
+        SET refToOutRSCE.(XMLNSC.NamespaceDecl)xmlns:rec	   = ns_CEM_RSCE_v3;
+        SET refToOutRSCE.(XMLNSC.NamespaceDecl)xmlns:ip_to	   = ns_CEM_TO_IP;	
+		SET refToOutRSCE.(XMLNSC.NamespaceDecl)xmlns:event_to  = ns_CEM_TO_Event;
+        	
+		CREATE LASTCHILD OF refToOutRSCE AS refToOutHdr NAMESPACE ns_CEM_RSCE_v3 NAME 'serviceHeader';
+		SET refToOutHdr.(XMLNSC.NamespaceDecl)xmlns:cor  	   = ns_Srv_Def_CDT;
+		
+		-- Create the service header
+		--								Source		 Target
+		CALL createRSCEBackendHeader(refToESBSrvHdr,refToOutHdr);
+		
+		CREATE LASTCHILD OF refToOutRSCE NAMESPACE ns_CEM_RSCE_v3 NAME 'consumingApplicationId' VALUE 'TransForm';
+		
+		CREATE LASTCHILD OF refToOutRSCE AS refToEngAction NAMESPACE ns_CEM_RSCE_v3 NAME 'engagementAction';
+		
+		IF (refToJrnlEvent.EngagementID <> '') THEN
+			SET refToEngAction.ns_CEM_TO_Event:engagementID			 = refToJrnlEvent.EngagementID;
+		END IF;	
+		SET refToEngAction.ns_CEM_TO_Event:engagementType 			 = 'Other';
+		SET refToEngAction.ns_CEM_TO_Event:engagementActionType 	 = 'ChangeOfAddress';
+		SET refToEngAction.ns_CEM_TO_Event:engagementActionStartTime = CAST(refToESBSrvHdr.messageInfo.createDateTime AS TIMESTAMP 
+																			FORMAT 'IU');
+		SET refToEngAction.ns_CEM_TO_Event:engagementActionEndTime 	 = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU');
+		SET refToEngAction.ns_CEM_TO_Event:endEngagement 			 = TRUE;
+		
+		CREATE LASTCHILD OF refToEngAction AS refToEngActNote NAMESPACE ns_CEM_TO_Event NAME 'engagementActionNote';
+		
+		SET refToEngActNote.ns_CEM_TO_Event:actionName  =  'Reason Code';
+		SET refToEngActNote.ns_CEM_TO_Event:actionValue =  COALESCE(refToJrnlEvent.Reason,' ');
+		
+		CREATE LASTCHILD OF refToEngAction AS refToEngActNote NAMESPACE ns_CEM_TO_Event NAME 'engagementActionNote';
+		
+		SET refToEngActNote.ns_CEM_TO_Event:actionName  =  'Reason Description';
+		SET refToEngActNote.ns_CEM_TO_Event:actionValue =  COALESCE(refToJrnlEvent.ReasonDesc,' ');
+		
+		CREATE LASTCHILD OF refToEngAction AS refToEngActNote NAMESPACE ns_CEM_TO_Event NAME 'engagementActionNote';
+		
+		SET refToEngActNote.ns_CEM_TO_Event:actionName  =  'Future Dated Change';
+		
+		IF CAST(Environment.ESBServiceData.startDate AS DATE DEFAULT DATE '0001-01-01') > CURRENT_DATE THEN
+			SET refToEngActNote.ns_CEM_TO_Event:actionValue =  'Y';
+		ELSE
+			SET refToEngActNote.ns_CEM_TO_Event:actionValue =  'N';
+		END IF;	
+		
+		--Decode & extract claims info from JWT token only when authorization exists
+		IF COALESCE(Environment.Request.Header.authorization,'') <> '' THEN	
+			CALL extractFromJWToken(Environment.Request.Header.authorization,refToEnv);
+		END IF;
+		SET jwtEid = COALESCE(UPPER(Environment.TokenClaims.JSON.Data.dmn) || '\', '') || Environment.TokenClaims.JSON.Data.eid;
+		
+		-- TFR Def#931, new engagementActionNote added with Who as actionName and employeeId as actionValue
+		CREATE LASTCHILD OF refToEngAction AS refToEngActNote NAMESPACE ns_CEM_TO_Event NAME 'engagementActionNote';
+		
+		SET refToEngActNote.ns_CEM_TO_Event:actionName  =  'Who';
+		SET refToEngActNote.ns_CEM_TO_Event:actionValue =  COALESCE(jwtEid,
+																   THE(SELECT ITEM(C.identifier) 
+															 	   FROM refToESBSrvHdr.channelInfo.alternateIdentifier[] AS C 
+															  	   WHERE C.type = 'EMPLOYEEID'),' ');
+		
+		CREATE LASTCHILD OF refToEngAction AS refToEngIP NAMESPACE ns_CEM_TO_Event NAME 'engagementInvolvedParty';
+		
+		SET refToEngIP.ns_CEM_TO_IP:engagementRole      =  'EffectingParty';
+		
+		SET refToEngIP.ns_CEM_TO_IP:involvedPartyType	=  'Agent';
+	
+		SET refToEngIP.ns_CEM_TO_IP:involvedPartyID     = COALESCE(jwtEid,
+																   THE(SELECT ITEM(C.identifier) 
+															 	   FROM refToESBSrvHdr.channelInfo.alternateIdentifier[] AS C 
+															  	   WHERE C.type = 'EMPLOYEEID'),' ');
+		
+		SET refToEngIP.ns_CEM_TO_IP:addPartyToEngagement =  TRUE;
+		
+		CREATE LASTCHILD OF refToEngAction AS refToEngIP NAMESPACE ns_CEM_TO_Event NAME 'engagementInvolvedParty';
+		
+		SET refToEngIP.ns_CEM_TO_IP:engagementRole       = 'AffectedParty';
+		
+		SET refToEngIP.ns_CEM_TO_IP:involvedPartyType 	 = 'Individual';
+		
+		SET refToEngIP.ns_CEM_TO_IP:involvedPartyID      =  refToEnv.ESBServiceData.involvedPartyId;
+		
+		SET refToEngIP.ns_CEM_TO_IP:addPartyToEngagement =  TRUE;
+		
+		SET refToEngAction.ns_CEM_TO_Event:channelType 	 = 'ServiceCentre';
+		
+		RETURN TRUE;
+	
+	END;
+END MODULE;
+
+---------------------------------------------------------------------------------------------------
+-- Custom Procedure to create Headers for Backend from Environment (Arg1 - Source, Arg2 - Target --
+---------------------------------------------------------------------------------------------------
+CREATE PROCEDURE createRSCEBackendHeader (IN refEnvHdr REFERENCE,INOUT refToOutHdr REFERENCE)
+	
+	BEGIN
+		
+		DECLARE alterPairRef REFERENCE TO refEnvHdr.channelInfo.alternateIdentifier[1];
+		DECLARE addPairRef 	 REFERENCE TO refEnvHdr.additionalInfo[1];
+		DECLARE refToMsgInfo REFERENCE TO refEnvHdr.messageInfo;
+		DECLARE refToOutAltId, refToOutAddInf REFERENCE TO refToOutHdr;		
+	
+		IF (refToMsgInfo.journeyID <> '') THEN
+			SET refToOutHdr.ns_Srv_Def_CDT:messageInfo.ns_Srv_Def_CDT:journeyID = refToMsgInfo.journeyID;
+		END IF;
+		
+		SET refToOutHdr.ns_Srv_Def_CDT:messageInfo.ns_Srv_Def_CDT:sourceSystemID = refToMsgInfo.sourceSystemID;
+			
+		SET refToOutHdr.ns_Srv_Def_CDT:messageInfo.ns_Srv_Def_CDT:createDateTime = refToMsgInfo.createDateTime ;
+		SET refToOutHdr.ns_Srv_Def_CDT:channelInfo.ns_Srv_Def_CDT:channel 		 = refEnvHdr.channelInfo.channel;
+		
+		WHILE LASTMOVE(alterPairRef) DO
+			CREATE LASTCHILD OF refToOutHdr.ns_Srv_Def_CDT:channelInfo AS refToOutAltId NAMESPACE ns_Srv_Def_CDT NAME 'alternateIdentifier';
+		    CREATE FIELD refToOutAltId.ns_Srv_Def_CDT:type 			VALUE FIELDVALUE(alterPairRef.type);
+		    CREATE FIELD refToOutAltId.ns_Srv_Def_CDT:identifier 	VALUE FIELDVALUE(alterPairRef.identifier);	    
+			MOVE alterPairRef NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		WHILE LASTMOVE(addPairRef) DO
+			CREATE LASTCHILD OF refToOutHdr AS refToOutAddInf NAMESPACE ns_Srv_Def_CDT NAME 'additionalInfo';
+		    CREATE FIELD refToOutAddInf.ns_Srv_Def_CDT:name 	VALUE FIELDVALUE(addPairRef.name);
+		    CREATE FIELD refToOutAddInf.ns_Srv_Def_CDT:value 	VALUE FIELDVALUE(addPairRef.value);	    
+			MOVE addPairRef NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		SET refToOutHdr.ns_Srv_Def_CDT:gatewayInfo.ns_Srv_Def_CDT:virtualEnvironment = refEnvHdr.gatewayInfo.virtualEnvironment;
+		SET refToOutHdr.ns_Srv_Def_CDT:gatewayInfo.ns_Srv_Def_CDT:schemaVersion 	 = '3.0';
+		
+	END;
+
+

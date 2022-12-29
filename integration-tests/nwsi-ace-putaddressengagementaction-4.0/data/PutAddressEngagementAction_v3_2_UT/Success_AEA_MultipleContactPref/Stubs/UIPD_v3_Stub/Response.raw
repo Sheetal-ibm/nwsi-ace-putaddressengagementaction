@@ -1,0 +1,52 @@
+httpStatus:200
+X-Journey-Id:f9f929ef-5008-49c7-acc0-4608b168eb8e
+{
+   "involvedPartySoftLock" : "092349393424",
+   "contactPreferences" : [
+      {
+         "contactPointSoftLock" : "092349393424",
+         "contactPointRoleSoftLock" : "0923493934242345864137808425673452",
+         "contactPointUsage" : "1",
+         "numberOfAccounts" : "1",
+         "moveAccountStatus" : [
+            {
+               "accountReference" : "1234567890",
+               "partialCCPAN" : "TestReference",
+               "accountHostLocation" : "81",
+               "accountSubTypeCode" : "0000",
+               "accountLifecycleStatus" : "1",
+               "reasonCode" : "0",
+               "reasonDescription" : "Agreement Amended Successfully"
+            }
+         ]
+      }
+,
+      {
+         "contactPointSoftLock" : "092349393425",
+         "contactPointRoleSoftLock" : "0923493934242345864137808425673452",
+         "contactPointUsage" : "1",
+         "numberOfAccounts" : "1",
+         "moveAccountStatus" : [
+            {
+               "accountReference" : "1234567891",
+               "partialCCPAN" : "TestReference",
+               "accountHostLocation" : "81",
+               "accountSubTypeCode" : "0002",
+               "accountLifecycleStatus" : "1",
+               "reasonCode" : "0",
+               "reasonDescription" : "Agreement Amended Successfully"
+            },
+            {
+               "accountReference" : "1234567892",
+               "partialCCPAN" : "TestReference",
+               "accountHostLocation" : "81",
+               "accountSubTypeCode" : "0002",
+               "accountLifecycleStatus" : "1",
+               "reasonCode" : "0002",
+               "reasonDescription" : "Agreement Failed to Amend"
+            }
+         ]
+      }
+
+   ]
+}

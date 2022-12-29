@@ -1,0 +1,49 @@
+BROKER SCHEMA QueueBasedCorrelation
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+ 
+ 
+ 
+ 
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			03/11/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Remove the RFH2 header from the original request message.
+---------------------------------------------------------------------------------------
+
+
+CREATE COMPUTE MODULE RemoveRFH2Header
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	---------------------------------------------------------------------------------------
+	-- Description:
+	-- Main Function
+	---------------------------------------------------------------------------------------
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Copy the whole message.
+		SET OutputRoot = InputRoot;
+		
+		-- Remove the RFH2 header.
+		SET OutputRoot.MQRFH2 = NULL;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

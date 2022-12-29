@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/" xmlns:cns="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:tns="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd_1="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/">
+      <xsd:import namespace="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" schemaLocation="Services/Definitions/CoreDatatypes/CoreDatatypes.xsd"/>
+      <xsd:import namespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/" schemaLocation="Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/CreateAuditEvent.xsd"/>
+      <xsd:element ibmSchExtn:docRoot="true" name="createAuditEvent" type="xsd_1:CreateAuditEventRequest"/>
+      <xsd:element ibmSchExtn:docRoot="true" name="createAuditEventResponse" type="xsd_1:CreateAuditEventResponse"/>
+      <xsd:element ibmSchExtn:docRoot="true" name="fault" type="cns:Fault"/>
+    </xsd:schema>

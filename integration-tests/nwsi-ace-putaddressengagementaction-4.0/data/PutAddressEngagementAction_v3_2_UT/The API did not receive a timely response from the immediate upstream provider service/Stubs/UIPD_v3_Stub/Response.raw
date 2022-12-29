@@ -1,0 +1,11 @@
+httpStatus:504
+X-Journey-Id:f9f929ef-5008-49c7-acc0-4608b168eb8e
+{
+"errors": [
+              {
+                "code": "NEM.ESB.IPM.504.001",
+                "message": "The API did not receive a timely response from the provider service",
+			 "logErrorId": "c9cd35a4-8cf8-4b9c-90e5-299aea597024"
+              }
+            ]
+}

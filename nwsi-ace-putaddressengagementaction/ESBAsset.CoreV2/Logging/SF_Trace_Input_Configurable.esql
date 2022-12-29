@@ -1,0 +1,207 @@
+BROKER SCHEMA Logging
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Shaun Dennett			29/06/05	Initial Version
+--	
+---------------------------------------------------------------------------------------
+-- Description:
+-- Performs a configurable log file write depending upon the variables stored in the 
+-- System Environment or those Stored on the ENVIRONMENT_VALUES table
+---------------------------------------------------------------------------------------
+
+DECLARE LOG_LABEL EXTERNAL CHARACTER '';
+CREATE FILTER MODULE SF_Trace_Input_Level_Basic
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN Environment.Variables.ENV.ESB_TRACE_INPUT = '1';		
+	END;
+
+END MODULE;
+
+
+CREATE FILTER MODULE SF_Trace_Input_Level_Message
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN Environment.Variables.ENV.ESB_TRACE_INPUT = '2';		
+	END;
+
+END MODULE;
+
+
+CREATE FILTER MODULE SF_Trace_Input_Level_MessageAndHeaders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN Environment.Variables.ENV.ESB_TRACE_INPUT = '3';		
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE SF_Trace_Input_Level_DetermineMessageType
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- CALL CopyMessageHeaders();
+		CALL CopyEntireMessage();
+		Declare SoapRef 		  Reference To InputLocalEnvironment;
+		Declare MqRef 		  Reference To InputLocalEnvironment;
+		
+		Declare key 		  Reference To InputLocalEnvironment;
+		declare key_char character;
+		
+		DECLARE flowIdent CHARACTER ' : ' || MessageFlowLabel || ' : ' || NodeLabel; 
+		DECLARE CR CHARACTER CAST(x'0D0A' AS CHAR CCSID 1208);
+		DECLARE commonLeadertext CHARACTER
+				'LOG : '||
+				' ' || BrokerName ||
+				' v.' || BrokerVersion ||
+				' (EG): ' || ExecutionGroupLabel ||
+				' (' || CAST(ProcessId AS CHARACTER) || ') ' ||
+				flowIdent || ' ';
+				
+				
+		move SoapRef to InputRoot.SOAP.Context.operation;
+		move MqRef to InputRoot.MQMD.SourceQueue;
+		
+		
+		IF SoapRef IS NOT NULL THEN
+			
+			--Move key to InputLocalEnvironment.Destination.SOAP.Reply.ReplyIdentifier;
+			set key_char =  SUBSTRING(CAST(InputLocalEnvironment.Destination.SOAP.Reply.ReplyIdentifier AS CHAR)FROM 3 FOR 8);
+			-- Set the Environment.Variables.BasicText = the SOAP operation
+			SET Environment.Variables.BasicText = commonLeadertext || ' SOAP MESSAGE Processed : ' || InputRoot.SOAP.Context.operation || ' ' || key_char; 
+		
+	
+		ELSEIF	 MqRef is NOT null THEN
+			
+			set key_char = SUBSTRING(CAST(InputRoot.MQMD.MsgId AS CHAR)FROM 3 FOR 48);  
+			SET Environment.Variables.BasicText = commonLeadertext || ' MQ MESSAGE Processed : ' || InputRoot.MQMD.SourceQueue || ' ' || key_char;  
+		
+			
+		ELSE
+			
+			SET Environment.Variables.BasicText = commonLeadertext || ' Unknown transport'; 
+			
+		END IF;
+			
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE SF_Trace_Input_Level_FlowLevelCheck
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyEntireMessage();
+		
+		-- if the 
+		
+		-- read the ESB_TRACE_PARMS string
+		-- format 
+		-- ESB_TRACE_FLOW = <FLOWNAME>:<level>+
+		declare pointer reference to InputLocalEnvironment;
+			
+		if Environment.Variables.ENV.ESB_LOAD_TRACE_SETTINGS_FROM_DATABASE = '1' then
+			move pointer to Environment.Variables.STATIC.ESB_TRACE_PARMS;
+		else
+			move pointer to Environment.Variables.ENV.ESB_TRACE_PARMS;
+		end if;
+				
+			
+		declare current_flow character 'NOTFOUND';
+		declare current_setting character 'NOTFOUND';
+		declare pos integer  0;
+		declare endpos integer 0;
+		
+		set pos = POSITION(LOG_LABEL in pointer);
+		set endpos = POSITION('+' in pointer from pos);
+		set	current_flow = SUBSTRING(pointer from pos for (endpos - pos));
+		set pos = POSITION(':' in current_flow);
+		set current_setting = SUBSTRING(current_flow from pos+ 1 for 1);
+		
+		SET Environment.Variables.ENV.ESB_TRACE_INPUT = current_setting;
+		
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
+
+
+CREATE FILTER MODULE SF_Trace_Input_Level_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	
+		RETURN Environment.Variables.ENV.ESB_LOAD_TRACE_SETTINGS_FROM_DATABASE = '1';		
+	
+	END;
+
+END MODULE;
+
+
+CREATE FILTER MODULE SF_Trace_Input_Level_Do_we_load_trace_setting_from_the_database
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN Environment.Variables.ENV.ESB_LOAD_TRACE_SETTINGS_FROM_DATABASE = '1';		
+	END;
+
+END MODULE;
+
+
+CREATE FILTER MODULE SF_Trace_Input_Configurable_ConfigurableTraceTest
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		if ((Environment.Variables.ENV.ESB_TRACE_INPUT = '1') OR
+		    (Environment.Variables.ENV.ESB_TRACE_INPUT = '2') OR
+		    (Environment.Variables.ENV.ESB_TRACE_INPUT = '3')) 
+		THEN
+			RETURN TRUE;
+		else
+			RETURN FALSE;
+		end if;
+	END;
+
+END MODULE;

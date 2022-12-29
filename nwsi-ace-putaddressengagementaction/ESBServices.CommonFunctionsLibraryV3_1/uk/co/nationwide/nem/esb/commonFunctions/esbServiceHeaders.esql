@@ -1,0 +1,148 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+
+---------------------
+--Declare NameSpaces
+---------------------
+DECLARE ns21 NAMESPACE 'http://uk/co/nationwide/Services/Definitions/CoreDatatypes/'; --- TODO : Add to NamespaceDeclarations.esql and remove from here.
+------------------------------------------------------------
+--Procedure to store Input serviceHeaders to the environment
+------------------------------------------------------------
+CREATE PROCEDURE ServiceHeadersToEnvironment (IN In_Header REFERENCE,INOUT Environment REFERENCE)
+
+	BEGIN
+		DECLARE alternateIdCardinality,AdditionalInfoCardinality,loopCounter INTEGER;
+		DECLARE refToAltId,refToAddIn REFERENCE TO Environment;
+		
+		IF (EXISTS(In_Header.*:messageInfo.*:journeyID[])) THEN
+			SET Environment.ESBServiceData.serviceHeader.messageInfo.journeyID	=	In_Header.*:messageInfo.*:journeyID;		
+		END IF;
+					
+		SET Environment.ESBServiceData.serviceHeader.messageInfo.sourceSystemID	=	In_Header.*:messageInfo.*:sourceSystemID;
+		SET Environment.ESBServiceData.serviceHeader.messageInfo.createDateTime	=	In_Header.*:messageInfo.*:createDateTime;
+		
+		IF (EXISTS(In_Header.*:messageInfo.*:ipAddress[]))THEN
+		SET Environment.ESBServiceData.serviceHeader.messageInfo.ipAddress		=	In_Header.*:messageInfo.*:ipAddress;
+		END IF;
+		
+		IF (EXISTS(In_Header.*:channelInfo[])) THEN
+			SET Environment.ESBServiceData.serviceHeader.channelInfo.channel	=	In_Header.*:channelInfo.*:channel;
+			
+			IF (EXISTS(In_Header.*:channelInfo.*:alternateIdentifier[])) THEN
+				
+				SET alternateIdCardinality = CARDINALITY(In_Header.*:channelInfo.*:alternateIdentifier[]);
+				SET loopCounter = 1;
+				WHILE (loopCounter <= alternateIdCardinality) DO
+				
+					CREATE LASTCHILD OF Environment.ESBServiceData.serviceHeader.channelInfo AS refToAltId NAME 'alternateIdentifier';
+					-- Changes for getting Element name EDB PROD issue
+					SET refToAltId.type				=	FIELDVALUE(In_Header.*:channelInfo.*:alternateIdentifier[loopCounter].(XMLNSC.Field)*:type);
+					SET refToAltId.identifier		=	FIELDVALUE(In_Header.*:channelInfo.*:alternateIdentifier[loopCounter].(XMLNSC.Field)*:identifier);
+					SET loopCounter 				= 	loopCounter + 1;
+				
+				END WHILE; 
+				
+				
+			END IF;
+		END IF;
+			
+		IF (EXISTS(In_Header.*:additionalInfo[])) THEN
+			
+			SET AdditionalInfoCardinality = CARDINALITY(In_Header.*:additionalInfo[]);
+			SET loopCounter = 1;
+			WHILE (loopCounter <= AdditionalInfoCardinality) DO
+				
+				CREATE LASTCHILD OF Environment.ESBServiceData.serviceHeader AS refToAddIn NAME 'additionalInfo';
+				-- Changes for getting Element name EDB PROD issue
+				SET refToAddIn.name				=	FIELDVALUE(In_Header.*:additionalInfo[loopCounter].(XMLNSC.Field)*:name);
+				SET refToAddIn.value			=	FIELDVALUE(In_Header.*:additionalInfo[loopCounter].(XMLNSC.Field)*:value);
+				SET loopCounter 				= 	loopCounter + 1;
+				
+			END WHILE;
+			
+			
+		END IF;
+		
+		-----------------------------------------------------------------------------------
+		--Save GatewayInfo's field in environment if serviceHeader type is ServiceHeader_V2
+		-----------------------------------------------------------------------------------
+		IF(EXISTS(In_Header.*:gatewayInfo[]))THEN
+		  IF(EXISTS(In_Header.*:gatewayInfo.*:schemaVersion[]))THEN
+		    SET Environment.ESBServiceData.serviceHeader.gatewayInfo.schemaVersion		    =	In_Header.*:gatewayInfo.*:schemaVersion;
+	      END IF;
+	
+	      IF(EXISTS(In_Header.*:gatewayInfo.*:virtualEnvironment[]))THEN
+	      	SET Environment.ESBServiceData.serviceHeader.gatewayInfo.virtualEnvironment		=	In_Header.*:gatewayInfo.*:virtualEnvironment;
+	      END IF;
+	      	 
+	    END IF;
+			
+	END;
+	
+---------------------------------------------------------------------
+--Procedure to transform response serviceHeaders from the environment
+---------------------------------------------------------------------
+CREATE PROCEDURE EnvironmentToServiceHeaders (INOUT Out_Header REFERENCE,IN Environment REFERENCE)
+
+	BEGIN
+		
+		DECLARE alternateIdCardinality,AdditionalInfoCardinality,loopCounter INTEGER;
+		DECLARE refToAltId,refToAddIn REFERENCE TO Environment;
+		
+		IF(EXISTS(Environment.ESBServiceData.serviceHeader.messageInfo.journeyID[])) THEN
+			SET Out_Header.ns21:messageInfo.ns21:journeyID =	Environment.ESBServiceData.serviceHeader.messageInfo.journeyID;	
+		END IF;
+		
+		SET Out_Header.ns21:messageInfo.ns21:sourceSystemID		=	Environment.ESBServiceData.serviceHeader.messageInfo.sourceSystemID	;
+		SET Out_Header.ns21:messageInfo.ns21:createDateTime		=	Environment.ESBServiceData.serviceHeader.messageInfo.createDateTime	;		
+		
+		IF(EXISTS(Environment.ESBServiceData.serviceHeader.messageInfo.ipAddress[])) THEN
+		SET Out_Header.ns21:messageInfo.ns21:ipAddress			=	Environment.ESBServiceData.serviceHeader.messageInfo.ipAddress;
+		END IF;				
+						
+		IF (EXISTS(Environment.ESBServiceData.serviceHeader.channelInfo[])) THEN
+			SET Out_Header.ns21:channelInfo.ns21:channel	=	Environment.ESBServiceData.serviceHeader.channelInfo.channel;
+			
+			IF(EXISTS(Environment.ESBServiceData.serviceHeader.channelInfo.alternateIdentifier[])) THEN
+				
+				SET alternateIdCardinality = CARDINALITY(Environment.ESBServiceData.serviceHeader.channelInfo.alternateIdentifier[]);
+				SET loopCounter = 1;
+				WHILE (loopCounter <= alternateIdCardinality) DO
+				
+					CREATE LASTCHILD OF Out_Header.ns21:channelInfo AS refToAltId NAMESPACE ns21 NAME 'alternateIdentifier';
+					SET refToAltId.ns21:type			=	COALESCE(Environment.ESBServiceData.serviceHeader.channelInfo.alternateIdentifier[loopCounter].type,'');
+					SET refToAltId.ns21:identifier		=	COALESCE(Environment.ESBServiceData.serviceHeader.channelInfo.alternateIdentifier[loopCounter].identifier,'');
+					SET loopCounter 					= 	loopCounter + 1;
+				END WHILE;
+			END IF;
+			
+		END IF;
+			
+		IF (EXISTS(Environment.ESBServiceData.serviceHeader.additionalInfo[])) THEN
+			
+			SET AdditionalInfoCardinality = CARDINALITY(Environment.ESBServiceData.serviceHeader.additionalInfo[]);
+			SET loopCounter = 1;
+			WHILE (loopCounter <= AdditionalInfoCardinality) DO
+				
+				CREATE LASTCHILD OF Out_Header AS refToAddIn NAMESPACE ns21 NAME 'additionalInfo';
+				SET refToAddIn.ns21:name				=	COALESCE(Environment.ESBServiceData.serviceHeader.additionalInfo[loopCounter].name,'');
+				SET refToAddIn.ns21:value				=	COALESCE(Environment.ESBServiceData.serviceHeader.additionalInfo[loopCounter].value,'');
+				SET loopCounter 						= 	loopCounter + 1;
+				
+			END WHILE;
+			
+			
+		END IF;
+		
+		------------------------------------------------------------
+		--Map gateWayInfo if serviceHeader type is  ServiceHeader_V2
+		-------------------------------------------------------------
+       IF(EXISTS(Environment.ESBServiceData.serviceHeader.gatewayInfo[]))THEN
+         IF(EXISTS(Environment.ESBServiceData.serviceHeader.gatewayInfo.virtualEnvironment[]))THEN
+           SET Out_Header.ns21:gatewayInfo.ns21:virtualEnvironment =Environment.ESBServiceData.serviceHeader.gatewayInfo.virtualEnvironment;
+         END IF;
+         IF(EXISTS(Environment.ESBServiceData.serviceHeader.gatewayInfo.schemaVersion[]))THEN
+           SET Out_Header.ns21:gatewayInfo.ns21:schemaVersion =Environment.ESBServiceData.serviceHeader.gatewayInfo.schemaVersion;
+         END IF;
+       END IF;	      	 
+	END;

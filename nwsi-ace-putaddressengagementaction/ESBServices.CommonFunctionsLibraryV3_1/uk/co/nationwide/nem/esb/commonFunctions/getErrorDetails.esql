@@ -1,0 +1,52 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+----------------------------------------------------------------------------------------
+--Function 			: getErrorDetails
+--Input Parameters	: Faultcode, SysId and Interface Name
+--Output Parameters	: ErrorLookUp Reference
+--Description 		: The function fetches the error code details from the database based on the fault code , 
+--					  sys ID and Interface name through a PASSTHRU function. IF no result is found from the passthru 
+--					  func then the default code and message are populated.  
+----------------------------------------------------------------------------------------
+
+
+	CREATE FUNCTION getErrorDetails (IN faultCode CHARACTER,IN sysID CHARACTER ,IN intf CHARACTER, INOUT refToError REFERENCE ) 
+		BEGIN
+			DECLARE SQL_STATEMENT CHARACTER 'SELECT SERVICE_ERROR_CODE,SERVICE_MESSAGE,SEVERITY FROM REFDATA.NEM_ERROR_LOOKUP WHERE PROVIDER_ERROR_CODE = ? AND PROVIDER_SYS_ID = ? AND PROVIDER_INTF_NAME = ?  ';
+			DECLARE DB_IN_PARAMS_STRING CHARACTER;
+			SET DB_IN_PARAMS_STRING = faultCode ||  sysID || intf;
+			SET refToError.result[] 																												
+				= PASSTHRU(SQL_STATEMENT,faultCode,sysID,intf);
+		 
+	 			IF NOT EXISTS(refToError.result[]) THEN
+					SET refToError.result[1].SEVERITY = 'REJECTED';
+					SET refToError.result[1].SERVICE_ERROR_CODE = 'NEM.ESB.49999';
+					SET refToError.result[1].SERVICE_MESSAGE = 'Unknown Error Received From the Provider';
+				END IF;
+			
+		END;
+		
+----------------------------------------------------------------------------------------
+--Function 			: getErrorDetails
+--Input Parameters	: Faultcode, SysId, Interface Name and defau;t code
+--Output Parameters	: ErrorLookUp Reference
+--Description 		: The function fetches the error code details from the database based on the fault code , 
+--					  sys ID and Interface name through a PASSTHRU function. IF no result is found from the passthru 
+--					  func then the defaultcode and message are populated from the db.  
+----------------------------------------------------------------------------------------
+	
+	
+		CREATE FUNCTION getErrorCodeDetails (IN faultCode CHARACTER,IN sysID CHARACTER ,IN intf CHARACTER,IN defaultFaultCode CHARACTER, 
+												INOUT refToError REFERENCE ) 
+		BEGIN
+			DECLARE SQL_STATEMENT CHARACTER 'SELECT SERVICE_ERROR_CODE,SERVICE_MESSAGE,SEVERITY FROM 
+					REFDATA.NEM_ERROR_LOOKUP WHERE PROVIDER_ERROR_CODE = ? AND PROVIDER_SYS_ID = ? AND PROVIDER_INTF_NAME = ?  ';
+			DECLARE DB_IN_PARAMS_STRING CHARACTER;
+			SET DB_IN_PARAMS_STRING = faultCode ||  sysID || intf;
+			SET refToError.result[] 																												
+				= PASSTHRU(SQL_STATEMENT,faultCode,sysID,intf);
+		 
+ 			IF NOT EXISTS(refToError.result[]) THEN
+				SET refToError.result[] = PASSTHRU(SQL_STATEMENT,defaultFaultCode,sysID,intf);
+			END IF;
+			
+		END;

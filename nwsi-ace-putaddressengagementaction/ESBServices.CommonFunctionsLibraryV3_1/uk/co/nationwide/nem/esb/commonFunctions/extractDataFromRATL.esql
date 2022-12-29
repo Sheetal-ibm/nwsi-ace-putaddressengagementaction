@@ -1,0 +1,95 @@
+/* ===================================================================================
+ *
+ * Licensed Materials - Property of Nationwide Building Society
+ *
+ * Nationwide Enterprise Middleware DC
+ *
+ * 
+======================================================================================= 
+***************************************************************************************
+--** File Version History
+***************************************************************************************
+--** Defect	ID		CID		Date		Description		Test cycle
+--** ----------- --------- ----------	--------------- ----------- 
+		101,106		  C35916	22/12/15	Initial Version   ST
+***************************************************************************************
+--** Description Of the Function contained in the file.
+--** ==================================================================================
+--** This ESQL  defines functions which are used to extract data from RATL responses.  If default values need to be specified these are detailed in each function.
+**************************************************************************************/
+
+----------------
+--Declare Schema
+----------------
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+--------------------------------------------------------------------------
+--Function  extractDateFromRATL
+--This function extracts a date element from a RATL response.
+--As CIS holds dates as a numeric field any date that is not defined is represented as Zero.
+--------------------------------------------------------------------------
+
+CREATE FUNCTION extractDateFromRATL(IN Environment REFERENCE,IN RATLDate INTEGER) RETURNS DATE
+
+	BEGIN
+		-------------------------
+		--Declare the variables--
+		-------------------------
+		
+		DECLARE extractedDate DATE;
+		DECLARE dateStr CHARACTER;
+		
+		
+		
+		IF(RATLDate < 0) THEN
+			--If the date is negative--
+			SET Environment.ProviderFaultInfo.faultCode = 'DateFault';
+			THROW USER EXCEPTION MESSAGE 2952 VALUES('');
+			
+		ELSEIF(RATLDate = 0) THEN
+			--If the date is missing in CIS--
+			RETURN NULL;
+			
+		ELSE
+			SET dateStr = CAST(RATLDate AS CHARACTER);
+			IF(LENGTH(dateStr) <> 8) THEN
+				--If the length of the date is not equal to 8.It should be of the format yyyyMMdd--
+				SET Environment.ProviderFaultInfo.faultCode = 'DateFault';
+				THROW USER EXCEPTION MESSAGE 2952 VALUES('');
+			ELSE	
+				
+				SET extractedDate = CAST(dateStr AS DATE FORMAT 'yyyyMMdd');
+				RETURN extractedDate;
+			END IF;
+		END IF;
+		
+		
+	END;
+	
+--------------------------------------------------------------------------
+--Function  extractTMSHonorificValueFromRATL
+--This function extracts a TMS Value from a RATL response.
+--As CIS holds TMS Values as a numeric field any element that is not defined is represented as Zero.
+--------------------------------------------------------------------------
+		
+	
+	CREATE FUNCTION extractTMSHonorificValueFromRATL(INOUT Environment REFERENCE,IN RATLHonoroficValue INTEGER) RETURNS INTEGER NULLABLE
+	BEGIN
+		
+		
+		IF(RATLHonoroficValue < 0) THEN
+			--If the Honorific code is negative--
+			SET Environment.ProviderFaultInfo.faultCode = 'HonorificCodeFault';
+			THROW USER EXCEPTION MESSAGE 2952 VALUES('');
+			
+		ELSEIF(RATLHonoroficValue = 0) THEN
+			--If the Honorific code is missing in CIS--
+			RETURN NULL;
+			
+		ELSE
+			
+			RETURN RATLHonoroficValue;
+		END IF;
+		
+	END;

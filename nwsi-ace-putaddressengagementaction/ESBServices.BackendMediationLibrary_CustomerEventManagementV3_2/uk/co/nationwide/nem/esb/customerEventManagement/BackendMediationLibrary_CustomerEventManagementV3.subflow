@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="uk/co/nationwide/nem/esb/customerEventManagement/BackendMediationLibrary_CustomerEventManagementV3.subflow" nsPrefix="uk_co_nationwide_nem_esb_customerEventManagement_BackendMediationLibrary_CustomerEventManagementV3.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="BackendMediationLibrary_CustomerEventManagementV3" bundleName="uk/co/nationwide/nem/esb/customerEventManagement/BackendMediationLibrary_CustomerEventManagementV3" pluginId="ESBServices.BackendMediationLibrary_CustomerEventManagementV3_2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/ESBServices.BackendMediationLibrary_CustomerEventManagementV3_2/icons/full/obj16/BackendMediationLibrary_CustomerEventManagementV3.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/ESBServices.BackendMediationLibrary_CustomerEventManagementV3_2/icons/full/obj30/BackendMediationLibrary_CustomerEventManagementV3.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="This Backend lib will put message in RSCE queue and handle failure if any."/>
+    <longDescription xmi:type="utility:ConstantString" string="This backend mediation lib put message in queue based CustomerEventManagement_v3_RecordSignificantCustomerEvent service and handle exceptions (if any)."/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="229,217" computeExpression="esql://routine/uk.co.nationwide.nem.esb.customerEventManagement#BackendMediation_LogBackendRequest_Compute.Main" computeMode="destination" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="LogBackendRequest"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Log CustomerEventManagementV3 Request"/>
+        <longDescription xmi:type="utility:ConstantString" string="The request which is being sent to CustomerEventManagementV3 is logged here"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="549,280" computeExpression="esql://routine/uk.co.nationwide.nem.esb.customerEventManagement#BackendMediation_LogSuccess_Compute.Main" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="LogSuccess"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Log SAP response"/>
+        <longDescription xmi:type="utility:ConstantString" string="The response from SAP is logged here. and the flow is routed based on the response to either business error or the success path"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="671,281">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="uk/co/nationwide/nem/esb/customerEventManagement/BackendMediationLibrary_CustomerEventManagementV3" pluginId="ESBServices.BackendMediationLibrary_CustomerEventManagementV3_2"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Output Node for the subflow in case of success"/>
+        <longDescription xmi:type="utility:ConstantString" string="This node is used as an Output Node for the subflow in case of Success."/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="548,175" computeExpression="esql://routine/uk.co.nationwide.nem.esb.customerEventManagement#BackendMediation_LogMQFault_Compute.Main" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="LogMQFault"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Log SAP error response"/>
+        <longDescription xmi:type="utility:ConstantString" string="Logs the error response from SAP servcie and routes the flow to either modelled or unmodelled fault"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="124,217">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="uk/co/nationwide/nem/esb/customerEventManagement/BackendMediationLibrary_CustomerEventManagementV3" pluginId="ESBServices.BackendMediationLibrary_CustomerEventManagementV3_2"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Input Node for the subflow"/>
+        <longDescription xmi:type="utility:ConstantString" string="This node is used as an Input Node for the subflow."/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.SOAPFault_Modelled" location="669,176">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.MQFault" bundleName="uk/co/nationwide/nem/esb/customerEventManagement/BackendMediationLibrary_CustomerEventManagementV3" pluginId="ESBServices.BackendMediationLibrary_CustomerEventManagementV3_2"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Output Node for the subflow for Modelled Exceptions"/>
+        <longDescription xmi:type="utility:ConstantString" string="This node is used as an Output Node for the subflow in case of Modelled Exceptions."/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="403,218" queueName="REC_SIG_CUST_EVENT_V3.0.ESB.FNF.O" destinationMode="list" validateMaster="contentAndValue">
+        <translation xmi:type="utility:ConstantString" string="MQ Output"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.SOAPFault_Modelled" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

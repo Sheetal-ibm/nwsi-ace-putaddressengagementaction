@@ -1,0 +1,140 @@
+BROKER SCHEMA Core
+
+
+CREATE COMPUTE MODULE CS_Generate_Exception_Build_Exception
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+		-- CALL CopyEntireMessage();
+			--*****************************************************************************************
+		--** Node History
+		--*****************************************************************************************
+		--** Defect Name                Date        Description
+		--** ------ ------------------- ----------- -----------------------------------
+		--** 413726 Steve Schorah       04-04-2008  Initial Release
+		--** 413726 Rui Gomes           31-10-2008  Adding support for severity field
+	    --** 413726 Rui Gomes           08-04-2009  Changing small error with ed_length
+		--*****************************************************************************************
+		--** Description
+		--** ===========
+		--** This node will build the relevant data for an exception message.
+		--****************************************************************************************
+
+		DECLARE outRef REFERENCE TO OutputRoot.XMLNSC;
+		DECLARE errRef REFERENCE TO InputLocalEnvironment;
+		DECLARE rfh2Ref REFERENCE TO InputRoot.MQRFH2;
+		
+		DECLARE j INT 0;
+		DECLARE k INT 1;
+	
+		DECLARE ec_length 		INT 0;
+		DECLARE ed_length 		INT 0;
+		DECLARE es_length 		INT 0;
+		DECLARE errorCode 		CHAR;
+		DECLARE errorDesc 		CHAR;
+		DECLARE severity 		CHAR;
+	
+		DECLARE date_pattern 	CHAR 'yyyyMMdd';
+		DECLARE time_pattern 	CHAR 'HHmmssSS';
+
+		CREATE LASTCHILD OF OutputRoot.XMLNSC 	AS outRef NAME 'exceptionReport';
+		
+		-- if this is not an online request then there is no need for a response to the requester
+	
+		--** Find AMS Code and set errorCode
+		MOVE errRef TO InputExceptionList.RecoverableException;
+		IF LastMove(errRef) THEN
+			FindUserLoop : WHILE j <> k DO
+				IF FieldName(errRef.(XML.Element)[<]) = 'RecoverableException' THEN
+
+					--** Move errRef to point to a lower level of the exception tree
+					MOVE errRef TO errRef.RecoverableException;
+				ELSE
+					LEAVE FindUserLoop;
+				END IF;
+			END WHILE FindUserLoop;
+
+			IF FieldName(errRef.(XML.Element)[<]) = 'UserException' THEN
+				
+				SET errorCode = coalesce(errRef.UserException."Insert"[1].Text,'Unknown');
+				SET ec_length = length(errorCode);
+				IF ec_length > 20 THEN 
+					set ec_length = 20;
+				END IF;		
+				
+				SET errorDesc = coalesce(errRef.UserException."Insert"[2].Text,'Unknown');
+				SET ed_length = length(errorDesc);
+				IF ed_length > 255 THEN
+				   set ed_length = 255;
+				END IF;
+				
+				SET severity = coalesce(errRef.UserException."Insert"[3].Text,'Unknown');
+				SET es_length = length(severity);
+				IF es_length > 20 THEN
+				   set es_length = 20;
+				END IF;
+				
+			END IF;
+		END IF;
+		
+		IF length(errorCode) = 0 THEN
+		   SET errorCode = 'Unknown';
+		   SET ec_length = length(errorCode);
+		END IF;
+				
+		IF length(errorDesc) = 0 THEN
+		   SET errorDesc = 'Unknown';
+		   SET ed_length = length(errorDesc);
+		END IF;
+		
+		IF length(severity) = 0 THEN
+		   SET severity = 'Unknown';
+		   SET es_length = length(severity);
+		END IF;
+		
+		SET outRef.errorCode = SubString(errorCode From 1 For ec_length);
+		SET outRef.errorDesc = SubString(errorDesc From 1 For ed_length);
+		SET outRef.severity  = SubString(severity  From 1 For es_length);
+
+
+		SET outRef.queueName        = InputRoot.MQMD.SourceQueue;
+		SET outRef.originalMsgId    = InputRoot.MQMD.MsgId;
+		SET outRef.originalCorrelId = InputRoot.MQMD.CorrelId;
+		
+		-- putDate and putTime are important later in matching failure messages to exception messages
+					
+		Set outRef.putDate = CAST(InputRoot.MQMD.PutDate AS CHARACTER FORMAT date_pattern);  
+		Set outRef.putTime = CAST(InputRoot.MQMD.PutTime AS CHARACTER FORMAT time_pattern);  
+
+		--** Copy the Exception List and all its child elements
+		SET outRef.exceptionText = InputExceptionList;
+
+		SET OutputRoot.MQRFH2        = Null;
+		SET OutputRoot.MQMD.CorrelId = InputRoot.MQMD.MsgId;
+				
+		/* Set to Unlimited Expiry */
+		Set OutputRoot.MQMD.Expiry = MQEI_UNLIMITED;
+
+		/* Set to Persistent */
+		Set OutputRoot.MQMD.Persistence = MQPER_PERSISTENT;
+
+		RETURN TRUE;
+
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER;
+		DECLARE J INTEGER;
+		SET I = 1;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
+

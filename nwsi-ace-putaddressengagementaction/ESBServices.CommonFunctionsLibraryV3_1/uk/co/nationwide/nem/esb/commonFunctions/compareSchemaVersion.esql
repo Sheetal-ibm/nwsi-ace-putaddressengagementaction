@@ -1,0 +1,19 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+--------------------------------------------------------------------------------------------------
+--Function 			: comapareSchemaVersion
+--Input Parameters	: reqSchemaVersion, baseSchemaVerion
+--Output Parameters	: schemaFlag 
+--Description 		: The function compares the schema version in the input request to the base 
+--					  schema version. It returns a True flag if the reqSchemaVersion is greater
+--					   than or equal to the base version. 
+--------------------------------------------------------------------------------------------------
+
+
+	CREATE FUNCTION compareSchemaVersion (IN reqSchemaVersion CHARACTER,IN baseSchemaVerion DECIMAL, INOUT schemaFlag BOOLEAN )
+	BEGIN
+		IF (CAST(reqSchemaVersion AS DECIMAL) >= baseSchemaVerion) THEN
+			SET schemaFlag = TRUE;
+		END IF;	
+		
+	END;	

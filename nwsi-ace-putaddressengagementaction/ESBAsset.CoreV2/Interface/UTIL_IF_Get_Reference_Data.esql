@@ -1,0 +1,89 @@
+BROKER SCHEMA Interface
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Rich Jones			29/06/05	Initial Version
+-- AA00000093 All		Rich Jones			26/10/05	Corrected to match latest design doc
+--			  All		Chris Walters		10/11/06	Matches EAGLE standard format
+---------------------------------------------------------------------------------------
+-- Description:
+-- Convert the input XML message into Canonical format
+-- Input:	esb:utilGetReferenceData
+-- Output: 	can:utilGetReferenceDataIn
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE UTIL_IF_Get_Reference_Data_Convert_To_Canonical
+	Declare ClearCaseRevision CHAR('%Revision%');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+		
+		--Declare Reference Pointers for use in code
+		Declare inRef Reference To InputLocalEnvironment; 	-- Reference to the input message
+		Declare outRef Reference To InputLocalEnvironment; -- Reference to the output message
+		Declare forRef Reference To InputLocalEnvironment; -- Reference to the output message
+		Declare ic   Namespace 'http://www.ibm.com/esb/icommon';
+		DECLARE can NAMESPACE 'http://Canonical.eai.ibm.com';
+		DECLARE cs NAMESPACE 'http://common.eai.ibm.com';
+		DECLARE esb NAMESPACE 'http://www.ibm.com/esb/imsg';
+		
+		-- Check message signature is correct for flow
+		Move inRef To InputRoot.XMLNS.esb:esbMessage.esb:utilGetReferenceData;
+		IF NOT LastMove(inRef) Then
+				Throw User Exception Values
+					('ESB', 'FAILED:Could not get utility reference data',
+					 'EAI:000705', 'Message signature not expected by flow');
+		End If;	
+
+		-- Build output message and namespace declarations
+		SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Version = '1.0';
+		SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Encoding = 'UTF-8';
+		Create LastChild Of OutputRoot.XMLNSC As outRef NAMESPACE can Name 'esbMessage';
+		SET OutputRoot.XMLNSC.can:esbMessage.(XMLNSC.NamespaceDecl)xmlns:can = can;
+		SET OutputRoot.XMLNSC.can:esbMessage.(XMLNSC.NamespaceDecl)xmlns:cs = cs;
+		
+		--Map input message attributes to output message
+		SET outRef.(XMLNSC.Attribute)LastMessage = InputRoot.XMLNS.esb:esbMessage.(XML.Attribute)LastMessage;
+		SET outRef.(XMLNSC.Attribute)MessageType = InputRoot.XMLNS.esb:esbMessage.(XML.Attribute)MessageType;
+		SET outRef.(XMLNSC.Attribute)BusinessTransId = InputRoot.XMLNS.esb:esbMessage.(XML.Attribute)BusinessTransId;
+		SET outRef.(XMLNSC.Attribute)BusinessCorrelId = InputRoot.XMLNS.esb:esbMessage.(XML.Attribute)BusinessCorrelId;
+		SET outRef.(XMLNSC.Attribute)UserID = InputRoot.XMLNS.esb:esbMessage.(XML.Attribute)UserID;
+		
+		--Create Canonical Message
+		Create LastChild Of outRef As outRef NAMESPACE can Name 'getReferenceDataIn';
+		Set outRef.cs:DataDomain = inRef.ic:DataDomain;	
+		For forRef As inRef.ic:DataKey[] Do
+			Create LastChild Of outRef NAMESPACE cs Name 'DataKey' Value forRef;				
+		End For;
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;

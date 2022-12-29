@@ -1,0 +1,70 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+-------------------------------------------------------------------------------------------
+--Procedure : AccValidate
+--Description: Validate an account number string.  The account type (number) is returned.  
+--             The formatted account number string is also returned.
+-------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE AccValidate(IN AccNum CHARACTER, OUT FmtAcc CHARACTER, OUT AccType INTEGER)
+BEGIN
+--------------------------------------------------------------------------------------------
+--Set the value of  FmtAcc variable by calling getAccountNumberFormatted function
+--------------------------------------------------------------------------------------------
+SET FmtAcc= getAccountNumberFormatted(AccNum);
+--------------------------------------------------------------------------------------------
+--Set the value of  AccType variable by calling getResult function
+--------------------------------------------------------------------------------------------
+SET AccType= getResult(AccNum);-- Calls
+END;
+
+-------------------------------------------------------------------------------------------
+--Procedure : AccValType
+--Description: Validate an account number string.  The account type (string) is returned.  
+--             The formatted account number string and result are also returned.
+-------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE AccValType(IN AccNum CHARACTER, OUT FmtAcc CHARACTER, OUT AccType CHARACTER ,OUT Result INTEGER)
+BEGIN
+--------------------------------------------------------------------------------------------
+--Set the value of  FmtAcc variable by calling getAccountNumberFormatted function
+--------------------------------------------------------------------------------------------
+SET FmtAcc= getAccountNumberFormatted(AccNum);
+--------------------------------------------------------------------------------------------
+--Set the value of  AccType variable by calling getAccountType function
+--------------------------------------------------------------------------------------------
+SET AccType= getAccountType(AccNum);
+
+--------------------------------------------------------------------------------------------
+--Set the value of  result ('0','-1','-2','-3',1-51) by calling getResult function
+--------------------------------------------------------------------------------------------
+SET Result= getResult(AccNum);
+END;
+
+
+
+-------------------------------------------------------------------------------------------
+--Function : getResult
+--Description: Call the getResult function in AccValWrapper class which returns integer 
+-------------------------------------------------------------------------------------------
+CREATE FUNCTION getResult(IN str CHAR) RETURNS int
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.accval.AccValWrapper.getResult";
+
+-------------------------------------------------------------------------------------------
+--Function : getAccountNumberFormatted
+--Description: Call the getAccountNumberFormatted function in AccValWrapper class which returns String 
+-------------------------------------------------------------------------------------------
+
+CREATE FUNCTION getAccountNumberFormatted(IN str CHAR) RETURNS CHAR
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.accval.AccValWrapper.getAccountNumberFormatted";
+
+-------------------------------------------------------------------------------------------
+--Function : getAccountType
+--Description: Call the getAccountType function in AccValWrapper class which returns String 
+-------------------------------------------------------------------------------------------
+
+CREATE FUNCTION getAccountType(IN str CHAR) RETURNS CHAR
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.accval.AccValWrapper.getAccountType";

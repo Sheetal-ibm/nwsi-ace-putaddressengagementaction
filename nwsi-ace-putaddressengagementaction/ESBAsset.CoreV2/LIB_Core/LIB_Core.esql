@@ -1,0 +1,328 @@
+BROKER SCHEMA LIB_Core
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    		Name                Date    	Description
+-- 			  cDatabaseWrite	Rich Jones			30/06/05	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used to write information to the database with common error handling
+---------------------------------------------------------------------------------------
+
+CREATE PROCEDURE cDatabaseWrite(IN SQL_STATEMENT CHAR, IN ERR_CODE CHAR, IN DB_IN_PARAMS REFERENCE) BEGIN
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	-- Perform Database Passthru Statement
+	Passthru(SQL_STATEMENT, DB_IN_PARAMS.[]);
+			
+	-- Check for non-zero SQLCODE or no rows found
+	IF (SQLCODE <> 0) THEN
+		
+		-- Build string of input parameters
+		DECLARE DB_IN_PARAMS_STRING CHAR '';
+	
+		For dipRef As DB_IN_PARAMS.*[] Do
+				SET DB_IN_PARAMS_STRING = DB_IN_PARAMS_STRING || CAST(Coalesce(dipRef,'NULL') as CHAR) || ',';	
+		End For;
+	
+		SET DB_IN_PARAMS_STRING = TRIM(TRAILING ',' From DB_IN_PARAMS_STRING);
+	
+		THROW USER EXCEPTION VALUES(
+			'ESB',
+			'FAILED: Data exception',
+			ERR_CODE,
+			'soap:Server',
+			Left(SQL_STATEMENT, 1000),
+			SQLCODE,SQLERRORTEXT,SQLSTATE,SQLNATIVEERROR,
+			DB_IN_PARAMS_STRING);
+
+
+	END IF;
+
+END;
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    		Name                Date    	Description
+-- 			  cDatabaseRead		Rich Jones			30/06/05	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used to read information from the database with common error handling
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE cDatabaseRead(IN SQL_STATEMENT CHAR, IN THROW_IF_NO_ROWS_FOUND BOOLEAN, IN ERR_CODE CHAR, IN DB_IN_PARAMS REFERENCE, IN DB_OUT_PARAMS REFERENCE, IN RESULT_BRANCH_NAME CHAR) BEGIN
+
+	DECLARE noRowsRef REFERENCE TO DB_IN_PARAMS;
+    
+	-- Perform Database Passthru Statement
+	SET DB_OUT_PARAMS.{RESULT_BRANCH_NAME}[] = Passthru(SQL_STATEMENT, DB_IN_PARAMS.[]);
+	
+	-- Check for non-zero SQLCODE or no rows found
+	Move noRowsRef To  DB_OUT_PARAMS.{RESULT_BRANCH_NAME}[1];
+		
+	-- There were no rows found
+	IF (SQLCODE <> 0) OR (THROW_IF_NO_ROWS_FOUND AND (LastMove(noRowsRef) = FALSE)) THEN
+		
+		-- Build string of input parameters
+		DECLARE DB_IN_PARAMS_STRING CHAR '';
+	
+		For dipRef As DB_IN_PARAMS.*[] Do
+			SET DB_IN_PARAMS_STRING = DB_IN_PARAMS_STRING || CAST(Coalesce(dipRef,'NULL') as CHAR) || ',';
+		End For;
+	
+		SET DB_IN_PARAMS_STRING = TRIM(TRAILING ',' From DB_IN_PARAMS_STRING);
+		
+		IF (SQLCODE <> 0) THEN
+	
+			THROW USER EXCEPTION VALUES(
+				'ESB',
+				'FAILED: Data exception',
+				ERR_CODE,
+				'soap:Server',
+				Left(SQL_STATEMENT, 1000),
+				SQLCODE,SQLERRORTEXT,SQLSTATE,SQLNATIVEERROR,
+				DB_IN_PARAMS_STRING);
+			
+		ELSE
+			
+			THROW USER EXCEPTION VALUES(
+				'ESB',
+				'FAILED: No Rows Found',
+				ERR_CODE,
+				'soap:Server',
+				Left(SQL_STATEMENT, 1000),				
+				SQLCODE,SQLERRORTEXT,SQLSTATE,SQLNATIVEERROR,
+				DB_IN_PARAMS_STRING);			
+			
+		END IF;
+
+	END IF;
+
+END;
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    		Name                Date    	Description
+-- 			  cWrapWithSoap		Andy Howells		08/09/05	Initial Version
+--	14102005  cWrapWithSoap		Rich Jones			18/10/05	Removed TYPE for Move tempRef
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used to read information from the database with common error handling
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE cWrapWithSoap(
+IN outRef REFERENCE,
+IN domainName CHAR,
+OUT Status CHAR) 
+BEGIN
+	
+		-- Basically we take in a reference to the OutputRoot and the domain name that
+		-- you want to wrap in a SOAP Message
+
+
+		DECLARE soap11 NAMESPACE 'http://schemas.xmlsoap.org/soap/envelope/'; 
+		DECLARE soap12 NAMESPACE 'http://www.w3.org/2002/06/soap-envelope'; 
+		DECLARE tempRef REFERENCE TO outRef; -- we will create a temporary storage for the Message Body
+		DECLARE outRef2 REFERENCE To outRef;
+		
+		CREATE LASTCHILD OF tempRef AS tempRef NAME 'TEMP';
+				
+		MOVE outRef LASTCHILD NAME domainName; -- TYPE 0x01000000; 
+		-- HY 14102005 added TYPE 0x01000000 to force outRef pointing at the message body
+		MOVE outRef FIRSTCHILD TYPE 0x01000000;	-- Pointing at the message body
+		CREATE LASTCHILD OF tempRef FROM outRef; -- This is a copy of the message body
+		MOVE tempRef FIRSTCHILD; -- Pointing at the message body
+		
+		DELETE FIELD outRef;
+		
+		MOVE outRef2 LASTCHILD NAME domainName; -- TYPE 0x01000000; 
+		
+		CREATE LASTCHILD OF outRef2 As outRef2 NAMESPACE soap11 NAME 'Envelope';
+		CREATE LASTCHILD OF outRef2 NAMESPACE soap11 NAME 'Header';
+		CREATE LASTCHILD OF outRef2 AS outRef2 NAMESPACE soap11 NAME 'Body';
+		CREATE LASTCHILD OF outRef2 FROM tempRef;
+		
+		-- Now we need to delete the temporary reference
+		MOVE tempRef PARENT;
+		DELETE FIELD tempRef;
+		
+		RETURN;
+	
+END;
+
+-- ************************************************************************************
+-- Update message from one NameSpace to another
+-- ************************************************************************************
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    							Name        Date    	Description
+-- 			  cReplaceNameSpacePrefixOnElements		Rich Jones	22/09/05	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used to read information from the database with common error handling
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE cReplaceNameSpacePrefixOnElements(InOut nmsRef Reference, In oldNamespace Char, In newNamespace Char) BEGIN
+
+    -- ************************************************************************************
+	-- Declare the variables and references required for this procedure
+	-- ************************************************************************************
+    -- The references required
+    Declare newRef Reference To nmsRef; -- Shortcut to the new namespace portion of a message
+    Declare oldRef Reference To nmsRef; -- Shortcut to the old namespace portion of a message
+
+    -- The variables required
+    Declare oldNms         Char oldNamespace || '';   -- the old namespace with a colon on the end
+    Declare oldLength      Int  Length(oldNms);        -- the length of the old namespace including colon
+    Declare newNms         Char newNamespace || '';   -- the new namespace with a colon on the end
+    Declare newElementName Char '';				       -- the new element name with new namespace prefix and colon included
+	Declare treeBottom             Boolean False;      -- Used to indicate that the Reference has reached the bottom of the tree
+	Declare moreElementsToRePrefix Boolean True;       -- Used to indicate that there are potentially still more elements for rePrefixing
+
+	Move oldRef To nmsRef;
+	Move oldRef FirstChild;
+	If LastMove(oldRef) Then -- Ensures there is at least one child under the tree to update
+		While moreElementsToRePrefix Do
+			If SameField(oldRef,nmsRef) Then
+				Set moreElementsToRePrefix = False; -- No more elements to be examined for renaming
+			Else
+				If treeBottom Then -- No elements under this one
+					Move oldRef NextSibling; -- the code is trying to traverse sideways on the tree
+					If LastMove(oldRef) Then
+						Set treeBottom = False; -- This is a new element and will need renaming on the next time round the While loop
+					Else
+						Move oldRef Parent; -- but if sideways doesn't work the code traverses back up the tree
+					End If;
+				Else
+					DECLARE myFieldName char '';
+					set myFieldName = FieldName(oldRef);
+					-- update the namespace, if it matches the old namespace
+		            If SubString(FieldName(oldRef) From 1 For oldLength) = oldNms Then
+
+		                Set newElementName = newNms || SubString(FieldName(oldRef) From (oldLength + 1)); -- Create the new element name
+		                Create PreviousSibling Of oldRef As newRef Name newElementName; -- Copy the old element to the new element
+		                Set newRef = oldRef;   -- Copy the branch of the tree to the newly namespaced branch
+		                Set oldRef = Null;     -- Null the old namespace branch of the tree
+		                Move oldRef To newRef; -- Move the oldRef pointer to point to where the code had reached in it's traverse of the tree
+		
+		            End If;
+
+		            If SubString(oldRef From 1 For oldLength) = oldNms Then
+
+		                --Set newElementName = newNms || SubString(oldRef From (oldLength + 1)); -- Create the new element name
+		                --Create PreviousSibling Of oldRef As newRef Name myFieldName VALUE newNms; -- Copy the old element to the new element
+		                
+		                --Set newRef = oldRef;   -- Copy the branch of the tree to the newly namespaced branch
+		                Set oldRef = newNms;     -- Null the old namespace branch of the tree
+		                --Move oldRef To newRef; -- Move the oldRef pointer to point to where the code had reached in it's traverse of the tree
+		
+		            End If;
+					Move oldRef FirstChild;
+					If Not LastMove(oldRef) Then
+						Set treeBottom = True; -- No children under this element
+					End If;
+				End If;
+			End If;
+		End While;
+	End If;
+
+End;
+-- ************************************************************************************
+-- END OF SUBSECTION: replace element namespace prefix
+-- ************************************************************************************
+
+
+
+
+-- ************************************************************************************
+-- Set up the HTTRequest URL 
+-- ************************************************************************************
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    							Name        Date    	Description
+-- 			  cReplaceNameSpacePrefixOnElements		Rich Jones	22/09/05	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used to read HTTPRequest URL from the database for various web services 
+---------------------------------------------------------------------------------------
+CREATE PROCEDURE cSetHTTPRequestURL(InOut envRef Reference, In webServiceName CHAR, Out webServiceURL CHAR) BEGIN
+
+    -- ************************************************************************************
+	-- Declare the variables and references required for this procedure
+	-- ************************************************************************************
+
+		
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER CARDINALITY(envRef.*[]);
+		DECLARE continueLoop BOOLEAN ;
+		DECLARE varStaticDataKey CHAR '';
+		
+		SET continueLoop = TRUE;
+		
+		WHILE I < J AND continueLoop DO			
+			SET varStaticDataKey = '';
+			SET varStaticDataKey = FIELDNAME(envRef.*[I]);
+			IF varStaticDataKey LIKE webServiceName THEN	
+ 				 SET webServiceURL = FIELDVALUE(envRef.*[I]);	
+				SET continueLoop = FALSE;			
+			ELSE 
+				SET I = I + 1;				
+			END IF;					
+		END WHILE;
+End;
+-- ************************************************************************************
+-- END OF SUBSECTION: Set up the HTTRequest URL 
+-- ************************************************************************************
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    							Name        Date    	Description
+-- 			  GetNextValueOfSequence		        Jingfeng	26/10/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used to read Next Value of a Database Sequence. It supports DB2 and Oracle. 
+---------------------------------------------------------------------------------------
+CREATE FUNCTION GetNextValueOfSequence(IN env REFERENCE, IN ERR_CODE CHAR, IN SequenceName CHAR) RETURNS DECIMAL
+BEGIN
+	Declare DBTypeRef  Reference To env.Variables;
+	MOVE DBTypeRef TO env.Variables.STATIC.DATABASE;
+	
+	IF (NOT LASTMOVE(DBTypeRef)) OR (DBTypeRef IS NULL) THEN
+		Throw User Exception Values (
+			 'ESB',
+			 'FAILURE: The DATABASE Environment Variable does not exist or is NULL.',
+			 ERR_CODE,
+			 'soap:Server');
+	END IF;
+	
+	DECLARE GetSeqSQL CHAR;
+	
+	IF (DBTypeRef = 'DB2') THEN
+		SET GetSeqSQL = 'SELECT NEXT VALUE FOR ' || SequenceName || ' AS NEXT_VALUE FROM SYSIBM.SYSDUMMY1';
+	ELSEIF (DBTypeRef = 'ORACLE') THEN
+		SET GetSeqSQL = 'SELECT ' || SequenceName || '.NEXTVAL AS NEXT_VALUE FROM DUAL';
+	ELSE
+		Throw User Exception Values (
+			 'ESB',
+			 'FAILURE: Database type [' || DBTypeRef || '] is not supported currently.',
+			 ERR_CODE,
+			 'soap:Server');
+	END IF;
+		
+	DECLARE InParamRef REFERENCE TO env;
+	DECLARE OutParamRef REFERENCE TO env;
+	CREATE LASTCHILD OF env NAME 'TempForGetNextValueOfSequence';
+	CREATE LASTCHILD OF env.TempForGetNextValueOfSequence AS InParamRef NAME 'InParam';
+	CREATE LASTCHILD OF env.TempForGetNextValueOfSequence AS OutParamRef NAME 'OutParam';
+	
+	CALL cDatabaseRead(GetSeqSQL, TRUE, ERR_CODE, InParamRef, OutParamRef, 'Result');
+	DECLARE NextValue DECIMAL;
+	SET NextValue = OutParamRef.Result.NEXT_VALUE;
+	
+	SET env.TempForGetNextValueOfSequence = NULL;
+	
+	RETURN NextValue;
+END;
+

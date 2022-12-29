@@ -1,0 +1,13 @@
+
+
+CREATE FILTER MODULE ErroHandler_ErrorAlreadyHandled
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF(Environment.Variables.ErrorFlag = 'Y') THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+
+END MODULE;

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:Logging_SF_Trace_Output.subflow="Logging/SF_Trace_Output.subflow" xmlns:QueueBasedCorrelation_SF_Store_Headers_To_Q.subflow="QueueBasedCorrelation/SF_Store_Headers_To_Q.subflow" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="QueueBasedCorrelation/SF_Broker_Output_No_RFH.subflow" 
+nsPrefix="QueueBasedCorrelation_SF_Broker_Output_No_RFH.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.queueManagerName" name="queueManagerName" >
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.queueName" name="queueName"  defaultValueLiteral="TO BE SUPPLIED">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.Specified_Correl_Msg_Expiry" name="Specified_Correl_Msg_Expiry" lowerBound="1"  defaultValueLiteral="false">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+</eStructuralFeatures>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.Correl_Msg_Expiry" name="Correl_Msg_Expiry"  defaultValueLiteral="36000">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+</eStructuralFeatures>
+<translation xmi:type="utility:TranslatableString" key="SF_Broker_Output_No_RFH" bundleName="QueueBasedCorrelation/SF_Broker_Output_No_RFH" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_Broker_Output_No_RFH.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_Broker_Output_No_RFH.gif"/>
+<composition>
+<nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="386,99" queueName="TO BE SUPPLIED" messageContext="setAll">
+<translation xmi:type="utility:ConstantString" string="OutPut_To_Defined Queue"/>
+</nodes>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="163,231" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="653,103">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="QueueBasedCorrelation/SF_Broker_Output_No_RFH" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="Logging_SF_Trace_Output.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="526,103">
+<translation xmi:type="utility:ConstantString" string="SF_Trace_Output"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="77,98">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="QueueBasedCorrelation/SF_Broker_Output_No_RFH" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="QueueBasedCorrelation_SF_Store_Headers_To_Q.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="147,98">
+<translation xmi:type="utility:ConstantString" string="SF_Store_Headers_To_Q"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="295,98" computeExpression="esql://routine/QueueBasedCorrelation#RemoveRFH2Header.Main">
+<translation xmi:type="utility:ConstantString" string="Remove RFH"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_5" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+<propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.mq.MQOutputQueueManagerEditor" configurable="true" describedAttribute="Property.queueManagerName">
+<propertyName xmi:type="utility:TranslatableString" key="Property.queueManagerName" bundleName="ComIbmMQOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.mq.MQQueueNameEditor" configurable="true" describedAttribute="Property.queueName">
+<propertyName xmi:type="utility:TranslatableString" key="Property.queueName" bundleName="ComIbmMQOutput" pluginId="com.ibm.etools.mft.ibmnodes"/>
+<propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.Specified_Correl_Msg_Expiry">
+<propertyName xmi:type="utility:TranslatableString" key="Property.Specified_Correl_Msg_Expiry" bundleName="QueueBasedCorrelation/SF_Store_Headers_To_Q" pluginId="Core"/>
+<propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.Correl_Msg_Expiry">
+<propertyName xmi:type="utility:TranslatableString" key="Property.Correl_Msg_Expiry" bundleName="QueueBasedCorrelation/SF_Store_Headers_To_Q" pluginId="Core"/>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyDescriptor>
+</propertyOrganizer>
+<attributeLinks promotedAttribute="Property.queueManagerName" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmMQOutput.msgnode#Property.queueManagerName"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.queueName" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmMQOutput.msgnode#Property.queueName"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.Specified_Correl_Msg_Expiry" overriddenNodes="FCMComposite_1_5">
+<overriddenAttribute href="QueueBasedCorrelation/SF_Store_Headers_To_Q.subflow#Property.Specified_Correl_Msg_Expiry"/>
+</attributeLinks>
+<attributeLinks promotedAttribute="Property.Correl_Msg_Expiry" overriddenNodes="FCMComposite_1_5">
+<overriddenAttribute href="QueueBasedCorrelation/SF_Store_Headers_To_Q.subflow#Property.Correl_Msg_Expiry"/>
+</attributeLinks>
+<stickyBoard/>
+</eClassifiers>
+</ecore:EPackage>

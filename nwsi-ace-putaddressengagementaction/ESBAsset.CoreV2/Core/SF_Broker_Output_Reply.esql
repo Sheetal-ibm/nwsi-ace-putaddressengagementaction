@@ -1,0 +1,99 @@
+BROKER SCHEMA Core
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name            Date    	Description
+-- 			  All		Rich Jones		29/06/05	Initial Version
+--			  All		Rich Jones		20/09/05	Changed name of usr folder
+--			  All		Rich Jones		28/09/05	Removed exception handling if no originalUsr
+--			  All		Rich Jones		30/09/05	Only copy replyToQueue and replyToQueueMgr if responseDetails is not null
+--			  All		Rich Jones		10/10/05	Change the name of the usr folder
+--	A00000083 All		Hui Yee Yap		17/10/05	Fixed Defect A00000083
+-- AA00000478 All		Rich Jones		28/11/05	Added the namespaces for the MQRFH2
+-- AA00000512 All		Rich Jones		28/11/05	Removed namespaces
+-- AA00000633 All		Rich Jones		16/02/06	Changed the way the originalUsr is handled
+-- 115989	  All		Shaun Dennett	05/06/09    fixed the issue with the parse statement
+
+---------------------------------------------------------------------------------------
+-- Description:
+-- Used at the end of reply flows
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Broker_Output_Reply_Restore_Original_RFH_Headers
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			Declare workArea BLOB;
+ 		   Declare restore_encoding Integer;  
+  			Declare restore_ccsid    Integer; 
+		 CALL CopyEntireMessage();
+
+		If InputRoot.MQMD.CorrelId = '' Or InputRoot.MQMD.CorrelId IS NULL  Or InputRoot.MQMD.CorrelId = MQCI_NONE THEN		
+			Set OutputRoot.MQMD.CorrelId = CAST(InputRoot.MQMD.MsgId as BLOB);
+		
+		Else 
+		-- Only set this for WPC, for some reason the MsgId will replace the CorrelId while the message is sent to WPC
+			Set OutputRoot.MQMD.MsgId = CAST(InputRoot.MQMD.CorrelId as BLOB);
+		End If;
+			
+		-- Extract reply details from RFH Header	
+		
+		
+		-- Restore the original RFH Header
+		Set restore_encoding = 273; -- set to same value used in the original save subflow
+		Set restore_ccsid    = 819; -- set to same value used in the original save subflow
+		
+		IF InputRoot.MQRFH2.usr.originalUsr IS NOT NULL Then
+ 
+			Set workArea = InputRoot.MQRFH2.usr.originalUsr;
+		   -- implicit conversion from char to BLOB
+			-- create the new RFH2 after MQMD
+			-- This will create a second MQRFH2
+			CREATE NEXTSIBLING Of OutputRoot.MQMD DOMAIN 'MQRFH2' Parse(workArea ENCODING InputRoot.Properties.Encoding
+                    CCSID InputRoot.Properties.CodedCharSetId);	
+ 			
+ 			-- Copy the new RFH2 we have just created into the RFH2 that was already there
+ 			-- We do this in case there was information in the old RFH2 that we need to keep
+ 			Set OutputRoot.MQRFH2[LAST].usr = OutputRoot.MQRFH2.usr;
+ 			
+ 			-- NULL the RFH2 we have just created as it is no longer needed
+ 			Set OutputRoot.MQRFH2 = NULL;
+ 			
+ 			-- Set the format
+        	Set OutputRoot.MQRFH2.(MQRFH2.Field)Format = MQFMT_STRING;
+        
+		Else
+			
+			-- Set the format	
+			Set OutputRoot.MQMD.Format = MQFMT_STRING;
+		End IF;
+		
+		If InputRoot.MQRFH2.usr.originalReplyToQ IS NOT NULL Then
+			Set OutputRoot.MQMD.ReplyToQ    = InputRoot.MQRFH2.usr.originalReplyToQ;
+			Set OutputRoot.MQMD.ReplyToQMgr = InputRoot.MQRFH2.usr.originalReplyToQMgr;
+		End If;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

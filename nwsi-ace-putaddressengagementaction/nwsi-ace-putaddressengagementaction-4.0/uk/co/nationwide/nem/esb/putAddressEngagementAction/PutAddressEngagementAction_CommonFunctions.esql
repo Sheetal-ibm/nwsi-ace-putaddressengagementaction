@@ -1,0 +1,517 @@
+/* ================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+===================================================================================================
+***************************************************************************************************
+** File Version History
+***************************************************************************************************
+** Change ID 	  WorkItemId		  CID 		   Date 		   Description 			Test cycle
+** ----------- 	 ------------		------- 	---------- 	     ----------------- 		-----------
+**   TFR 2			277540 			C412459  	27/11/2019 	      Initial Version 	       DEV
+**   TFR 2.4		277540 			C417151 	23/06/2020 	     TFR 2.4 SIT Def#839       SIT
+																 cpStartDate & cpEndDate
+																 validation updates
+**   DeDuplication  283190 			C433730 	23/07/2020 	     Defect#874 -updated       SIT
+																 'Change ContactPointRole'	
+**   DeDuplication  283492 			C417151 	26/08/2020 	     Defect#917 -updated Jrnl  SIT
+																 condition for CHANGE_TYPE
+																 'Change ContactPointRole'																	 
+***************************************************************************************************
+** Description
+** ================================================================================================
+** The ESQL code below provides common functions which would be used by the other modules
+** of this service. The functions provided below would aid in providing a reusable piece of
+** code for validating the incoming HTTPRequest message, copying incoming message headers to 
+** Environment, creating a Backend Service Header & decoding JWT token etc. 
+***************************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH uk.co.nationwide.nem.esb.patterns;
+/** ========================================================================
+** This functions calls the java function for pattern matching
+****************************************************************************/
+CREATE FUNCTION MatchValueWithRegExp (IN regExPattern CHAR, IN valueToBeMatched CHAR) RETURNS BOOLEAN LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.esb.PatternMatch.MatchValueWithRegExp";
+/****************************************************************************/
+
+CREATE PROCEDURE isValidJournal (IN inRoot REFERENCE,INOUT envRef REFERENCE, IN serviceName CHARACTER)
+	
+	BEGIN
+		
+		DECLARE inRef,refTojournalXml 	   REFERENCE TO inRoot.HTTPInputHeader;
+		DECLARE refToInputData			   REFERENCE TO inRoot.JSON.Data;
+		DECLARE errorFields   		 	   CHARACTER '';
+		DECLARE throwError,throwMissErr,parsingError  BOOLEAN FALSE;
+		DECLARE cFieldValue			       CHARACTER;
+        DECLARE journalToBlob 			   BLOB;
+        DECLARE parserOptions 			   INTEGER BITOR(RootBitStream, ValidateContentAndValue, ValidateComplete, ValidateException); 
+			
+		CALL retrieveCacheSubTree(envRef,'ENV_PARAMETERS',envRef.Operation);
+		
+		IF UPPER(envRef.ENV_PARAMETERS.JournalValidation) = 'OFF' THEN
+			SET parserOptions = BITOR(RootBitStream, ValidateNone);
+		END IF;
+		
+		-------------------------
+		--Validate Journal Data--
+		-------------------------
+		SET cFieldValue = FIELDVALUE(refToInputData.journalData);
+		IF cFieldValue = '' THEN
+			SET throwMissErr = TRUE;
+			SET errorFields	 = errorFields || 'journalData: Missing, ';
+		ELSE
+			BEGIN
+				DECLARE CONTINUE HANDLER FOR SQLSTATE LIKE '%' BEGIN SET parsingError = TRUE; END;
+					SET journalToBlob = CAST(cFieldValue AS BLOB CCSID 1208);
+					CREATE LASTCHILD OF envRef.Variables.journalData AS refTojournalXml DOMAIN('XMLNSC') 
+																	 PARSE(journalToBlob, 437, 1208,,,,parserOptions);
+				END;
+			IF parsingError THEN
+				SET throwError = TRUE;
+				SET errorFields	= errorFields || 'journalData: error occured while parsing xml, ';
+			END IF;
+		END IF;	
+		
+		IF throwMissErr = TRUE THEN
+			SET errorFields	=	LEFT(errorFields,LENGTH(errorFields) - 2) || '.';		
+			CREATE LASTCHILD OF envRef.ProviderErrorInfo NAME 'code' VALUE SvcOperationName || '_400.101';
+		END IF;	
+		
+		--Throw an Exception if the fields failed validation
+		IF throwError = TRUE THEN
+			SET errorFields	=	LEFT(errorFields,LENGTH(errorFields) - 2) || '.';		
+			CREATE LASTCHILD OF envRef.ProviderErrorInfo NAME 'code' VALUE SvcOperationName || '_400.100';
+		END IF;
+		
+                         
+		IF throwError OR throwMissErr  THEN
+			THROW USER EXCEPTION MESSAGE 2952 VALUES ('Error Details:: ' ||  errorFields);
+		END IF;
+		
+	END;
+
+CREATE PROCEDURE isValidRequest (IN inRoot REFERENCE,INOUT envRef REFERENCE, IN serviceName CHARACTER)
+	
+	BEGIN
+		
+		DECLARE inRef				 	   REFERENCE TO inRoot.HTTPInputHeader;
+		DECLARE refToInputData			   REFERENCE TO inRoot.JSON.Data;
+		DECLARE refToCntctPref 			   REFERENCE TO refToInputData.contactPreferences;
+		DECLARE ipSoftLock				   CHARACTER refToInputData.involvedPartySoftLock;
+		DECLARE errorFields   		 	   CHARACTER '';
+		DECLARE throwError,bothBFPOandPoBoxPresent,
+				throwMissErr				  BOOLEAN FALSE;
+		DECLARE cFieldValue			       CHARACTER;
+		DECLARE dateValue 				   TIMESTAMP;
+		DECLARE rowIndex				   INTEGER 1;
+		
+	
+		-------------------------------
+		--Validating Authorization--
+		-------------------------------
+		IF COALESCE(inRef.Authorization,'')='' THEN
+			SET throwMissErr = TRUE;
+			SET errorFields  = errorFields || 'Authorization Header : Missing, ';
+		END IF;
+		
+		-------------------------------
+		--Validating involvedPartyId --
+		-------------------------------
+		SET cFieldValue = FIELDVALUE(envRef.ESBServiceData.involvedPartyId);
+		IF (cFieldValue IS NULL) OR (cFieldValue = '') THEN
+			SET throwMissErr = TRUE;
+			SET errorFields	 = errorFields || 'InvolvedPartyId: Mandatory parameter is missing, ';
+		ELSEIF 	LENGTH(cFieldValue) > 10 THEN
+			SET throwError	= TRUE;
+			SET errorFields	= errorFields || 'InvolvedPartyId: Maximum Length Exceeded, ';     
+		ELSEIF MatchValueWithRegExp(involvedPartyIdPattern,cFieldValue) <> 'true' THEN
+			SET throwError	= TRUE;
+			SET errorFields	= errorFields || 'InvolvedPartyId: Pattern validation failed, ';
+	    END IF; 
+	    
+	    ----------------------
+		--Validating Channel
+		----------------------
+		SET cFieldValue = inRef."X-Channel";
+		IF NOT(EXISTS(inRef."X-Channel"[])) OR cFieldValue = '' THEN
+			SET throwMissErr = TRUE;
+			SET errorFields	 = errorFields || 'X-Channel: Missing, ';
+		ELSE
+			IF MatchValueWithRegExp(XChannelPattern,cFieldValue) <> 'true' THEN
+				SET throwError  = TRUE;
+				SET errorFields	=	errorFields || 'X-Channel: Pattern validation failed, ';
+			END IF;
+			IF LENGTH(cFieldValue) > 25 OR LENGTH(cFieldValue) < 2 THEN
+				SET throwError  = TRUE;
+				SET errorFields	= errorFields || 'X-Channel: Greater than expected length, ';
+			END IF;
+		END IF;
+		
+		-------------------------------
+		--Validate X-Source-System-Id--
+		-------------------------------
+		SET cFieldValue=COALESCE(inRef."X-Source-System-Id",'');
+		IF NOT(EXISTS(inRef."X-Source-System-Id"[])) OR cFieldValue='' THEN
+			SET throwMissErr = TRUE;
+			SET errorFields	 = errorFields || 'X-Source-System-Id: Missing, ';
+		ELSE
+			IF MatchValueWithRegExp(XSourceSystemIdPattern,cFieldValue) <> 'true' THEN
+				SET throwError  = TRUE;
+				SET errorFields	= errorFields || 'X-Source-System-Id: Pattern validation failed, ';
+			ELSEIF LENGTH(cFieldValue) > 60 THEN
+				SET throwError  = TRUE;
+				SET errorFields	= errorFields || 'X-Source-System-Id: Greater than expected length, ';
+			END IF;
+		END IF;
+		
+		-------------------------------
+		--Validate X-Create-Date-Time--
+		-------------------------------
+		SET cFieldValue = FIELDVALUE(inRef."X-Create-Date-Time");
+		IF NOT(EXISTS(inRef."X-Create-Date-Time"[])) OR cFieldValue = '' THEN
+			SET throwMissErr = TRUE;
+			SET errorFields	 = errorFields || 'X-Create-Date-Time: Missing, ';
+		ELSEIF LENGTH(cFieldValue) < 19 THEN
+			SET throwError  = TRUE;
+			SET errorFields	 = errorFields || 'X-Create-Date-Time: Invalid format, ';
+		ELSE		
+			BEGIN
+				DECLARE CONTINUE HANDLER FOR SQLSTATE LIKE '%' BEGIN END ;
+				SET dateValue=CAST(inRef."X-Create-Date-Time" AS TIMESTAMP FORMAT 'IU');
+				IF SQLCODE <> 0  OR (SQLCODE=0 AND COALESCE(dateValue,'') = '') THEN
+					SET throwError	= TRUE;
+					SET errorFields	= errorFields || 'X-Create-Date-Time: Invalid format, ';
+				END IF;
+			END ;
+		END IF;
+		
+		----------------------------------
+		--Validating Channel AlternateId--
+		----------------------------------
+		IF NOT(EXISTS(inRef."X-Channel-Alternate-Id"[])) OR (inRef."X-Channel-Alternate-Id" = '')  THEN
+			SET throwMissErr	=	TRUE;
+			SET errorFields	=	errorFields || 'Unable to identify BranchPrefix as X-Channel-Alternate-Id is not supplied, ';
+		ELSE	
+		
+			DECLARE valueStr CHARACTER;
+			SET valueStr = SUBSTRING(SUBSTRING(inRef."X-Channel-Alternate-Id" AFTER 'FUNCTIONALUNITID ') BEFORE '"');
+			IF COALESCE(valueStr,'') = '' THEN
+				SET throwMissErr  = TRUE;
+				SET errorFields = errorFields || 'BranchPrefix (X-Channel-Alternate-Id): Mandatory parameter is missing, ';
+			END IF;
+			
+			DECLARE reftoChannelAltId REFERENCE TO envRef.ESBServiceData.serviceHeader.channelInfo.alternateIdentifier;
+			WHILE LASTMOVE(reftoChannelAltId) DO
+				IF NOT(reftoChannelAltId.type IN ('CASHIERID','CUSTOMERID','EMPLOYEEID','MACHINEID',
+												  'TERMINALID','USERID','FUNCTIONALUNITID')) THEN
+				SET throwError	=	TRUE;
+				SET errorFields	=	errorFields || 'X-Channel-Alternate-Id: One of the types provided is not allowed as per the ENUM, ';
+				END IF;
+				MOVE reftoChannelAltId NEXTSIBLING REPEAT NAME;	
+			END WHILE;
+			
+			SET cFieldValue = TRANSLATE(inRef."X-Channel-Alternate-Id",'[]"','');
+			IF (MatchValueWithRegExp(XChannelAlternateIdPattern,cFieldValue) <> 'true') THEN
+				SET throwError	=	TRUE;
+				SET errorFields	=	errorFields || 'X-Channel-Alternate-Id: Pattern validation failed, ';
+			END IF;	
+			
+			IF LENGTH(inRef."X-Channel-Alternate-Id") > 121 THEN
+				SET throwError	=	TRUE;
+				SET errorFields	=	errorFields || 'X-Channel-Alternate-Id: Greater than expected length, ';
+			END IF;
+			
+		END IF;
+			
+		---------------------------------
+		--Validating AdditionalInfo-
+		---------------------------------
+		IF (inRef."X-Additional-Info" <> '') THEN		   					
+			IF LENGTH(inRef."X-Additional-Info") > 121 THEN
+				SET throwError  = TRUE;
+				SET errorFields = errorFields || 'X-Additional-Info: Greater than expected length, ';
+			END IF;    
+			SET cFieldValue = TRANSLATE(inRef."X-Additional-Info",'[]"','');
+			IF (MatchValueWithRegExp(XAdditionalInfoPattern,cFieldValue) <> 'true') THEN
+				SET throwError  = TRUE;
+				SET errorFields = errorFields || 'X-Additional-Info: Pattern Validation Failed, ';
+		    END IF;
+		END IF;
+
+		-------------------------
+		--Validate X-Journey-Id--
+		-------------------------
+		SET cFieldValue=inRef."X-Journey-Id";
+		IF EXISTS(inRef."X-Journey-Id"[]) THEN
+			IF MatchValueWithRegExp(XJourneyIdPattern,cFieldValue) <> 'true' THEN
+				SET throwError  = TRUE;
+				SET errorFields	=	errorFields || 'X-Journey-Id: Pattern validation failed, ';
+		    END IF;
+		END IF;
+		
+		-------------------------
+		--Validate X-IP-Address--
+		-------------------------
+		IF EXISTS(inRef."X-Ip-Address"[]) THEN
+			SET cFieldValue=inRef."X-Ip-Address";	
+		    IF LENGTH(cFieldValue) < 7 OR LENGTH(cFieldValue) > 39 THEN
+				SET throwError	= TRUE;
+				SET errorFields	= errorFields || 'X-IP-Address: Length not within range, ';
+		    ELSEIF MatchValueWithRegExp(XIPAddressPattern,cFieldValue) <> 'true' THEN
+			    SET throwError	= TRUE;
+				SET errorFields	= errorFields || 'X-IP-Address: Pattern Validation Failed, ';
+			END IF;    
+		END IF;
+		
+        IF throwMissErr = TRUE THEN
+			SET errorFields	=	LEFT(errorFields,LENGTH(errorFields) - 2) || '.';		
+			CREATE LASTCHILD OF envRef.ProviderErrorInfo NAME 'code' VALUE SvcOperationName || '_400.101';
+		END IF;	
+		
+		--Throw an Exception if the fields failed validation
+		IF throwError = TRUE THEN
+			SET errorFields	=	LEFT(errorFields,LENGTH(errorFields) - 2) || '.';		
+			CREATE LASTCHILD OF envRef.ProviderErrorInfo NAME 'code' VALUE SvcOperationName || '_400.100';
+		END IF;
+		
+                         
+		IF throwError OR throwMissErr   THEN
+			THROW USER EXCEPTION MESSAGE 2952 VALUES ('Error Details:: ' ||  errorFields);
+		END IF;
+		
+	END;      	 
+
+
+------------------------------------------------------------------
+--Procedure to store Input RestserviceHeaders to the environment--
+------------------------------------------------------------------
+CREATE PROCEDURE loadServiceHeaderToEnv (IN refInParameter REFERENCE,INOUT refToEnv REFERENCE)
+
+	BEGIN
+
+		DECLARE index INTEGER 1;
+		DECLARE altIdInfo,addInfo,altholder,addholder CHARACTER;
+		DECLARE isValid BOOLEAN TRUE;
+		DECLARE refEnvhdr,refMsgInfo REFERENCE TO refToEnv;
+	
+		SET refToEnv.serviceHeader.channelInfo.channel	 = refInParameter."X-Channel";	
+		
+		MOVE refEnvhdr TO refToEnv.serviceHeader;
+			
+		SET refEnvhdr.messageInfo.sourceSystemID		 = refInParameter."X-Source-System-Id";
+		MOVE refMsgInfo TO refEnvhdr.messageInfo;
+		SET refMsgInfo.createDateTime 			 		 = refInParameter."X-Create-Date-Time";
+		SET refMsgInfo.ipAddress 			 		     = refInParameter."X-Ip-Address";
+		
+		IF (EXISTS(refInParameter."X-Journey-Id"[])) THEN
+			SET refMsgInfo.journeyID 					 = refInParameter."X-Journey-Id";		
+		END IF;
+				
+		SET refEnvhdr.gatewayInfo.virtualEnvironment	 = refInParameter."X-Virtual-Environment";	
+		
+		SET refEnvhdr.gatewayInfo.schemaVersion  	     = refInParameter."X-Schema-Version";
+				
+		IF (refInParameter."X-Channel-Alternate-Id" <> '') THEN
+				
+			SET altIdInfo = TRANSLATE(refInParameter."X-Channel-Alternate-Id",'[]"','');
+			IF MatchValueWithRegExp(XChannelAlternateIdPattern,altIdInfo) <> 'true' THEN
+				SET isValid = FALSE;
+			END IF;
+			SET altIdInfo = TRIM(altIdInfo);			
+				
+			WHILE isValid DO
+				IF CONTAINS(altIdInfo,',') THEN	
+					SET altholder = SUBSTRING(altIdInfo BEFORE ',');
+					SET refEnvhdr.channelInfo.alternateIdentifier[index].type       = SUBSTRING(TRIM(altholder) BEFORE ' '); 
+					SET refEnvhdr.channelInfo.alternateIdentifier[index].identifier = SUBSTRING(TRIM(altholder) AFTER ' ');
+					SET altIdInfo = SUBSTRING(altIdInfo AFTER ',');
+				ELSE
+					SET refEnvhdr.channelInfo.alternateIdentifier[index].type       = SUBSTRING(TRIM(altIdInfo) BEFORE ' '); 
+					SET refEnvhdr.channelInfo.alternateIdentifier[index].identifier = SUBSTRING(TRIM(altIdInfo) AFTER ' '); 
+					SET isValid = FALSE ;
+				END IF;	
+				SET index = index+1;
+			END WHILE;
+				
+		END IF;
+	
+		SET isValid = TRUE;
+		SET index 	= 1;
+	
+		IF (refInParameter."X-Additional-Info" <> '') THEN
+			
+			SET addInfo = TRANSLATE(refInParameter."X-Additional-Info",'[]"','');
+			IF MatchValueWithRegExp(XAdditionalInfoPattern,addInfo) <> 'true' THEN
+				SET isValid = FALSE;
+			END IF;
+			SET addInfo = TRIM(addInfo);			
+				
+			WHILE isValid DO
+				IF CONTAINS(addInfo,',') THEN	
+					SET addholder = SUBSTRING(addInfo BEFORE ',');
+					SET refEnvhdr.additionalInfo[index].name  = SUBSTRING(TRIM(addholder) BEFORE ' '); 
+					SET refEnvhdr.additionalInfo[index].value = SUBSTRING(TRIM(addholder) AFTER ' ');
+					SET addInfo = SUBSTRING(addInfo AFTER ',');
+				ELSE
+					SET refEnvhdr.additionalInfo[index].name  = SUBSTRING(TRIM(addInfo) BEFORE ' '); 
+					SET refEnvhdr.additionalInfo[index].value = SUBSTRING(TRIM(addInfo) AFTER ' '); 
+					SET isValid = FALSE ;
+				END IF;	
+				SET index = index+1;
+			END WHILE;
+			
+		END IF;	
+	
+	END;
+
+CREATE FUNCTION validateContactPreferenceForEditAddress (IN refToCntctPref REFERENCE,IN ipSoftLock CHARACTER,INOUT envRef REFERENCE)
+																														 RETURNS BOOLEAN
+	BEGIN
+		DECLARE SC03A,SC04B,SC05A,isValidContactPreference BOOLEAN FALSE;
+		
+		/* Check if contactPreference data is of SC03A: Update accounts to have a new/existing correspondance address*/
+    	IF ipSoftLock <> '' AND refToCntctPref.contactPointUsage =  '1' AND refToCntctPref.standaloneAddressIndicator = FALSE THEN
+     		SET SC03A = TRUE;
+     		SET envRef.ESBServiceData.addressChange = 'Address Change';
+    	END IF;
+    	
+		/* Check if contactPreference data is of SC05A: Create new standalone communication point*/
+    	IF ipSoftLock <> '' AND EXISTS(refToCntctPref.contactPointAddressComponent[]) 
+    		AND refToCntctPref.standaloneAddressIndicator = TRUE 
+    			AND COALESCE(refToCntctPref.contactPointRole.contactPointRoleSoftLock,'') = '' 
+    				AND COALESCE(refToCntctPref.contactPointSoftLock,'') = '' AND 
+    				COALESCE(refToCntctPref.contactPointUsage,'') <> '' THEN
+    		SET SC05A = TRUE;
+    		SET envRef.ESBServiceData.standAloneAddress = 'Add Standalone Address';
+    	END IF;
+    		
+		/* Check if contactPreference data is of SC04B: Update CP Role*/
+    	IF EXISTS(refToCntctPref.contactPointRole[]) THEN
+    		IF COALESCE(refToCntctPref.contactPointRole.contactPointRoleSoftLock,'') <> '' THEN
+	    		SET SC04B = TRUE;
+    			IF EXISTS(refToCntctPref.contactPointOccupancyStatusCode[]) THEN
+    				SET envRef.ESBServiceData.updateCPRole.occupancy = 'Change Occupancy Status';
+    			END IF;
+    	    	IF CAST(refToCntctPref.contactPointRole.contactPointUnavailableReason AS INTEGER) = 1 THEN
+    				SET envRef.ESBServiceData.updateCPRole.setTrace = 'Set No Trace';
+    			END IF;
+    			IF CAST(refToCntctPref.contactPointRole.contactPointUnavailableReason AS INTEGER) = 0 THEN
+    				SET envRef.ESBServiceData.updateCPRole.removeTrace = 'Remove No Trace';
+    			END IF;		
+    			IF EXISTS(refToCntctPref.contactPointEndDate[]) THEN
+        			SET envRef.ESBServiceData.updateCPRole.endRole = 'End Contact Point Role';
+    			END IF;
+    			--Defect#874,917, Updates to the condition to evaluate the scenario for Change ContactPointRole
+    			IF NOT EXISTS(refToCntctPref.contactPointEndDate[])
+    				 AND (EXISTS(refToCntctPref.contactPointStartDate[]) 
+    				 OR EXISTS(refToCntctPref.contactPointUsage[]) 
+    				 OR EXISTS(refToCntctPref.contactPointRole.contactPointRoleAddressPrefix[])
+    				 OR EXISTS(refToCntctPref.contactPointRole.contactPointMailingAddressIndicator[])) THEN
+    				SET envRef.ESBServiceData.updateCPRole.change = 'Change Contact Point Role';
+    			END IF;
+    		END IF;
+    	END IF;
+
+    	IF SC03A OR SC04B OR SC05A THEN
+    		SET isValidContactPreference = TRUE;
+    	END IF;
+    
+        -----------------------------------------------------
+		--Saving values to be used for Journal---
+		-----------------------------------------------------	
+    	IF EXISTS(refToCntctPref.accountsForAddressChange[]) THEN
+        	SET envRef.ESBServiceData.addressChange = 'Exception Address Change';
+       	END IF;
+    	
+    	RETURN isValidContactPreference;
+    	
+	END;
+------------------------------------------------------------------------------------------------
+--Custom Procedure to create Headers for Backend from Environment (Arg1 - Source, Arg2 - Target)
+------------------------------------------------------------------------------------------------
+CREATE PROCEDURE createBackendHeader (IN refInHdr REFERENCE,INOUT refToOutHdr REFERENCE)
+
+	BEGIN
+		
+		SET refToOutHdr."X-Additional-Info" 	  = refInHdr."X-Additional-Info";
+		SET refToOutHdr."X-Channel" 			  = refInHdr."X-Channel";
+		SET refToOutHdr."X-Channel-Alternate-Id"  = refInHdr."X-Channel-Alternate-Id";
+		SET refToOutHdr."X-Virtual-Environment"   = refInHdr."X-Virtual-Environment";
+		SET refToOutHdr."X-Schema-Version"	 	  = refInHdr."X-Schema-Version";
+		SET refToOutHdr."X-Journey-Id" 			  = refInHdr."X-Journey-Id";
+		SET refToOutHdr."X-Source-System-Id" 	  = refInHdr."X-Source-System-Id";
+		SET refToOutHdr."X-Create-Date-Time" 	  = refInHdr."X-Create-Date-Time";
+		SET refToOutHdr."X-IP-Address" 		  	  = refInHdr."X-Ip-Address";
+		
+	END;	
+	
+CREATE PROCEDURE bizUseCaseValidation(IN inRoot REFERENCE,INOUT envRef REFERENCE)
+
+	BEGIN
+		 
+		DECLARE refToCntctPref 			   REFERENCE TO inRoot.JSON.Data.contactPreferences;
+		DECLARE ipSoftLock				   CHARACTER inRoot.JSON.Data.involvedPartySoftLock;
+		DECLARE errorFields   		 	   CHARACTER '';
+		DECLARE throwError,bothBFPOandPoBoxPresent
+						   				   BOOLEAN FALSE;
+		DECLARE rowIndex				   INTEGER 1;
+		
+		MOVE refToCntctPref TO refToCntctPref.Item;
+		
+	  
+		
+		WHILE LASTMOVE(refToCntctPref) DO
+			
+			---------------------------------------------------------------
+			--Business Logic To Compare Contact Point Start and End Dates--
+			---------------------------------------------------------------
+			IF EXISTS (refToCntctPref.contactPointStartDate[]) AND EXISTS(refToCntctPref.contactPointEndDate[]) THEN
+				IF CAST(refToCntctPref.contactPointEndDate AS DATE FORMAT 'yyyy-MM-dd') <
+					 CAST(refToCntctPref.contactPointStartDate AS DATE FORMAT 'yyyy-MM-dd') THEN
+					SET throwError = TRUE;
+					SET errorFields	= errorFields || 'ContactPreferences Element [' || CAST(rowIndex AS CHARACTER) 
+												  || '] : contactPointEndDate cannot be less than contactPointStartDate , ';
+				END IF;
+			END IF;
+			---------------------------------------------------------------------
+			--Validate Business Logic (BFPONo and POBoxNo both are not allowed)--
+			---------------------------------------------------------------------
+			IF EXISTS(refToCntctPref.contactPointAddressComponent[]) THEN
+				IF (COALESCE(refToCntctPref.contactPointAddressComponent.poBoxNumber,'') <> ''
+								 AND UPPER(refToCntctPref.contactPointAddressComponent.city) = 'BFPO') THEN
+					SET bothBFPOandPoBoxPresent = TRUE;
+					SET errorFields	= errorFields || 'ContactPreferences Element [' || CAST(rowIndex AS CHARACTER)	
+																					|| '] : BFPONo and POBoxNo both are not allowed, ';
+				END IF;
+			END IF;
+			
+			-------------------------------------------------------------------
+			--Business Logic To Validate if Request is for allowed operations--
+			-------------------------------------------------------------------
+			IF NOT (validateContactPreferenceForEditAddress(refToCntctPref,ipSoftLock,envRef)) THEN 
+				SET throwError = TRUE;
+				SET errorFields	= errorFields || 'ContactPreferences Element [' || CAST(rowIndex AS CHARACTER)	
+																				|| '] : Data Not Valid for Edit Address Use Case, ';
+			END IF;
+        	
+			SET rowIndex = rowIndex + 1;
+			MOVE refToCntctPref NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		--Throw an Exception if the fields failed validation
+		IF throwError = TRUE THEN
+			SET errorFields	=	LEFT(errorFields,LENGTH(errorFields) - 2) || '.';		
+			CREATE LASTCHILD OF envRef.ProviderErrorInfo NAME 'code' VALUE SvcOperationName || '_400.100';
+		END IF;
+		
+		IF bothBFPOandPoBoxPresent THEN
+			CREATE LASTCHILD OF envRef.ProviderErrorInfo NAME 'code' VALUE SvcOperationName || '_400.103';
+		END IF;
+                         
+		IF throwError OR bothBFPOandPoBoxPresent THEN
+			THROW USER EXCEPTION MESSAGE 2952 VALUES ('Error Details:: ' ||  errorFields);
+		END IF;
+	END;

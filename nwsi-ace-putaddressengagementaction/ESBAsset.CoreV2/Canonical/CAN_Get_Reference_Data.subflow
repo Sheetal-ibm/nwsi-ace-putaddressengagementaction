@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="Canonical/CAN_Get_Reference_Data.subflow" 
+nsPrefix="Canonical_CAN_Get_Reference_Data.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<translation xmi:type="utility:TranslatableString" key="CAN_Get_Reference_Data" bundleName="Canonical/CAN_Get_Reference_Data" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/CAN_Get_Reference_Data.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/CAN_Get_Reference_Data.gif"/>
+<shortDescription xmi:type="utility:ConstantString" string="Looks up keys in the domain"/>
+<longDescription xmi:type="utility:ConstantString" string="Looks up all keys if specific keys have not been specified."/>
+<composition>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="55,280" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="34,64">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="Canonical/CAN_Get_Reference_Data" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="326,35" dataSource="ESBDB" computeExpression="esql://routine/Canonical#CAN_Get_Reference_Data_Lookup_Keys_In_Domain.Main" computeMode="destinationAndMessage">
+<translation xmi:type="utility:ConstantString" string="Lookup_Keys_In_Domain"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Internal%20Reference" location="564,39">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Internal%20Reference" bundleName="Canonical/CAN_Get_Reference_Data" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="108,64" dataSource="ESBDB" computeExpression="esql://routine/Canonical#CAN_Get_Reference_Data_Lookup_Data_Provider.Main" treatWarningsAsErrors="true" throwExceptionOnDatabaseError="false">
+<translation xmi:type="utility:ConstantString" string="Lookup_Data_Provider"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="259,67" filterExpression="esql://routine/Canonical#CAN_Get_Reference_Data_Filter.Main">
+<translation xmi:type="utility:ConstantString" string="Filter"/>
+</nodes>
+<nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="280,157" dataSource="ESBDB" computeExpression="esql://routine/Canonical#CAN_Get_Reference_Data_Create_Message_To_External_Data_Provider.Main" treatWarningsAsErrors="true" throwExceptionOnDatabaseError="false">
+<translation xmi:type="utility:ConstantString" string="Create_Message_To_External_Data_Provider"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.External%20Reference" location="548,154">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.External%20Reference" bundleName="Canonical/CAN_Get_Reference_Data" pluginId="flowAPIgenerated"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="OutTerminal.External%20Reference" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="OutTerminal.Internal%20Reference" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+</propertyOrganizer>
+<stickyBoard/>
+</eClassifiers>
+</ecore:EPackage>

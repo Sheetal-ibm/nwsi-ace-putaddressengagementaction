@@ -1,0 +1,70 @@
+BROKER SCHEMA Logging
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Rich Jones			29/06/05	Initial Version
+--	105022 	  			Shaun Dennett		23/02/2009  Chnages for the IA9c getEnvPlugin
+---------------------------------------------------------------------------------------
+-- Description:
+-- Writes the input message the log file if required
+---------------------------------------------------------------------------------------
+
+--CREATE FILTER MODULE "SF_Trace_Input_Do_Enironment.Variables_need_loading"
+CREATE FILTER MODULE "SF_Trace_Input_Variables_need_loading"
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Avoid loading Environment.Variables if they have already been loaded.
+		If Cardinality(Environment.Variables.ENV[]) = 0 Then
+			RETURN TRUE;
+		Else
+			RETURN FALSE;
+		End If;		
+	END;
+
+END MODULE;
+
+
+--CREATE COMPUTE MODULE "SF_Trace_Input_Move_ENV_From_Root_to_Environment.Variables"
+CREATE COMPUTE MODULE "SF_Trace_Input_Move_ENV_From_Root_to_Environment_Variables"
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyEntireMessage();
+		
+		-- Move ENV from Root to Environment.Variables
+		Set Environment.Variables.ENV = Environment.ENV;
+		Set Environment.ENV = NULL;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
+
+
+CREATE FILTER MODULE "SF_Trace_Input_Input_Trace_Required"
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN Environment.Variables.ENV.ESB_TRACE_INPUT = '1';		
+	END;
+
+END MODULE;

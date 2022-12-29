@@ -1,0 +1,45 @@
+/* =====================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+========================================================================================================
+********************************************************************************************************
+** File Version History
+********************************************************************************************************
+** Change ID 	  WorkItemId	     CID 		       Date 		   Description 			Test cycle
+** ----------- 	 ------------	--------------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 		C417151/C412459  	17/11/2019 	      Initial Version 	       DEV
+**												
+********************************************************************************************************
+** Description of the ESQL
+** =====================================================================================================
+** The ESQL module handles any exceptions that might be caught when Audit Subflow tries to
+** put it on the AuditManager input queue.
+********************************************************************************************************/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH AsynAuditing,uk.co.nationwide.nem.esb.logging;
+
+CREATE COMPUTE MODULE ServiceGatewayOut_JournalFailureHandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refToEnvSrvData REFERENCE TO Environment;
+		
+		SET Environment.ESBServiceData.PartialSuccess.Jrnl	= 'Yes';
+		
+		MOVE refToEnvSrvData TO Environment.ESBServiceData;
+		
+		SET refToEnvSrvData.logPosition = 'P5';
+		SET refToEnvSrvData.logErrorId 	= COALESCE(refToEnvSrvData.logErrorId,UUIDASCHAR);
+		SET OutputLocalEnvironment.Log.FailedJournalData = Environment.Variables.journalData.XMLNSC; 
+		SET OutputLocalEnvironment.Log.ExceptionList 	 = InputExceptionList;
+		
+		CALL log4jv2loggingExceptionList(Environment,InputRoot,OutputLocalEnvironment.Log,'ESB','Audit_SF');			
+	 	
+	 	RETURN FALSE;
+	END;
+	
+END MODULE;

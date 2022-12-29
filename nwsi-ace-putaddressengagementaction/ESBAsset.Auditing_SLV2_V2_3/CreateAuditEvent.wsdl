@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" name="CreateAuditEvent" targetNamespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/CreateAuditEvent/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://uk/co/nationwide/Services/Utility/AuditManager/v2/CreateAuditEvent/" xmlns:wsdl_1="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:documentation>
+    <wsdl:appinfo source="WMQI_APPINFO">
+      <MRWSDLAppInfo imported="true">
+        <binding hasEncoding="false" imported="true" name="IAuditManagerBinding" originalBindingStyle="document"/>
+      </MRWSDLAppInfo>
+    </wsdl:appinfo>
+  </wsdl:documentation>
+  <wsdl:import location="IAuditManager.wsdl" namespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/"/>
+  <wsdl:binding name="IAuditManagerBinding" type="wsdl_1:IAuditManager">
+    <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="createAuditEvent">
+      <soap12:operation soapAction="http://uk/co/nationwide/Services/Utility/AuditManager/v2/CreateAuditEvent/createAuditEvent/"/>
+      <wsdl:input>
+        <soap12:body parts="parameters" use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body parts="parameters" use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="fault">
+        <soap12:fault name="fault" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="AuditManager_CreateAuditEvent">
+    <wsdl:port binding="tns:IAuditManagerBinding" name="IAuditManagerPort">
+      <soap12:address location="http://uk/co/nationwide/Services/Utility/AuditManager/v2/CreateAuditEvent/AuditManager_CreateAuditEvent/IAuditManagerPort"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

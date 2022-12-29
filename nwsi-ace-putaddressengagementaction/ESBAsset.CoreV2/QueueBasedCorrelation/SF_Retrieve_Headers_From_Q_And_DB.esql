@@ -1,0 +1,83 @@
+BROKER SCHEMA QueueBasedCorrelation
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+ 
+ 
+ 
+ 
+ 
+PATH LIB_Core; -- This allows use of the core db procedures
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			06/11/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- If no matched correlation message, search DB. If the correlation information cannot
+-- be found in the DB yet, throw an exception.
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Retrieve_Headers_From_Q_And_DB_Search_Database
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	---------------------------------------------------------------------------------------
+	-- Description:
+	-- Main Function
+	---------------------------------------------------------------------------------------
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Ensure MQMD.CorrelId of the Response Message is not NULL.
+		IF InputRoot.MQMD.CorrelId IS NULL THEN
+			THROW USER EXCEPTION VALUES (
+				 'ESB',
+				 'FAILURE: The MQMD.CorrelId of the Response Message should not be NULL.',
+				 'ERR:00205',
+				 'soap:Server');
+		END IF;
+		
+		-- Copy the whole message and local environment.
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		-- Clear the setting for the upstream MQGet node.
+		SET OutputLocalEnvironment.MQGetRetrieveHeadersSetting = NULL;
+		
+		-- Prepare parameters for the search.
+		DECLARE SQL CHAR 'SELECT(MESSAGE_DATA) FROM ASSET.RESPONSE_CONTROL WHERE REQ_MSG_ID=?';
+		SET InputLocalEnvironment.InputParams.REQ_MSG_ID = TransfBlobToChar(InputRoot.MQMD.CorrelId);
+		
+		-- Search DB.
+		CALL cDatabaseRead(SQL, false, 'ERR:00206', InputLocalEnvironment.InputParams, InputLocalEnvironment, 'OutputParams');
+		
+		IF CARDINALITY(InputLocalEnvironment.OutputParams.*[]) > 0 THEN
+			CREATE LASTCHILD OF InputLocalEnvironment NAME 'CorrelMsg';
+			CREATE LASTCHILD OF InputLocalEnvironment.CorrelMsg PARSE (CAST(InputLocalEnvironment.OutputParams.MESSAGE_DATA AS BLOB));
+			SET OutputLocalEnvironment.CorrelMsgRoot = InputLocalEnvironment.CorrelMsg.Root;
+		ELSE
+			THROW USER EXCEPTION VALUES (
+				 'ESB',
+				 'FAILURE: No Matched Correlation Message.',
+				 'ERR:00206',
+				 'soap:Server');
+		END IF;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

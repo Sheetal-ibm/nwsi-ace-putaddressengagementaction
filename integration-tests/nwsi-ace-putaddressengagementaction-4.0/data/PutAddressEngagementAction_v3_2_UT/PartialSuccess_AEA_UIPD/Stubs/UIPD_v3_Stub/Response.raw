@@ -1,0 +1,19 @@
+httpStatus:207
+X-Journey-Id:f9f929ef-5008-49c7-acc0-4608b168eb8e
+{ 
+   "errors":[ 
+      { 
+         "code":"NEM.ESB.IPM.207.001",
+         "message":"Partial Success response received from UpdateInvolvedPartyDetails service",
+         "logErrorId":"c9cd35a4-8cf8-4b9c-90e5-299aea597024"
+      }
+   ],
+   "involvedPartySoftLock":"092349393424",
+   "contactPreferences":[ 
+      { 
+         "contactPointSoftLock":"092349393412",
+         "contactPointRoleSoftLock":"0923493934242345864137808425673452",
+         "contactPointUsage":"1"
+      }
+   ]
+}

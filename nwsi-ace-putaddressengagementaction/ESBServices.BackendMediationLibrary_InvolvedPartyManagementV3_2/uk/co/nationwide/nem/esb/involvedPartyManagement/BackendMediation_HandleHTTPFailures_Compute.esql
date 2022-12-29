@@ -1,0 +1,59 @@
+/* =========================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+* 
+============================================================================================ 
+********************************************************************************************
+** File Version History
+********************************************************************************************
+** Defect ID    CID         Date        	Description       	Test cycle
+**----------- ---------  -----------     ----------------- 		----------- 
+**             C412459    01/08/2019      Initial Version   		Dev
+**             C432489    13/04/2020      Added Log4jV2 changes     DEV
+********************************************************************************************
+** Description of the modules contained in the file.
+** =========================================================================================
+** This module logs is responsible for handling the REST API erorrs returned during 
+** invocation of the operations under the Ispec InvolvedPartyManagement_v3.
+********************************************************************************************/
+BROKER SCHEMA uk.co.nationwide.nem.esb.involvedPartyManagement
+
+PATH uk.co.nationwide.nem.esb.commonFunctions,uk.co.nationwide.nem.esb.logging;
+
+CREATE COMPUTE MODULE BackendMediation_HandleHTTPFailures_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToEnv REFERENCE TO Environment;
+		DECLARE version  CHARACTER Environment.ESBServiceData.IPM_Schema;
+		DECLARE Operation CHARACTER Environment.Variables.STATIC.Operation;
+		DECLARE oprName  CHARACTER REPLACE(Operation,'Update','Put');
+		
+		SET Environment.ESBServiceData.logPosition = 'P3';	
+		---------------------------------------------------------
+		--Logging the InvolvedPartyManagement_v3 Error Response--
+		---------------------------------------------------------			
+		
+		CALL log4jv2logging(refToEnv,InputRoot,'InvolvedPartyManagement_v' || version || '_' || oprName,'ESB');
+		
+		--If a JSON error response was returned as per the swagger spec
+		IF EXISTS(InputRoot.JSON.Data.errors[]) THEN	
+			DECLARE errJSONRef REFERENCE TO InputRoot.JSON.Data.errors; 
+			SET Environment.BackendError.code 		  = errJSONRef.Item[1].code;
+			SET Environment.BackendError.description  = errJSONRef.Item[1].message;
+			
+			PROPAGATE TO TERMINAL 'out' DELETE NONE;
+		-- If some other HTTP content-type message was received		
+		ELSE
+			SET Environment.BackendError.Message = InputRoot;
+			SET Environment.BackendError.type	 = 'UnModelled';
+			
+			PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		END IF;	
+		
+		RETURN FALSE;
+	END;
+END MODULE;

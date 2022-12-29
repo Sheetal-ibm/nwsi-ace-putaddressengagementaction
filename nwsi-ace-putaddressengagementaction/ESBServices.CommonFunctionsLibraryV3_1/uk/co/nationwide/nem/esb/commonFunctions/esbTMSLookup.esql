@@ -1,0 +1,104 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+
+
+--------------------------------------------------------------------------
+--Function  getTMSStringFromCanonical
+--This function retrives records from the REFDATA schema tables 
+--Function takes  TMS_Domain and TMS_CannonicalCode as input and returns a character variable 
+--------------------------------------------------------------------------
+CREATE FUNCTION getTMSStringFromCanonical(TMS_Domain CHARACTER, TMS_CannonicalCode CHARACTER) RETURNS CHARACTER
+	BEGIN
+		Declare SQL_RESULT  ROW;
+	   	Declare TABLENAME, SQL_STATEMENT,COUNT, OUTPUT  CHARACTER;
+		--------------------------------------------------------------------------------
+        --Create table name by contactinating REFDATA.TMS_ and the input variable TMS_Domain
+        --------------------------------------------------------------------------------
+		SET TABLENAME= 'REFDATA.TMS_'||TMS_Domain;
+		--------------------------------------------------------------------------------
+        --Create prepared statement and execute 
+        --------------------------------------------------------------------------------
+        Set SQL_STATEMENT    = 'Select LONGDESCRIPTION From '||TABLENAME||' where code=?';
+        SET SQL_RESULT.result[] = Passthru(SQL_STATEMENT,TMS_CannonicalCode);
+    
+        --------------------------------------------------------------------------------
+        -- Check the cardinality of the row variable and set the number of result in variable count
+        --------------------------------------------------------------------------------
+        SET COUNT=CARDINALITY(SQL_RESULT.*[]);
+        
+        IF COUNT=1 THEN   -- Set the output if the COUNT is 1 
+        	SET OUTPUT = SQL_RESULT.result.LONGDESCRIPTION;
+        ELSE IF COUNT<1 THEN-- Throw and exception if COUNT is less than 1
+        	THROW USER EXCEPTION VALUES('NEM.ESB.20111','NEM.ESB.20111:Unknown TMS honorific code',20111,'NEM.ESB.20111:Unknown TMS honorific code',SQLCODE,SQLERRORTEXT,SQLSTATE,SQLNATIVEERROR);
+        ELSE IF COUNT>1 THEN-- Set the first row as output if COUNT is more than 1
+        	SET OUTPUT = SQL_RESULT.result.LONGDESCRIPTION;
+        END IF;END IF;END IF;
+		RETURN OUTPUT;
+	END;
+
+--------------------------------------------------------------------------
+--Function  getTMSCanonicalFromString
+--This function retrives records from the REFDATA schema tables 
+--Function takes  TMS_Domain and TMS_String as input and returns a character variable 
+--------------------------------------------------------------------------
+CREATE FUNCTION getTMSCanonicalFromString( TMS_Domain CHARACTER, TMS_String CHARACTER) RETURNS CHARACTER
+	BEGIN
+		Declare SQL_RESULT  ROW;
+		Declare TABLENAME, SQL_STATEMENT,COUNT,OUTPUT CHARACTER;
+		--------------------------------------------------------------------------------
+        --Create table name by contactinating REFDATA.TMS_ and the input variable TMS_Domain
+        --------------------------------------------------------------------------------
+		SET TABLENAME= 'REFDATA.TMS_'||TMS_Domain;
+		--------------------------------------------------------------------------------
+        --Create prepared statement and execute 
+        --------------------------------------------------------------------------------     
+        Set SQL_STATEMENT    = 'Select CODE From '||TABLENAME||' where LONGDESCRIPTION=?';
+        SET SQL_RESULT.result[] = Passthru(SQL_STATEMENT, TMS_String);
+        --------------------------------------------------------------------------------
+        -- Check the cardinality of the row variable and set the number of result in variable count
+        --------------------------------------------------------------------------------       
+        SET COUNT=CARDINALITY(SQL_RESULT.*[]);
+        IF COUNT=1 THEN -- Set the output if the COUNT is 1 
+        	SET OUTPUT = SQL_RESULT.result.CODE;
+        ELSE IF COUNT<1 THEN-- Throw and exception if COUNT is less than 1
+        	THROW USER EXCEPTION VALUES('NEM.ESB.20102','NEM.ESB.20102:Unknown TMS String Value',20102,'NEM.ESB.20102:Unknown TMS String Value',SQLCODE,SQLERRORTEXT,SQLSTATE,SQLNATIVEERROR);
+        ELSE IF COUNT>1 THEN-- Set the first row as output if COUNT is more than 1
+        	SET OUTPUT = SQL_RESULT.result.CODE;
+        END IF;END IF;END IF;
+		RETURN OUTPUT;
+	END;
+
+--------------------------------------------------------------------------------------------------------------------
+--Function  getSAPNationalityCodeFromTMS
+--This function retrives records from the REFDATA schema tables 
+--Function takes  TMS_Domain and TMS_CannonicalCode as input and returns a character variable 
+--This function return value of SDSSAPNATIONALITYCODE corresponds to input country code passed as TMS_CannonicalCode
+--------------------------------------------------------------------------------------------------------------------
+CREATE FUNCTION getSAPNationalityCodeFromTMS(TMS_Domain CHARACTER, TMS_CannonicalCode CHARACTER) RETURNS CHARACTER
+	BEGIN
+		Declare SQL_RESULT  ROW;
+	   	Declare TABLENAME, SQL_STATEMENT,COUNT, OUTPUT  CHARACTER;
+		--------------------------------------------------------------------------------
+        --Create table name by contactinating REFDATA.TMS_ and the input variable TMS_Domain
+        --------------------------------------------------------------------------------
+		SET TABLENAME= 'REFDATA.TMS_'||TMS_Domain;
+		--------------------------------------------------------------------------------
+        --Create prepared statement and execute 
+        --------------------------------------------------------------------------------
+        Set SQL_STATEMENT    = 'Select SDSSAPNATIONALITYCODE From '||TABLENAME||' where code=?';
+        SET SQL_RESULT.result[] = Passthru(SQL_STATEMENT,TMS_CannonicalCode);
+    
+        --------------------------------------------------------------------------------
+        -- Check the cardinality of the row variable and set the number of result in variable count
+        --------------------------------------------------------------------------------
+        SET COUNT=CARDINALITY(SQL_RESULT.*[]);
+        
+        IF COUNT=1 THEN   -- Set the output if the COUNT is 1 
+        	SET OUTPUT = SQL_RESULT.result.SDSSAPNATIONALITYCODE;
+        ELSE IF COUNT<1 THEN-- Throw and exception if COUNT is less than 1
+        	THROW USER EXCEPTION VALUES('NEM.ESB.20111','NEM.ESB.20111:Unknown TMS honorific code',20111,'NEM.ESB.20111:Unknown TMS honorific code',SQLCODE,SQLERRORTEXT,SQLSTATE,SQLNATIVEERROR);
+        ELSE IF COUNT>1 THEN-- Set the first row as output if COUNT is more than 1
+        	SET OUTPUT = SQL_RESULT.result.SDSSAPNATIONALITYCODE;
+        END IF;END IF;END IF;
+		RETURN OUTPUT;
+	END;

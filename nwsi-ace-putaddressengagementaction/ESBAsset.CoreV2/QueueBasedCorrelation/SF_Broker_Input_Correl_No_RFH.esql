@@ -1,0 +1,59 @@
+BROKER SCHEMA QueueBasedCorrelation
+
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+ 
+ 
+ 
+ 
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Jingfeng			03/11/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Re-construct the RFH2 header of the response message by the Correlation Message.
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE ReconstructRFH2Header
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	---------------------------------------------------------------------------------------
+	-- Description:
+	-- Main Function
+	---------------------------------------------------------------------------------------
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Copy the whole Local Env and Msg.
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		
+		-- If no RFH2 header in the input Msg, create it.
+		DECLARE RFH2Ref REFERENCE TO OutputRoot;
+		MOVE RFH2Ref TO OutputRoot.MQRFH2;
+		IF NOT LASTMOVE(RFH2Ref) THEN
+			CREATE NEXTSIBLING OF OutputRoot.MQMD AS RFH2Ref DOMAIN 'MQRFH2';
+		END IF;
+		
+		-- Copy MQRFH2.usr
+		SET RFH2Ref.usr = OutputLocalEnvironment.CorrelMsgRoot.MQRFH2.usr;
+		
+		-- Clean the Correl Msg Information
+		SET OutputLocalEnvironment.CorrelMsgRoot = NULL;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,36 @@
+
+/* =======================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+==========================================================================================
+******************************************************************************************
+** File Version History
+******************************************************************************************
+**  Change ID 	WorkItemId     CID 	     Date 		         Description	    Test cycle
+** ----------- 	----------   --------   ---------- 	  ------------------------	-----------
+**   TFR 3	 	  277540      C412459   28/11/2019 	   		Initial Version 	    DEV
+**												
+*******************************************************************************************
+** Description of the ESQL
+** ========================================================================================
+** The ESQL module handles any unmodelled errors from calling the REST API UIPD and throws
+** appropriate exception message
+** ========================================================================================*/
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+CREATE COMPUTE MODULE SF_Call_InvolvedPartyManagementV3_HandleUnModelledError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	
+		IF (InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" IN (403,404,503,504)) THEN
+			SET Environment.ProviderErrorInfo.code = SvcOperationName || '_UIPD_Unavail';
+		ELSE
+			SET Environment.ProviderErrorInfo.code = SvcOperationName || '_UIPD_UnModErr';
+		END IF;
+		THROW USER EXCEPTION MESSAGE 2954 VALUES('UnModelled Error from the PutInvolvedParties');
+		
+	END;
+END MODULE;

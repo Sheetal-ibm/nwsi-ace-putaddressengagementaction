@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/Services/Utility/AuditManager/TransferObjects/Utility/Auditing" version="1.0" xmlns:aud="http://uk/co/nationwide/Services/Utility/AuditManager/TransferObjects/Utility/Auditing" xmlns:prdt="http://uk/co/nationwide/PrimitiveDatatypes/" xmlns:xsd_1="http://uk/co/nationwide/UtilityComponents/Auditing/Enumerations/">
+  <xsd:import namespace="http://uk/co/nationwide/PrimitiveDatatypes/" schemaLocation="../../../../../../../PrimitiveDatatypes/PrimitiveDatatypes.xsd"/>
+  <xsd:import namespace="http://uk/co/nationwide/UtilityComponents/Auditing/Enumerations/" schemaLocation="../../../../../../../UtilityComponents/Auditing/Enumerations/Enumerations.xsd"/>
+  <xsd:complexType name="AuditInformation_TO">
+    <xsd:sequence>
+      <xsd:element name="contextId" type="xsd:ID">
+        <xsd:annotation>
+          <xsd:documentation>unique id used to identify the audit event. (i.e. AUSS_ID)</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="originatingSystem" type="xsd_1:LogicalLayerType">
+        <xsd:annotation>
+          <xsd:documentation>This will tell in which NEM layer the Audit event was generated, possible values can be found in the enumeration. When INTERNAL is chosen additional details can be given in in the additional Reference Id field. IF LRPO or STPO are used, Additional Reference ID can be used to pass the Process ID.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="eventSource" type="prdt:String256">
+        <xsd:annotation>
+          <xsd:documentation>Name of process, service or screen where the audit point was generated</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="auditTypeId" type="prdt:String15">
+        <xsd:annotation>
+          <xsd:documentation>Audit Event ID to allow SID to audit. This will be assigned by the event publisher (STPO, ESB, Channel)</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="eventTimestamp" type="prdt:DateTime">
+        <xsd:annotation>
+          <xsd:documentation>date and time in UTC format when the event occurred</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="isJournal" type="prdt:Boolean">
+        <xsd:annotation>
+          <xsd:documentation>Y or N – If sent by ESB in Originating system this is optional
+
+Publishers post their audit messages optimised for processing based on topic. Topic is used to determine which subscriber will receive a given message.
+
+See Publication TOPIC Section in functional specification for more details.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="serverName" type="prdt:String50">
+        <xsd:annotation>
+          <xsd:documentation>The name of the server that was originating the Audit event.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="additionalRefId" type="prdt:String50">
+        <xsd:annotation>
+          <xsd:documentation>This allows the Audit originator to specify additional ID like for example the Process ID when originating system is LRPO, other originating systems (like INTERNAL) can use this field to populate additional ID that will be helpful to locate the audit entry within their system.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="20" minOccurs="0" name="eventData" type="aud:Item_TO">
+        <xsd:annotation>
+          <xsd:documentation>Details of the event</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="appendix" type="xsd:anyType">
+        <xsd:annotation>
+          <xsd:documentation>Reserved for future usage</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="Item_TO">
+    <xsd:sequence>
+      <xsd:element name="name" type="xsd:string"/>
+      <xsd:element name="value" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

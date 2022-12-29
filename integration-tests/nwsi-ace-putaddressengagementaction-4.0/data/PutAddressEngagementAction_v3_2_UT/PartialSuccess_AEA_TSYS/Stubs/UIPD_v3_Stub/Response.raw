@@ -1,0 +1,16 @@
+httpStatus:207
+X-Journey-Id:f9f929ef-5008-49c7-acc0-4608b168eb8e
+{
+  "errors": [
+    {
+      "code": "NEM.ESB.IPM.207.002",
+      "message": "Partial success - TSYS Account Id or Token Id could not be retrieved",
+      "logErrorId": "c9cd35a4-8cf8-4b9c-90e5-299aea597024"
+    }
+  ],
+  "contactPreferences": [
+    {
+      "contactPointRoleSoftLock": "0923493934242345864137808425673452"
+    }
+  ]
+}

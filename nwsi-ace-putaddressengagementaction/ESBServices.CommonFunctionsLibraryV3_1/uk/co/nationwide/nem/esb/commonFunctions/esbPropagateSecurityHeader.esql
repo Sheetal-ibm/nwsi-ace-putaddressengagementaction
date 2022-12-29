@@ -1,0 +1,62 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+--------------------------------------------------------------------------------
+--Procedure to propagate Input Security Headers into the Output Security Headers
+--------------------------------------------------------------------------------
+
+CREATE PROCEDURE PropagateSecurityHeader (IN In_SerHdr REFERENCE,INOUT Out_SerHdr REFERENCE)
+
+	BEGIN
+		    
+			SET Out_SerHdr	=	In_SerHdr ;			
+			
+			
+	END;
+	
+/***************************************************************************************
+--** Description Of the Procedure contained in the file.
+--** ==================================================================================
+--** This procedure deals with Security Request Headers.
+**************************************************************************************/
+
+------------------------------------------------------------------------------------------------
+--Procedure to propagate Input Security Request Headers into the Output Security Request Headers
+------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE PropagateSecurityRequestHeader (IN In_SerReqHdr REFERENCE,INOUT Out_SerReqHdr REFERENCE)
+
+	BEGIN
+		
+-----------------------------------------------------------------------------------------------
+--Call Procedure PropagateSecurityHeader to propagate Input Security Request Headers into the 
+--Output Security Request Headers
+-----------------------------------------------------------------------------------------------
+
+		CALL PropagateSecurityHeader(In_SerReqHdr,Out_SerReqHdr);			
+			
+			
+	END;
+	
+/***************************************************************************************
+--** Description Of the Procedure contained in the file.
+--** ==================================================================================
+--** This procedure deals with Security Response Headers.
+**************************************************************************************/
+
+--------------------------------------------------------------------------------------------------
+--Procedure to propagate Input Security Response Headers into the Output Security Response Headers
+--------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE PropagateSecurityResponseHeader (IN In_SerResHdr REFERENCE,INOUT Out_SerResHdr REFERENCE)
+
+	BEGIN
+		
+-------------------------------------------------------------------------------------------------------------------------------
+--Call Procedure PropagateSecurityHeader to propagate Input Security Response Headers into the Output Security Response Headers
+-------------------------------------------------------------------------------------------------------------------------------
+
+		CALL PropagateSecurityHeader(In_SerResHdr,Out_SerResHdr);			
+			
+			
+	END;	
+	

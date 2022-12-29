@@ -1,0 +1,50 @@
+/*=====================================================================================================
+* Licensed Materials - Property of Nationwide Building Society
+* Nationwide Enterprise Middleware DC
+=======================================================================================================
+*******************************************************************************************************
+** File Version History
+*******************************************************************************************************
+**   Work Item ID			CID			  Date			Life cycle				Description           	 	
+**   ------------     	  ---------    ----------       ----------            ---------------         		
+      	248745     	   	   C411066	    13/08/19           DEV                Initial Version        
+******************************************************************************************************/
+
+-------------------
+-- Broker schema --
+-------------------
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+/***************************************************************************
+** Description OF the Module
+** ========================================================================
+** Procedure to extract a field value from Claims in JWT
+****************************************************************************/
+CREATE PROCEDURE extractFromJWToken (IN refAuthHdr REFERENCE,INOUT refToEnv REFERENCE)
+BEGIN		
+	DECLARE cEncodedValue CHARACTER refAuthHdr;
+	DECLARE strtPos,endPos INTEGER;
+	DECLARE padChar CHARACTER;
+	
+	SET strtPos= POSITION('.' IN cEncodedValue )+1;
+	SET endPos = POSITION('.' IN cEncodedValue REPEAT 2);
+    
+    SET cEncodedValue = SUBSTRING(refAuthHdr FROM strtPos FOR endPos-strtPos );
+    DECLARE iLengthEncodedValue INTEGER LENGTH(cEncodedValue);
+    DECLARE iModEncodedValue 	INTEGER MOD(iLengthEncodedValue,4);
+    
+    IF iModEncodedValue 	= 3 THEN
+    	SET padChar = '=';
+    ELSEIF iModEncodedValue = 2 THEN
+    	SET padChar = '==';
+    ELSEIF iModEncodedValue = 1 THEN
+    	SET padChar = '===';
+    END IF;
+    
+    IF iModEncodedValue > 0 THEN
+    	SET cEncodedValue =TRIM(cEncodedValue||padChar); 
+    END IF;
+    
+    DECLARE bDecodedValue BLOB BASE64DECODE(cEncodedValue);
+    CREATE LASTCHILD OF refToEnv.TokenClaims DOMAIN ('JSON') PARSE(bDecodedValue,546,1208);		
+END;					

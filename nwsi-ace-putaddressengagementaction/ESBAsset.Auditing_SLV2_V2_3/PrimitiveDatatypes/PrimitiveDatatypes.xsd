@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/PrimitiveDatatypes/" version="1.0" xmlns:dmdef="http://uk/co/nationwide/Definitions/" xmlns:prdt="http://uk/co/nationwide/PrimitiveDatatypes/">
+  <xsd:import namespace="http://uk/co/nationwide/Definitions/" schemaLocation="../Definitions/Definitions.xsd"/>
+  <xsd:annotation>
+    <xsd:documentation/>
+  </xsd:annotation>
+  <xsd:simpleType name="String15">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 15 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="15"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Text">
+    <xsd:annotation>
+      <xsd:documentation>A string of characters (optionally containing blanks) for which a maximum length cannot realistically be fixed. IBM Unique ID: IDM10007</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="NumericString10">
+    <xsd:annotation>
+      <xsd:documentation>String containing only numbers (0-9)
+
+Max Length of 10</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="10"/>
+      <xsd:pattern value="[\s0-9]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString60">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 60</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="60"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Decimal">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value that is not restricted to integer values and has a decimal point denoting fractional units. IBM Unique ID: IDM09902</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:decimal"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="UUID">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Date">
+    <xsd:annotation>
+      <xsd:documentation>An indication of a particular day in the Gregorian calendar. IBM Unique ID: IDM09899</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:date"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="NumericStringA10">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to NumericString, can only contain numbers (0-9)
+
+Can also contain +(plus) -(hyphen)
+
+Max Length of 30</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="10"/>
+      <xsd:pattern value="[\s0-9\+\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="NumericString8">
+    <xsd:annotation>
+      <xsd:documentation>String containing only numbers (0-9)
+
+Max Length of 8</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="8"/>
+      <xsd:pattern value="[\s0-9]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringA18">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain &amp;(ampersand) !(exclamation mark)
+
+Max Length of 18</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="18"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String11">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="Number04">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value capable of holding a real number, 4 characters, not capable of holding a fractional or decimal value. Can also include negative numbers.
+
+This number enforces a restriction on the integer data type.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer">
+      <xsd:pattern value="-?\d{0,4}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString4">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 4</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="4"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString5">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 5</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="5"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String350">
+    <xsd:annotation>
+      <xsd:documentation>String with Max Length of 350</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="350"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString20">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 20</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="20"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString40">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 40</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="40"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringC">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) (space) -(hyphen)
+
+As well as &amp;(ampersand) /(forward slash) !(exclamation mark)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[\sa-zA-Z0-9,_'/!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CurrencyAmount">
+    <xsd:annotation>
+      <xsd:documentation>A monetary amount including the &lt;Currency&gt;IBM Unique ID: IDM09893</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="theCurrencyAmount" type="prdt:Decimal">
+        <xsd:annotation>
+          <xsd:documentation>Amount. IBM Unique ID: IDM10919</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="theCurrencyCode" type="dmdef:CurrencyType">
+        <xsd:annotation>
+          <xsd:documentation>The currency of the monetary amount IBM Unique ID: IDM10920</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:simpleType name="BasicString2">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 2</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="2"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString255">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 255</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="255"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ReturnCode">
+    <xsd:annotation>
+      <xsd:documentation>Identifies an opaque result handle defined to be zero for a successful return from a function and nonzero if error or status information is returned. IBM Unique ID: IDM09991</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="Number02">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value capable of holding a real number, 2 characters, not capable of holding a fractional or decimal value.  Can also include negative numbers.
+
+This number enforces a restriction on the integer data type.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer">
+      <xsd:pattern value="-?\d{0,2}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Number10">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value capable of holding a real number, 4 characters, not capable of holding a fractional or decimal value.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer">
+      <xsd:pattern value="\d{0,10}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String34">
+    <xsd:restriction base="prdt:String">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="34"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BankAccountNumberType">
+    <xsd:annotation>
+      <xsd:documentation>An 8 digit number type</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="String100">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 100 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="100"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Time">
+    <xsd:annotation>
+      <xsd:documentation>An indication of a particular time in a day expressed with a maximum precision of one millisecond. IBM Unique ID: IDM10008</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:time"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="Percentage">
+    <xsd:annotation>
+      <xsd:documentation>A ratio, usually expressed as a number of units in 100.  Strictly speaking a value outside of the range 0 to 100 is invalid, but these values are common. IBM Unique ID: IDM09967</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:decimal"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="String23">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="String13">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="13"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Number">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value capable of holding a real number, not capable of holding a fractional or decimal value. IBM Unique ID: IDM09955</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="NumericStringA">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to NumericString, can only contain numbers (0-9)
+
+Can also contain +(plus) -(hyphen)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[\s0-9\+\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString64">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 64</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="64"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="UKDomesticSortCodeType">
+    <xsd:annotation>
+      <xsd:documentation>A 6 digit number type intended to ensure that the sort code has a valid format.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer">
+      <xsd:pattern value="\d{6}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String02">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 02 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="2"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Number4">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value capable of holding a real number, 4 characters, not capable of holding a fractional or decimal value.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer">
+      <xsd:pattern value="\d{0,4}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Identifier">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value capable of holding a real number that uniquely identifies an instance IBM Unique ID: IDM09928</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString3">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 3</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="3"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="Binary">
+    <xsd:annotation>
+      <xsd:documentation>A finite sequence of bytes. The definition consists of two logical elements: binary data and binary data length. IBM Unique ID: IDM09867</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="theContentType" type="prdt:String">
+        <xsd:annotation>
+          <xsd:documentation>An identifier specifying the content type of the data structure. IBM Unique ID: IDM10918</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="theBinData" type="prdt:Byte">
+        <xsd:annotation>
+          <xsd:documentation>The data contained in the type IBM Unique ID: IDM10916</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="theBinLength" type="prdt:Number">
+        <xsd:annotation>
+          <xsd:documentation>The length of data contained in this type IBM Unique ID: IDM10917</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:simpleType name="BasicStringA35">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain &amp;(ampersand) !(exclamation mark)
+
+Max Length of 35</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="35"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringA">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore)  (space) '(apostrophe) -(hyphen)
+
+Also can contain &amp;(ampersand) !(exclamation mark)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[\sa-zA-Z0-9,_'!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="Amount">
+    <xsd:annotation>
+      <xsd:documentation>A numeric count including units, such as liters, inches, or kilometres per litre. An example would be 150 km/h. IBM Unique ID: IDM09856</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="theAmount" type="prdt:Decimal">
+        <xsd:annotation>
+          <xsd:documentation>The amount being measured IBM Unique ID: IDM10915</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="theUnit" type="prdt:String">
+        <xsd:annotation>
+          <xsd:documentation>An indicator of the type being measured IBM Unique ID: IDM10921</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:simpleType name="BasicStringC18">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) (space) -(hyphen)
+
+As well as &amp;(ampersand) /(forward slash)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="18"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'/!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="NumericString6">
+    <xsd:annotation>
+      <xsd:documentation>String containing only numbers (0-9)
+
+Max Length of 6</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="6"/>
+      <xsd:pattern value="[\s0-9]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringA31">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain &amp;(ampersand) !(exclamation mark)
+
+Max Length of 31</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="31"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String30">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 30 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="30"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringC35">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) (space) -(hyphen)
+
+As well as &amp;(ampersand) /(forward slash)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="35"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'/!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="DateTime">
+    <xsd:annotation>
+      <xsd:documentation>An indication of a particular date and time expressed with a precision of one millisecond. IBM Unique ID: IDM09900</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:dateTime"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringA30">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain &amp;(ampersand) !(exclamation mark)
+
+Max Length of 30</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="30"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="NumericString">
+    <xsd:annotation>
+      <xsd:documentation>String containing only numbers (0-9)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[\s0-9]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String">
+    <xsd:annotation>
+      <xsd:documentation>A string of characters (optionally containing blanks) for which a maximum length can be specified. IBM Unique ID: IDM10000</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="String12">
+    <xsd:restriction base="xsd:string">
+      <xsd:length value="12"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String10">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 10 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="10"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String256">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 256 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="256"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String03">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 03 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="3"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TimePeriod">
+    <xsd:annotation>
+      <xsd:documentation>A duration of time expressed in years, months, days, hours, minutes, and seconds. IBM Unique ID: IDM10011</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:duration"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="IPAddress">
+    <xsd:annotation>
+      <xsd:documentation>String with format of IP Address
+
+Can only contain a-f A-F 0-9 .(full-stop) :(colon)
+
+Max Length of 39</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="39"/>
+      <xsd:pattern value="[\sa-zA-Z0-9:\.]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String50">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="50"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Boolean">
+    <xsd:annotation>
+      <xsd:documentation>Boolean indicates a logical TRUE or FALSE condition. IBM Unique ID: IDM09870</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:boolean"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="String64">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 64 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="64"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString10">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 10</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="10"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringA15">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain &amp;(ampersand) !(exclamation mark)
+
+Max Length of 15</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="15"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'!\.\-&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString25">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 25</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="25"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String04">
+    <xsd:restriction base="prdt:String">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="4"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringB20">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain /(forward slash) \(backward slash)
+
+Max Length of 20</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="20"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'/\.\-\\]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringB">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain /(forward slash) \(backward slash)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[\sa-zA-Z0-9,_'/\.\-\\]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="NumericStringA30">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to NumericString, can only contain numbers (0-9)
+
+Can also contain +(plus) -(hyphen)
+
+Max Length of 30</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="30"/>
+      <xsd:pattern value="[\s0-9\+\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String18">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 03 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="18"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String25">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 25 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="25"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicStringA80">
+    <xsd:annotation>
+      <xsd:documentation>String, similarly to BasicString, can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Also can contain &amp;(ampersand) !(exclamation mark)
+
+Max Length of 80</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="80"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'!\.\-;&amp;]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Number2">
+    <xsd:annotation>
+      <xsd:documentation>A numeric value capable of holding a real number, 2 characters,  not capable of holding a fractional or decimal value.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:integer"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="AlphanumericString">
+    <xsd:annotation>
+      <xsd:documentation>A string of characters without blanks) with at least one character</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:pattern value="[a-zA-Z0-9]+"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String06">
+    <xsd:annotation>
+      <xsd:documentation>A string that must not exceed 06 characters</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="2"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="String1000">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1"/>
+      <xsd:maxLength value="1000"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString50">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 50</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="50"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="Byte">
+    <xsd:annotation>
+      <xsd:documentation>An 8-bit integer that is not signed IBM Unique ID: IDM09873</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:byte"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BasicString8">
+    <xsd:annotation>
+      <xsd:documentation>String can only contain a-z A-Z 0-9 .(full stop) ,(comma) _(underscore) (space) '(apostrophe) -(hyphen)
+
+Max Length of 8</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="0"/>
+      <xsd:maxLength value="8"/>
+      <xsd:pattern value="[\sa-zA-Z0-9,_'\.\-]*"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>

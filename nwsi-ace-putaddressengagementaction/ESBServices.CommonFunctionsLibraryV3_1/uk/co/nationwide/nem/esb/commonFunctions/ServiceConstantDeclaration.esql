@@ -1,0 +1,41 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+/*******************************************************************************
+* Node: N/A
+* Module Name: Request Validation Pattern Matching Library
+*
+* Description: Constant values used within this service operation
+*	
+* Author: Devraj Mukherjee
+* 2.0   : Akash  Minocha
+*
+* Ver Date Descripton
+* === ========== =============================================
+* 1.0 20/07/2018 Initial
+* 2.0 12/07/2019 Added pattern of headers which will be used in common header validation.
+**************************************************************/
+--JWT BinarySecurityToken (XMLNSC) attribute valueType
+DECLARE valueType CHARACTER 'urn:ietf:params:oauth:token-type:jwt';
+--JWT BinarySecurityToken (XMLNSC) attribute EncodingType
+DECLARE EncodingType CHARACTER 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary';
+
+/*===========================================================
+* HEADER VALIDATION
+**************************************************************/
+
+DECLARE Pan							CONSTANT CHARACTER	'^\d{16}$';
+DECLARE Pan1						CONSTANT CHARACTER	'^\d{18}$';
+DECLARE Pan2						CONSTANT CHARACTER	'^\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}$';
+DECLARE XIPAddressPattern 			CONSTANT CHARACTER  '^[a-fA-F0-9:\.]*$';
+DECLARE XAdditionalInfoPattern 		CONSTANT CHARACTER  '^[a-zA-Z0-9,_\''\.\-]+[ ][ a-zA-Z0-9,_\''\.\-]+$';
+DECLARE XChannelAlternateId 		CONSTANT CHARACTER  '^[a-zA-Z0-9,_\''\.\-]+[ ][ a-zA-Z0-9,_\''\.\-]+$';
+DECLARE XAdditionalInfo 			CONSTANT CHARACTER  '^[a-zA-Z0-9,_\''\.\-]+[ ][ a-zA-Z0-9,_\''\.\-]+$';
+DECLARE XChannelAlternateIdPattern  CONSTANT CHARACTER  '^[a-zA-Z0-9,_\''\.\-]+[ ][ a-zA-Z0-9,_\''\.\-]+$';
+DECLARE XChannelPattern 			CONSTANT CHARACTER  '^[\sa-zA-Z0-9,_''\.\-]*$';											         
+DECLARE XVirtualEnvironment 		CONSTANT CHARACTER  '^[A-Z0-9,\.\-]*$';
+DECLARE XJourneyIdPattern 			CONSTANT CHARACTER  '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$';
+DECLARE XSourceSystemIdPattern 		CONSTANT CHARACTER  '^[\sa-zA-Z0-9,_''\.\-]*$';
+DECLARE XIdempotencykeyPattern 		CONSTANT CHARACTER  '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$';
+DECLARE XCreateDateTime				CONSTANT CHARACTER  '^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[Z]{0,1})$';
+DECLARE XCreateDateTime2			CONSTANT CHARACTER  '^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.]{1}[0-9]{3}Z)$';
+

@@ -1,0 +1,42 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+--* ==========================================================================
+-- *
+-- * Licensed Materials - Property of Nationwide Building Society
+-- *
+-- * Nationwide Enterprise Middleware DC
+-- *
+--* ==========================================================================
+--============================================================================= 
+--*****************************************************************************
+--** File Version History
+--*************************************************************************************************************************************************
+--** DefectID/ChangeID	 CID		Date			                         Description	                                           Test cycle
+--** ----------------- -------- ------------- --------------------------------------------------------------------------------------    ----------                                                                  
+--**  				   C416526	 06/09/2017    	               Initial Version															 Dev
+--***************************************************************************************************************************************************
+	
+	---------------------------------------------------------------------------------------------
+	--Procedure Description: procedure to convert xmltree to a string value 
+	--ParameterDescription:
+	--refInxML  		-> Reference to xml tree element
+	--refOutString 		-> Reference to output string element
+	--ccsid 			-> CCSID for conversion
+	--encoding 			-> encoding for conversion
+	---------------------------------------------------------------------------------------------
+	CREATE PROCEDURE ConvertXmlToString(IN refInxML REFERENCE, INOUT refOutString REFERENCE, IN ccsid INTEGER, IN encoding INTEGER)
+	BEGIN
+		
+		SET refOutString 	= ASBITSTREAM(refInxML CCSID COALESCE(ccsid,1208) ENCODING  COALESCE(encoding,437));
+        SET refOutString 	= CAST (refOutString AS CHARACTER CCSID COALESCE(ccsid,1208) ENCODING  COALESCE(encoding,437));
+        SET refOutString 	= REPLACE(refOutString, '&' ,'&amp;');
+        SET refOutString 	= REPLACE(refOutString, '''' ,'&apos;');
+        SET refOutString 	= REPLACE(refOutString, '"' ,'&quot;');
+        SET refOutString 	= REPLACE(refOutString, '>' ,'&gt;');
+        SET refOutString 	= REPLACE(refOutString, '<' ,'&lt;');
+        SET refOutString 	= REPLACE(refOutString, '&amp;amp;','&amp;');
+        SET refOutString 	= REPLACE(refOutString, '&amp;apos;','&apos;');
+        SET refOutString 	= REPLACE(refOutString, '&amp;quot;','&quot;');
+        SET refOutString 	= REPLACE(refOutString, '&amp;gt;','&gt;');
+        SET refOutString 	= REPLACE(refOutString, '&amp;lt;','&lt;');
+        
+	END;

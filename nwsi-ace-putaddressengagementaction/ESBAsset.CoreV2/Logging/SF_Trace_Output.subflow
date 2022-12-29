@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="Logging/SF_Trace_Output.subflow" 
+nsPrefix="Logging_SF_Trace_Output.subflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.filePath" name="filePath"  defaultValueLiteral="/var/log/BROKER_IO_TRACE.LOG">
+  <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+</eStructuralFeatures>
+<translation xmi:type="utility:TranslatableString" key="SF_Trace_Output" bundleName="Logging/SF_Trace_Output" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/SF_Trace_Output.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/SF_Trace_Output.gif"/>
+<shortDescription xmi:type="utility:ConstantString" string="Writes the output message to the log file"/>
+<longDescription xmi:type="utility:ConstantString" string="Flow responsible for the following:&#xA;·	Reading the operating system environment variables&#xA;·	Checking if logging is enabled&#xA;·	Writing to the log file if logging is enabled&#xA;"/>
+<composition>
+<nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="52,68">
+<translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="Logging/SF_Trace_Output" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="393,63">
+<translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="Logging/SF_Trace_Output" pluginId="flowAPIgenerated"/>
+</nodes>
+<nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="274,150" destination="file" filePath="/var/log/BROKER_IO_TRACE.LOG" pattern="Broker Trace {Output} - ${CURRENT_GMTDATE},  ${CURRENT_GMTTIME}&#xA;&#xA;${Root}">
+<translation xmi:type="utility:ConstantString" string="Trace_Output"/>
+</nodes>
+<nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="138,67" filterExpression="esql://routine/Logging#SF_Trace_Output_Output_Trace_Required.Main">
+<translation xmi:type="utility:ConstantString" string="Output_Trace_Required?"/>
+</nodes>
+<nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="53,174" label="%Revision">
+<translation xmi:type="utility:ConstantString" string="Revision"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+<propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.filePath">
+<propertyName xmi:type="utility:TranslatableString" key="Property.filePath" bundleName="ComIbmTrace" pluginId="com.ibm.etools.mft.ibmnodes"/>
+</propertyDescriptor>
+</propertyOrganizer>
+<attributeLinks promotedAttribute="Property.filePath" overriddenNodes="FCMComposite_1_1">
+<overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+</attributeLinks>
+<stickyBoard/>
+</eClassifiers>
+</ecore:EPackage>

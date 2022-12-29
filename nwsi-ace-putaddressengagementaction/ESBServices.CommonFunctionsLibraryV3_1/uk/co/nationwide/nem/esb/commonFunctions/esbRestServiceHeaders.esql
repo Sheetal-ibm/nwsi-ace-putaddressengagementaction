@@ -1,0 +1,306 @@
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+
+------------------------------------------------------------
+--Procedure to store Input RestserviceHeaders to the environment
+------------------------------------------------------------
+CREATE PROCEDURE RestServiceHeadersToEnvironment (IN refInParameter REFERENCE,INOUT Environment REFERENCE)
+
+	BEGIN
+		DECLARE alternateIdCardinality,AdditionalInfoCardinality,Index INTEGER;
+
+		SET Environment.ESBRestServiceHeader."x-Channel"		=	refInParameter."x-Channel";	
+			
+		IF (EXISTS(refInParameter."x-Channel-alternateIdentifier"[])) THEN
+			SET Environment.ESBRestServiceHeader."x-Channel-alternateIdentifier"	=	refInParameter."x-Channel-alternateIdentifier";	
+		END IF;
+
+		IF (EXISTS(refInParameter."x-VirtualEnvironment"[])) THEN
+			SET Environment.ESBRestServiceHeader."x-VirtualEnvironment"	=	refInParameter."x-VirtualEnvironment";	
+		END IF;
+		
+		IF (EXISTS(refInParameter."x-SchemaVersion"[])) THEN
+			SET Environment.ESBRestServiceHeader."x-SchemaVersion"	=	refInParameter."x-SchemaVersion";	
+		END IF;
+		
+		IF (EXISTS(refInParameter."x-JourneyID"[])) THEN
+			SET Environment.ESBRestServiceHeader."x-JourneyID"	=	refInParameter."x-JourneyID";		
+		END IF;
+					
+		SET Environment.ESBRestServiceHeader."x-SourceSystemID"	=	refInParameter."x-SourceSystemID";
+		SET Environment.ESBRestServiceHeader."x-CreateDateTime"	=	refInParameter."x-CreateDateTime";
+		
+			
+		IF (EXISTS(refInParameter."x-AdditionalInfo"[])) THEN
+			SET Environment.ESBRestServiceHeader."x-AdditionalInfo"	=	refInParameter."x-AdditionalInfo";			
+		END IF;
+	END;
+	
+	
+---------------------------------------------------------------------
+-- Procedure to transform response serviceHeaders from the environment
+---------------------------------------------------------------------
+
+CREATE PROCEDURE EnvironmentToRestServiceHeaders (INOUT OutRef REFERENCE,IN Environment REFERENCE)
+
+	BEGIN
+		
+		SET OutRef."x-Channel" = Environment.ESBRestServiceHeader."x-Channel";
+		
+		IF (EXISTS(Environment.ESBRestServiceHeader."x-Channel-alternateIdentifier"[])) THEN
+			SET OutRef."x-Channel-alternateIdentifier"	=	Environment.ESBRestServiceHeader."x-Channel-alternateIdentifier";	
+		END IF;
+
+		IF (EXISTS(Environment.ESBRestServiceHeader."x-VirtualEnvironment"[])) THEN
+			SET OutRef."x-VirtualEnvironment" = Environment.ESBRestServiceHeader."x-VirtualEnvironment";	
+		END IF;
+		
+		IF (EXISTS(Environment.ESBRestServiceHeader."x-SchemaVersion"[])) THEN
+			SET OutRef."x-SchemaVersion"	=	Environment.ESBRestServiceHeader."x-SchemaVersion";	
+		END IF;
+		
+		IF(EXISTS(Environment.ESBRestServiceHeader."x-JourneyID"[])) THEN
+			SET OutRef."x-journeyID" =	Environment.ESBRestServiceHeader."x-JourneyID";
+		END IF;
+		
+		SET OutRef."x-SourceSystemID"		=	Environment.ESBRestServiceHeader."x-SourceSystemID"	;
+		SET OutRef."x-CreateDateTime"		=	Environment.ESBRestServiceHeader."x-CreateDateTime"	;		
+					
+		IF (EXISTS(Environment.ESBRestServiceHeader."x-AdditionalInfo"[])) THEN
+			SET OutRef."x-AdditionalInfo" = Environment.ESBRestServiceHeader."x-AdditionalInfo";			
+		END IF;
+	END;
+
+	------------------------------------------------------------
+--Procedure to store Input RestserviceHeaders to the environment
+------------------------------------------------------------
+CREATE PROCEDURE HTTPInputRestHeaderParametersToEnvironment (IN refToHTTPInHeader REFERENCE,INOUT refToESBSvcData REFERENCE)
+
+	BEGIN
+		
+		IF (EXISTS(refToHTTPInHeader."X-Channel"[])) THEN
+			SET refToESBSvcData."X-Channel"  = refToHTTPInHeader."X-Channel";
+		END IF;
+
+		IF (EXISTS(refToHTTPInHeader."X-Channel-Alternate-Id"[])) THEN
+			SET refToESBSvcData."X-Channel-Alternate-Id"  = refToHTTPInHeader."X-Channel-Alternate-Id";
+		END IF;
+
+		IF (EXISTS(refToHTTPInHeader."X-Virtual-Environment"[])) THEN
+			SET refToESBSvcData."X-Virtual-Environment"           = refToHTTPInHeader."X-Virtual-Environment";	
+		END IF;
+		
+		IF (EXISTS(refToHTTPInHeader."X-Schema-Version"[])) THEN
+			SET refToESBSvcData."X-Schema-Version"                = refToHTTPInHeader."X-Schema-Version";	
+		END IF;
+		
+		IF (EXISTS(refToHTTPInHeader."X-Journey-Id"[])) THEN
+			SET refToESBSvcData."X-Journey-Id"   = refToHTTPInHeader."X-Journey-Id";
+		END IF;
+		
+		IF (EXISTS(refToHTTPInHeader."X-Source-System-Id"[])) THEN
+			SET refToESBSvcData."X-Source-System-Id" = refToHTTPInHeader."X-Source-System-Id";	
+		END IF;
+		
+		IF (EXISTS(refToHTTPInHeader."X-Create-Date-Time"[])) THEN
+			SET refToESBSvcData."X-Create-Date-Time" = refToHTTPInHeader."X-Create-Date-Time";	
+		END IF;
+		
+		IF (EXISTS(refToHTTPInHeader."X-Ip-Address"[])) THEN
+			SET refToESBSvcData."X-IP-Address"      = refToHTTPInHeader."X-Ip-Address";	
+		END IF;
+							
+		IF (EXISTS(refToHTTPInHeader."X-Additional-Info"[])) THEN
+			SET refToESBSvcData."X-Additional-Info"  = refToHTTPInHeader."X-Additional-Info";			
+		END IF;
+		
+		IF (EXISTS(refToHTTPInHeader."X-Additional-Info"[])) THEN
+				SET refToESBSvcData.interactionID =  SUBSTRING(SUBSTRING(refToHTTPInHeader."X-Additional-Info" AFTER 'x-fapi-interaction-id ')  
+																 BEFORE '"');
+		END IF;
+		
+		IF (EXISTS(refToHTTPInHeader.Authorization[])) THEN
+			SET refToESBSvcData.authorization  = SUBSTRING(refToHTTPInHeader.Authorization AFTER 'Bearer ');
+		END IF;
+		
+	END;	
+	
+	CREATE PROCEDURE EnvironmentToHTTPRestResponseHeaderParameters (INOUT refToHTTPResponseHeader REFERENCE, IN Environment REFERENCE)
+
+	BEGIN
+		DECLARE refToESBSvcData REFERENCE TO Environment.ESBServiceData;
+		
+		SET refToHTTPResponseHeader."X-Create-Date-Time" 	= LEFT(CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU'), 23) || 'Z';
+		
+		IF (EXISTS(refToESBSvcData."X-Channel"[])) THEN
+			SET refToHTTPResponseHeader."X-Channel" = refToESBSvcData."X-Channel";
+		END IF;
+		
+		IF (EXISTS(refToESBSvcData."X-Channel-Alternate-Id"[])) THEN
+			SET refToHTTPResponseHeader."X-Channel-Alternate-Id" = refToESBSvcData."X-Channel-Alternate-Id";
+		END IF;
+
+		IF (EXISTS(refToESBSvcData."X-Virtual-Environment"[])) THEN
+			SET refToHTTPResponseHeader."X-Virtual-Environment" = refToESBSvcData."X-Virtual-Environment";
+		END IF;
+		
+		IF (EXISTS(refToESBSvcData."X-Schema-Version"[])) THEN
+			SET refToHTTPResponseHeader."X-Schema-Version" = refToESBSvcData."X-Schema-Version";
+		END IF;
+		
+		IF (EXISTS(refToESBSvcData."X-Journey-Id"[])) THEN
+			SET refToHTTPResponseHeader."X-Journey-Id" = refToESBSvcData."X-Journey-Id";
+		END IF;
+
+		IF (EXISTS(refToESBSvcData."X-Source-System-Id"[])) THEN
+			SET refToHTTPResponseHeader."X-Source-System-Id" = refToESBSvcData."X-Source-System-Id";
+		END IF;
+		
+		IF (EXISTS(refToESBSvcData."X-IP-Address"[])) THEN
+			SET refToHTTPResponseHeader."X-Ip-Address" = refToESBSvcData."X-IP-Address";
+		END IF;
+		
+		IF (EXISTS(refToESBSvcData."X-Additional-Info"[])) THEN
+			SET refToHTTPResponseHeader."X-Additional-Info" = refToESBSvcData."X-Additional-Info";
+		END IF;
+
+	END;
+	------------------------------------------------------------------------------
+	-- This procedure Create Alternate Identifier Environment Tree --
+	-------------------------------------------------------------------------------
+	
+	CREATE PROCEDURE createAlternateIdentifierEnvironmentTree(IN refToEnvESBSvcData REFERENCE, IN Environment REFERENCE)
+		BEGIN
+			DECLARE cFieldValue CHAR;
+			DECLARE iChannelIdentifierPos INTEGER;
+			DECLARE isLoop BOOLEAN TRUE;
+			DECLARE cTempValue,cError CHAR;
+			DECLARE indexAltIden INTEGER 1;
+	
+			IF EXISTS(refToEnvESBSvcData."X-Channel-Alternate-Id"[]) THEN
+				SET cFieldValue= refToEnvESBSvcData."X-Channel-Alternate-Id";
+				SET cFieldValue=SUBSTRING(cFieldValue AFTER '[' FOR POSITION(']' IN cFieldValue)) ;
+				SET cFieldValue=SUBSTRING(cFieldValue BEFORE ']');
+				
+				-- Start of loop
+				IterateLoop : WHILE isLoop DO
+					SET iChannelIdentifierPos = POSITION(',' IN cFieldValue);
+					IF iChannelIdentifierPos > 0 THEN
+						SET cTempValue=SUBSTRING(TRIM(cFieldValue) AFTER '"' FOR (iChannelIdentifierPos-1));
+						SET cTempValue=SUBSTRING(TRIM(cTempValue) BEFORE '"');
+						
+						-- Declare type and identifier character variable. Local to IF Loop.
+						DECLARE type, identifier CHAR;
+						
+						SET type 		= SUBSTRING(TRIM(cTempValue) BEFORE ' ' FOR LENGTH(cTempValue));
+						SET identifier  = SUBSTRING(TRIM(cTempValue) AFTER ' ' FOR LENGTH(cTempValue));
+						
+						IF type IS NOT NULL AND type <> '' THEN
+							SET refToEnvESBSvcData.serviceHeader.channelInfo.alternateIdentifier[indexAltIden].type = type;
+							IF type IS NOT NULL AND type <> '' AND identifier IS NOT NULL AND identifier <> '' THEN 
+								SET refToEnvESBSvcData.serviceHeader.channelInfo.alternateIdentifier[indexAltIden].identifier = identifier;
+							END IF;
+							SET indexAltIden = indexAltIden + 1;
+						END IF;
+	
+						SET cFieldValue=SUBSTRING(TRIM(cFieldValue) FROM iChannelIdentifierPos+1 FOR LENGTH(cFieldValue));
+					ELSE
+						SET cTempValue=SUBSTRING(TRIM(cFieldValue) AFTER '"' FOR LENGTH(cFieldValue));
+						SET cTempValue=SUBSTRING(TRIM(cTempValue) BEFORE '"');
+						
+						-- Declare type and identifier character variables. Local to IF Loop. 
+						DECLARE type, identifier CHAR;
+						
+						SET type = SUBSTRING(TRIM(cTempValue) BEFORE ' ' FOR LENGTH(cTempValue));
+						SET identifier  = SUBSTRING(TRIM(cTempValue) AFTER ' ' FOR LENGTH(cTempValue));	
+							
+						IF type IS NOT NULL AND type <> '' THEN
+							SET refToEnvESBSvcData.serviceHeader.channelInfo.alternateIdentifier[indexAltIden].type = type;
+						
+							IF  (identifier IS NOT NULL) AND (identifier <> '') THEN 	
+								SET refToEnvESBSvcData.serviceHeader.channelInfo.alternateIdentifier[indexAltIden].identifier = identifier;
+							END IF;
+							SET indexAltIden = indexAltIden + 1;
+						END IF;
+					END IF;
+	
+					IF iChannelIdentifierPos = 0 THEN
+						SET isLoop = FALSE;
+						LEAVE IterateLoop;
+					END IF;
+					
+					SET cTempValue 	 = NULL; 
+					
+				END WHILE IterateLoop;
+			END IF;
+		END;
+
+		
+	------------------------------------------------------------------------------
+	-- This procedure creates Alternate Identifier Environment Tree --
+	-------------------------------------------------------------------------------
+	
+	CREATE PROCEDURE createAdditionalInfoEnvironmentTree(IN refToEnvESBSvcData REFERENCE, IN Environment REFERENCE)
+		BEGIN
+			DECLARE cFieldValue CHAR;
+			DECLARE isLoop BOOLEAN TRUE;
+			DECLARE iAltPos INTEGER;
+			DECLARE cTempValue,cError CHAR;
+			DECLARE indexAdInfo INTEGER 1;
+	
+			IF EXISTS(refToEnvESBSvcData."X-Additional-Info"[]) THEN
+				SET cFieldValue = refToEnvESBSvcData."X-Additional-Info";
+				SET cFieldValue = SUBSTRING(cFieldValue AFTER '[' FOR POSITION(']' IN cFieldValue)) ;
+				SET cFieldValue = SUBSTRING(cFieldValue BEFORE ']');
+				
+				IterateLoop : WHILE isLoop
+				DO
+					SET iAltPos = POSITION(',' IN cFieldValue);
+					IF iAltPos > 0 THEN 
+						
+						SET cTempValue = SUBSTRING(TRIM(cFieldValue) AFTER '"' FOR (iAltPos-1));
+						SET cTempValue=  SUBSTRING(TRIM(cTempValue) BEFORE '"');
+						
+						-- Declare name and value character variables. Local to IF Loop. 
+						DECLARE name, value CHAR;
+						SET name = SUBSTRING(TRIM(cTempValue) BEFORE ' ' FOR LENGTH(cTempValue));
+						SET value = SUBSTRING(TRIM(cTempValue) AFTER ' ' FOR LENGTH(cTempValue));
+								
+						IF (name IS NOT NULL) AND (name <> '') THEN
+							SET Environment.ESBServiceData.serviceHeader.additionalInfo[indexAdInfo].name = name;
+							IF (name IS NOT NULL) AND (name <> '') AND (value IS NOT NULL) AND (value <> '') THEN
+								SET Environment.ESBServiceData.serviceHeader.additionalInfo[indexAdInfo].value = value;
+							END IF;
+							SET indexAdInfo = indexAdInfo+1;
+						END IF;
+						
+						SET cFieldValue = SUBSTRING(TRIM(cFieldValue) FROM iAltPos+1 FOR LENGTH(cFieldValue));
+					ELSE
+						SET cTempValue = SUBSTRING(TRIM(cFieldValue) AFTER '"' FOR LENGTH(cFieldValue));
+						SET cTempValue = SUBSTRING(TRIM(cTempValue) BEFORE '"');
+						
+						-- Declare name and value character variables. Local to IF Loop.
+						DECLARE name, value CHAR;
+						
+						SET name = SUBSTRING(TRIM(cTempValue) BEFORE ' ' FOR LENGTH(cTempValue));
+						SET value  = SUBSTRING(TRIM(cTempValue) AFTER ' ' FOR LENGTH(cTempValue)); 
+						IF (name IS NOT NULL) AND (name <> '') THEN						
+							SET Environment.ESBServiceData.serviceHeader.additionalInfo[indexAdInfo].name = name;
+							IF (value IS NOT NULL) AND (value <> '') THEN
+								SET Environment.ESBServiceData.serviceHeader.additionalInfo[indexAdInfo].value= value;
+							END IF;
+							SET indexAdInfo = indexAdInfo+1;
+						END IF;
+					END IF;
+	
+					IF iAltPos = 0 THEN
+						SET isLoop = FALSE;
+						LEAVE IterateLoop;
+					END IF;
+					
+					SET cTempValue = NULL;
+					
+				END WHILE;
+
+			END IF;		
+		END;

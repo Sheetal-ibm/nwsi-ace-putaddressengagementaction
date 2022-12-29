@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/" xmlns:aud="http://uk/co/nationwide/Services/Utility/AuditManager/TransferObjects/Utility/Auditing" xmlns:cns="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" xmlns:xsd_1="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/">
+  <xsd:import namespace="http://uk/co/nationwide/Services/Utility/AuditManager/TransferObjects/Utility/Auditing" schemaLocation="../../TransferObjects/Utility/Auditing/Auditing.xsd"/>
+  <xsd:import namespace="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" schemaLocation="../../../../../Definitions/CoreDatatypes/CoreDatatypes.xsd"/>
+  <xsd:complexType name="CreateAuditEventResponse">
+    <xsd:sequence>
+      <xsd:element name="serviceHeader" type="cns:ServiceHeader_v2"/>
+      <xsd:element name="transactionStatus" type="cns:TransactionStatus"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CreateAuditEventRequest">
+    <xsd:sequence>
+      <xsd:element name="serviceHeader" type="cns:ServiceHeader_v2"/>
+      <xsd:element name="auditInformation" type="aud:AuditInformation_TO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

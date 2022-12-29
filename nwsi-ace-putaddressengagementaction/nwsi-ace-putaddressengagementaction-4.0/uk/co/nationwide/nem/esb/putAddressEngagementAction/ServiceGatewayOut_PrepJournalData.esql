@@ -1,0 +1,168 @@
+/* =====================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+========================================================================================================
+********************************************************************************************************
+** File Version History
+********************************************************************************************************
+** Change ID 	  WorkItemId	     CID 		       Date 		   Description 			Test cycle
+** ----------- 	 ------------	--------------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 		C417151/C412459  	17/11/2019 	      Initial Version 	       DEV
+**												
+********************************************************************************************************
+** Description of the ESQL
+** =====================================================================================================
+** The ESQL prepares the CreateAuditEvent request for journal data, validates the data, throws an 
+** exception for any errors during the validation against Journal xsd in the journal data 
+** received from the channel. 
+********************************************************************************************************/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH AsynAuditing,uk.co.nationwide.nem.esb.commonFunctions,uk.co.nationwide.nem.esb.patterns;
+
+CREATE COMPUTE MODULE ServiceGatewayOut_PrepJournalData
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refToChannelAltId,refToEnv 			 REFERENCE TO Environment;
+		DECLARE refToEnvSrvData,refToAuditData		 REFERENCE TO Environment.ESBServiceData;
+		DECLARE auditContextId    		   		 	 CHARACTER SUBSTRING(SUBSTRING(refToEnvSrvData.additionalInfo AFTER 'AuditContextID') 
+															   BEFORE '"');
+		DECLARE eidSet,parsingError		  			 BOOLEAN FALSE;
+		DECLARE refToJournalXml,refToJournalData	 REFERENCE TO refToEnv.Variables.journalData.XMLNSC;
+		DECLARE refToaccountsUpdated 				 REFERENCE TO refToEnv.Variables.AccountsUpdated;
+		DECLARE refToaccountsNotUpdated				 REFERENCE TO refToEnv.Variables.AccountsNotUpdated;
+		DECLARE wholeMsgBlob 			   			 BLOB;
+		DECLARE wholeMsgChar,effectiveDate 		 	 CHARACTER;
+		DECLARE parserOptions 			 			 INTEGER BITOR(RootBitStream,ValidateContentAndValue,
+																   ValidateComplete,ValidateException);
+		DECLARE tmprow 								 ROW;
+		DECLARE changeType 							 CHARACTER '';
+		
+		CALL retrieveCacheSubTree(refToEnv,'ENV_PARAMETERS',refToEnv.Operation);
+		
+		IF UPPER(refToEnv.ENV_PARAMETERS.JournalValidation) = 'OFF' THEN
+			SET parserOptions = BITOR(RootBitStream, ValidateNone);
+		END IF;	
+		 
+		--Decode & extract claims info from JWT token only when authorization exists
+		IF COALESCE(Environment.Request.Header.authorization,'') <> '' THEN	
+			CALL extractFromJWToken(Environment.Request.Header.authorization,refToEnv);
+		END IF;
+			
+		MOVE refToChannelAltId TO refToEnvSrvData.serviceHeader.channelInfo.alternateIdentifier;
+		WHILE LASTMOVE(refToChannelAltId) DO
+			IF (refToChannelAltId.type = 'EMPLOYEEID') THEN
+				IF EXISTS(Environment.TokenClaims.JSON.Data.eid[]) THEN
+					SET refToChannelAltId.identifier = Environment.TokenClaims.JSON.Data.eid;
+				END IF;
+				SET eidSet = TRUE;
+			END IF;
+			MOVE refToChannelAltId NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		IF NOT(eidSet) THEN
+			CREATE LASTCHILD OF refToEnvSrvData.serviceHeader.channelInfo AS refToChannelAltId NAME 'alternateIdentifier';
+			CREATE LASTCHILD OF refToChannelAltId NAME 'type' 		VALUE 'EMPLOYEEID';
+			CREATE LASTCHILD OF refToChannelAltId NAME 'identifier' VALUE COALESCE(Environment.TokenClaims.JSON.Data.eid,'');
+		END IF;	
+		
+		IF COALESCE(auditContextId,'') <> '' THEN
+			SET refToEnvSrvData.Context_ID = auditContextId;
+		ELSE				
+			SET refToEnvSrvData.Context_ID = COALESCE(Environment.TokenClaims.JSON.Data.jti,'00000000-0000-0000-0000-000000000000');
+		END IF; 
+    	
+    	IF refToEnvSrvData.serviceHeader.messageInfo.journeyID = '' THEN
+    		SET refToEnvSrvData.serviceHeader.messageInfo.journeyID = '00000000-0000-0000-0000-000000000000';
+	    END IF;
+	    
+	    SET refToEnvSrvData.serviceHeader.gatewayInfo.schemaVersion = '2.1';
+		
+		IF LASTMOVE(refToaccountsUpdated) OR LASTMOVE(refToaccountsNotUpdated) THEN
+			
+			MOVE refToJournalData TO refToJournalData.*:JournalEvent.*:UIPD.*:CommunicationPoints.*:Address.*:AccountsRequested;
+			
+			--If Accounts Requested tag does Not Exist Create a Child Of OccupancyStatus
+			IF NOT LASTMOVE (refToJournalData) THEN
+				MOVE refToJournalData TO refToJournalData.*:JournalEvent.*:UIPD.*:CommunicationPoints.*:Address.*:OccupancyStatus;	
+			END IF;
+			--If Occupancy Status tag does Not Exist Create a Child Of CPUsageType
+			IF NOT LASTMOVE (refToJournalData) THEN
+				MOVE refToJournalData TO refToJournalData.*:JournalEvent.*:UIPD.*:CommunicationPoints.*:Address.*:CPUsageType;	
+			END IF;
+			
+		    IF LASTMOVE(refToaccountsNotUpdated) THEN
+				DETACH refToaccountsNotUpdated;
+				ATTACH refToaccountsNotUpdated TO refToJournalData AS NEXTSIBLING;
+			END IF;
+			
+			IF LASTMOVE(refToaccountsUpdated) THEN
+				DETACH refToaccountsUpdated;
+				ATTACH refToaccountsUpdated TO refToJournalData AS NEXTSIBLING;
+			END IF;
+		
+		END IF;
+		
+		--Validating the updated Journal XML
+		BEGIN
+			DECLARE CONTINUE HANDLER FOR SQLSTATE LIKE '%' 
+			BEGIN 
+				THROW USER EXCEPTION MESSAGE 2952 VALUES ('xml parsing failed for updated journal data prior to sending response' ||
+														   CAST(wholeMsgBlob AS CHAR CCSID 1208) ); 
+			END;
+			SET wholeMsgBlob = ASBITSTREAM(refToJournalXml CCSID 1208 ENCODING 437);
+			CREATE LASTCHILD OF tmprow DOMAIN('XMLNSC') PARSE(wholeMsgBlob, 437, 1208,,,,parserOptions);
+		END;
+		
+ 		SET wholeMsgChar = CAST(wholeMsgBlob AS CHAR CCSID 1208);
+	
+    	/** Creating Audit Event Message in Environment **/
+		CALL CreateAuditEntry(Environment, Environment.ESBServiceData.Context_ID,
+				'Journaling Event for EditAddAddress - ' || 
+				'PUT /involved-party-management/v3/involved-parties/{involvedPartyId}/address-engagement-action' ||
+				'- After Updating Involved Party Details','J00006' ,'1',CAST(X'20' AS BLOB CCSID 1208 ENCODING 437),refToEnv); 
+		
+		-- Add Journal data under Audit event without using the function AddAuditDetail		
+		CREATE LASTCHILD OF refToEnv.AuditDetail AS refToAuditData DOMAIN('XMLNSC') NAME 'Data';
+		SET refToAuditData.Name  = 'JOURNAL_DATA'; 		
+		SET refToAuditData.(XMLNSC.CDataField)Value = wholeMsgChar;
+		
+		IF EXISTS(refToEnvSrvData.addressChange[]) THEN
+			SET changeType = refToEnvSrvData.addressChange || ',';
+		END IF;
+		
+		IF EXISTS(refToEnvSrvData.standAloneAddress[]) THEN		
+			SET changeType = changeType || refToEnvSrvData.standAloneAddress || ',';
+		END IF;	
+		
+		IF EXISTS(refToEnvSrvData.updateCPRole[]) THEN
+			IF EXISTS(refToEnvSrvData.updateCPRole.change[]) THEN
+				SET changeType = changeType || refToEnvSrvData.updateCPRole.change || ',';
+			END IF;	
+			IF EXISTS(refToEnvSrvData.updateCPRole.occupancy[]) THEN
+				SET changeType = changeType || refToEnvSrvData.updateCPRole.occupancy || ',';
+			END IF;	
+			IF EXISTS(refToEnvSrvData.updateCPRole.setTrace[]) THEN
+				SET changeType = changeType || refToEnvSrvData.updateCPRole.setTrace || ',';
+			END IF;	
+			IF EXISTS(refToEnvSrvData.updateCPRole.removeTrace[]) THEN
+				SET changeType = changeType || refToEnvSrvData.updateCPRole.removeTrace || ',';
+			END IF;	
+			IF EXISTS(refToEnvSrvData.updateCPRole.endRole[]) THEN
+				SET changeType = changeType || refToEnvSrvData.updateCPRole.endRole || ',';
+			END IF;	
+		END IF;	
+		
+        CALL AddAuditDetail(refToEnv,'CHANGE_TYPE', TRIM(TRAILING ',' FROM changeType));
+        SET  effectiveDate = CAST(SUBSTRING(refToEnvSrvData.creationDateTimeSubStr FROM 1 FOR 10) AS CHARACTER FORMAT 'yyyy-MM-dd');
+        CALL AddAuditDetail(refToEnv,'EFFECTIVE_DATE',COALESCE(refToEnvSrvData.startDate,effectiveDate));
+        CALL AddAuditDetail(refToEnv,'MEMBER_NUMBER',refToEnvSrvData.involvedPartyId);		
+		
+		RETURN TRUE;	
+
+	END;
+END MODULE;

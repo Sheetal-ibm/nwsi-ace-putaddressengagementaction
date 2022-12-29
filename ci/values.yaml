@@ -1,0 +1,6 @@
+retrieve-identityverification:
+  imagePullSecrets:
+    - name: "docker-artifactory"
+  image:
+    tag: 'set-me'
+  mockServer: 'set-me'

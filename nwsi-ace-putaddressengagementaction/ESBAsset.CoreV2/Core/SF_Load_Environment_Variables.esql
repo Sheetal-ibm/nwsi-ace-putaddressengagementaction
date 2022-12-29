@@ -1,0 +1,104 @@
+BROKER SCHEMA Core
+PATH LIB_Core;
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Rich Jones			29/06/05	Initial Version
+--			  All		Rich Jones			10/10/05	Changed the error handling
+-- AA00000392 All		Rich Jones			28/11/05	Removed redundant code and changed the FOR loop
+-- AA00000605 All		Rich Jones			31/01/06    Added WHERE clause 
+-- AA00000605 All		Rich Jones			31/01/06    Added a Coalesce to the WHERE clause 
+--	105022 	  			Shaun Dennett		23/02/2009  Chnages for the IA9c getEnvPlugin
+---------------------------------------------------------------------------------------
+-- Description:
+-- This sub-flow loads the environment variables from the database into the message area. 
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Load_Environment_Values
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyEntireMessage();
+		
+		Create Field Environment.Variables.STATIC.TEMP; 
+
+		Declare evRef Reference To Environment.Variables; -- Used as a shortcut to Enviornment.Variables
+		Declare inRef Reference To InputLocalEnvironment; -- Used in FOR loop
+		Declare oleRef Reference To OutputLocalEnvironment;
+		Declare DB_IN_PARAMS Reference To OutputLocalEnvironment;	
+		Declare DB_OUT_PARAMS Reference To OutputLocalEnvironment;
+		Declare sql Character;
+		
+		-- Extract Environment.Variables from Database into temp space
+
+		SET sql = 	'SELECT DATA_KEY, DATA_VALUE
+					FROM ASSET.ENVIRONMENT_VALUES
+					WHERE ENVIRONMENT = ?';
+		
+		CREATE FIELD oleRef.DB_IN_PARAMS AS DB_IN_PARAMS;
+		
+		-- SYS_ENV_VALUE_CONTEXT is a system environment variable that must be set before starting broker.
+		-- It can be set to any value, and is used to define which ENVIRONMENT_VALUE table records should be used, so should
+		-- be a valid value in the ENVIRONMENT column of the ENVIRONMENT_VALUES table.
+		
+		SET DB_IN_PARAMS.CONTEXT = Coalesce(evRef.ENV.SYS_ENV_VALUE_CONTEXT, 'ALL');
+		
+		CALL cDatabaseRead(sql, False, 'EAI:000707', DB_IN_PARAMS, DB_OUT_PARAMS, 'ENVIRONMENT_VALUES');
+		  
+		SET evRef.STATIC.TEMP.Entries[] = DB_OUT_PARAMS.ENVIRONMENT_VALUES[];
+
+		If evRef.STATIC.TEMP.Entries[1].*[1] IS NULL Then
+			Throw User Exception Values
+			('ESB',
+			 'FAILURE: Failed to load any rows from ENVIRONMENT_VALUES table',
+			 'ERR:00057',
+			 'soap:Server');
+		End If; 
+		
+		-- Move Static Values from Temp space into proper place
+		For inRef As evRef.STATIC.TEMP.Entries[] Do
+			Create LastChild Of evRef.STATIC Type NameValue Namespace '' Name Trim(Trailing ' ' From FIELDVALUE(inRef.DATA_KEY)) Value FIELDVALUE(inRef.DATA_VALUE);
+		End For;
+		
+		-- Delete STATIC TEMP space
+		Set evRef.STATIC.TEMP = Null;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
+
+
+
+CREATE FILTER MODULE SF_Load_Environment_Variables_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN	-- Avoid loading Environment.Variables if they have already been loaded.
+		If Cardinality(Environment.Variables.ENV[]) = 0 Then
+			RETURN TRUE;
+		Else
+			RETURN FALSE;
+		End If;	
+		
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE SF_Load_Environment_Variables_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyEntireMessage();
+		-- Move ENV from Root to Environment.Variables
+		Set Environment.Variables.ENV = Environment.ENV;
+		Set Environment.ENV = NULL;
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

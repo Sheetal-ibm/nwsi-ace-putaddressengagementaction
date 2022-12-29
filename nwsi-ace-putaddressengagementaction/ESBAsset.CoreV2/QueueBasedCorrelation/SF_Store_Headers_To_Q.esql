@@ -1,0 +1,155 @@
+BROKER SCHEMA QueueBasedCorrelation
+-- Enterprise Service Bus Implementation Accelerator Source Code
+/* ==========================================================================
+*
+* Licensed Materials - Property of IBM
+*
+* Enterprise Service Bus Implementation Accelerator
+*
+* (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+*
+* US Government Users Restricted Rights - Use, duplication or
+* disclosure restricted by GSA ADP Schedule Contract with
+* IBM Corp.
+*
+* =========================================================================== */ 
+ 
+ 
+
+
+
+
+DECLARE Specified_Correl_Msg_Expiry EXTERNAL BOOLEAN FALSE;
+DECLARE Correl_Msg_Expiry EXTERNAL INTEGER 36000;
+
+DECLARE CORREL_Q_NAME EXTERNAL CHAR 'SYS_CORREL';
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module Name Date Description
+-- All Jingfeng 03/11/09 Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Set the MQDestinationList for sending correlation messages to
+-- all correlation queue on all Brokers hosted Queue Managers.
+-- The QMgrNames is a string like 'QM01,QM02,QM03'.
+---------------------------------------------------------------------------------------
+
+CREATE PROCEDURE SetMQDestListForCorrel(IN LocalEnvRef REFERENCE, IN QMgrNames CHAR)
+BEGIN
+	Declare ClearCaseRevision CHAR('%Revision');
+	-- Clear the original destination.
+	SET LocalEnvRef.Destination = NULL;
+
+	DECLARE d CHAR ',';
+	DECLARE q INTEGER 0;
+	DECLARE p INTEGER 0;
+	SET p = POSITION(d IN QMgrNames);
+
+	DECLARE c INTEGER 1;
+
+	WHILE p > 0 DO
+		SET LocalEnvRef.Destination.MQDestinationList.DestinationData[c].queueManagerName =
+		SUBSTRING( QMgrNames FROM (q + 1) FOR (p - q - 1) );
+		SET LocalEnvRef.Destination.MQDestinationList.DestinationData[c].queueName = CORREL_Q_NAME;
+
+		SET q = p;
+		SET p = POSITION( d IN QMgrNames FROM (q + 1) );
+		SET c = c + 1;
+	END WHILE;
+
+	SET LocalEnvRef.Destination.MQDestinationList.DestinationData[c].queueManagerName =
+	SUBSTRING( QMgrNames FROM (q + 1) FOR (LENGTH(QMgrNames) - q) );
+	SET LocalEnvRef.Destination.MQDestinationList.DestinationData[c].queueName = CORREL_Q_NAME;
+END;
+
+
+
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix  Number  Module       Name           Date          Description
+--                All        Jingfeng       03/11/09      Initial Version
+--                ALL        Li Hua         21/12/10      R1.5, support HTTP/SOAP correlaiton
+---------------------------------------------------------------------------------------
+-- Description:
+-- Prepare the Correlation Message for storing.
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Store_Headers_To_Q_Prepare_Correl_Msg
+
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Get the qMgrNames from the Environment Variable
+		IF Environment.Variables.STATIC.ESB_QMGR_NAMES IS NULL THEN
+			THROW USER EXCEPTION VALUES (
+			'ESB',
+			'FAILURE: Environment Variable ''ESB_QMGR_NAMES'' cannot be found.',
+			'ERR:00201',
+			'soap:Server');
+		END IF;
+		DECLARE QMgrNames CHAR;
+		SET QMgrNames = Environment.Variables.STATIC.ESB_QMGR_NAMES;
+		-- Copy all the headers
+--		CALL CopyMessageHeaders();
+		-- Ensure MQMD header existing
+		DECLARE TempRef REFERENCE TO OutputRoot;
+		MOVE TempRef TO OutputRoot.MQMD;
+		IF NOT LASTMOVE(TempRef) THEN -- NO MQMD
+			MOVE TempRef TO OutputRoot.Properties;
+			IF NOT LASTMOVE(TempRef) THEN -- NO Properties
+				CREATE FIRSTCHILD OF OutputRoot DOMAIN 'MQMD';
+			ELSE -- Have Properties
+				CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD';
+			END IF;
+		END IF;
+		-- Set the CorrelId by the MsgId
+		SET OutputRoot.MQMD.CorrelId = InputRoot.MQMD.MsgId;
+		-- Handle the HTTP&SOAP protocal
+		IF OutputRoot.MQMD.CorrelId IS NULL THEN
+			SET OutputRoot.MQMD.CorrelId = InputLocalEnvironment.WrittenDestination.MQ.DestinationData.msgId;
+		END IF;
+		
+		-- Set the Expiry
+		IF Specified_Correl_Msg_Expiry THEN -- Use the Flow Level Expiry
+			SET OutputRoot.MQMD.Expiry = Correl_Msg_Expiry;
+		ELSE
+			-- Get the expiry from the Environment Variable
+			IF Environment.Variables.STATIC.ESB_CORREL_MSG_EXPIRY IS NULL THEN
+				THROW USER EXCEPTION VALUES (
+				'ESB',
+				'FAILURE: Environment Variable ''ESB_CORREL_MSG_EXPIRY'' cannot be found.',
+				'ERR:00201',
+				'soap:Server');
+			END IF;
+			SET OutputRoot.MQMD.Expiry = CAST(Environment.Variables.STATIC.ESB_CORREL_MSG_EXPIRY AS INTEGER);
+		END IF;
+		-- Set the Destination List
+		CALL SetMQDestListForCorrel(OutputLocalEnvironment, QMgrNames);
+		-- Set SOAP/HTTP Identifier
+
+		IF InputLocalEnvironment.Destination.HTTP.RequestIdentifier IS NOT NULL THEN
+			CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+			CREATE LASTCHILD OF OutputRoot.XMLNSC NAME 'Identifier' VALUE InputLocalEnvironment.Destination.HTTP.RequestIdentifier;
+		END IF;
+		IF InputLocalEnvironment.Destination.SOAP.Reply.ReplyIdentifier IS NOT NULL THEN
+			CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+			CREATE LASTCHILD OF OutputRoot.XMLNSC NAME 'Identifier' VALUE InputLocalEnvironment.Destination.SOAP.Reply.ReplyIdentifier;
+		END IF;
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+END MODULE;
+
+

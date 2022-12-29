@@ -1,0 +1,59 @@
+BROKER SCHEMA Core
+-- Enterprise Service Bus Implementation Accelerator Source Code
+
+/* ==========================================================================
+ *
+ * Licensed Materials - Property of IBM
+ *
+ * Enterprise Service Bus Implementation Accelerator
+ *
+ * (c) Copyright IBM Corp. 2004, 2006 All Rights Reserved
+ *
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ *
+ * =========================================================================== */
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- New			  All	Shaun Dennett		03/03/09	Initial Version
+---------------------------------------------------------------------------------------
+-- Description:
+-- Example ESQL to illustrate the settings required to invoke the MQOutput node using
+-- 	the DestinationList.
+-- This flow is designed to allow the solution to route to an output queue which is programmatically
+-- determined at runtime. 
+-- The destination could be detern=mined from any source including the message body 
+---------------------------------------------------------------------------------------
+
+
+CREATE COMPUTE MODULE SF_Broker_Output_Destination_ExamplePreparationNode
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyEntireMessage();
+		
+		-- Set the output destination list here 
+		
+		SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData[1].queueManagerName = 'WBRK61_DEFAULT_QUEUE_MANAGER';
+		-- Lets set the Queue Name in the destination list
+		SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData[1].queueName = 'TESTOUT';
+		
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

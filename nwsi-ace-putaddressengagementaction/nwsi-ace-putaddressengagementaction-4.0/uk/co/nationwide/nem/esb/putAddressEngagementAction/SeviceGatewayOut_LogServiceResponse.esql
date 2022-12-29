@@ -1,0 +1,88 @@
+/* =====================================================================================================
+*
+* Licensed Materials - Property of Nationwide Building Society
+*
+* Nationwide Enterprise Middleware DC
+*
+========================================================================================================
+********************************************************************************************************
+** File Version History
+********************************************************************************************************
+** Change ID 	  WorkItemId	     CID 		       Date 		   Description 			Test cycle
+** ----------- 	 ------------	--------------- 	---------- 	     ----------------- 		-----------
+**   TFR 3			277540 		C417151/C412459  	17/11/2019 	      Initial Version 	       DEV
+**												
+********************************************************************************************************
+** Description of the ESQL
+** =====================================================================================================
+** The ESQL module contains the logic to route the data to Audit if required based on the
+** SourceSystemId in the request, creates the HTTPResponseHeader and logs the payload at P4.
+** It also appends  any Journalling PartialSuccess errors if any to the payload.
+********************************************************************************************************/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.putAddressEngagementAction
+
+PATH uk.co.nationwide.nem.esb.patterns,uk.co.nationwide.nem.esb.logging;
+
+CREATE COMPUTE MODULE SeviceGatewayOut_LogServiceResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refToEnv,refToErrItem REFERENCE TO Environment;
+		DECLARE refToEnvSrvData REFERENCE TO Environment.ESBServiceData;
+		DECLARE rtrnHolder 		CHARACTER;
+		DECLARE sourceSysId		CHARACTER refToEnvSrvData.sourceSystemID;
+		
+		-- Audit filter condition
+		IF sourceSysId IN (refToEnv.ENV_PARAMETERS.AuditCfgSourceIds.Item[]) AND (UPPER(Environment.SvcStatus) = 'SUCCESS') THEN
+			PROPAGATE TO TERMINAL 'out1' FINALIZE NONE DELETE NONE;
+		END IF;
+		
+		SET OutputRoot.Properties = InputRoot.Properties;
+		
+		---------------------------
+		--Setting Response header--
+		---------------------------
+		SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code"	= InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code";
+		SET OutputRoot.HTTPResponseHeader."X-Journey-Id"				= refToEnvSrvData.serviceHeader.messageInfo.journeyID;
+		SET OutputRoot.HTTPResponseHeader."X-Create-Date-Time"			= LEFT(CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU'),23) || 'Z';
+
+		SET OutputRoot.JSON = InputRoot.JSON;
+		
+		--< Creating a error array item for any Jounalling failures
+		IF EXISTS(refToEnvSrvData.PartialSuccess.Jrnl[]) THEN
+			
+			SET OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code"	= 207;
+			IF NOT EXISTS(OutputRoot.JSON.Data.errors[]) THEN
+				CREATE FIRSTCHILD OF OutputRoot.JSON.Data NAME 'errors';
+				SET OutputRoot.JSON.Data.errors TYPE = JSON.Array;
+				CREATE LASTCHILD OF OutputRoot.JSON.Data.errors AS refToErrItem NAME 'Item';
+			ELSE	
+				CREATE LASTCHILD OF OutputRoot.JSON.Data.errors AS refToErrItem NAME 'Item';
+			END IF;	
+			
+			CALL retrieveCacheSubTree(refToEnv,'ERROR_LOOKUP',Environment.Operation);
+			
+			SET refToErrItem.code 	    = refToEnv.ERROR_LOOKUP.PutAddressEngagementAction_Jrnl_PartialSuccess.Item.ERROR_CODE;
+			SET refToErrItem.message    = refToEnv.ERROR_LOOKUP.PutAddressEngagementAction_Jrnl_PartialSuccess.Item.ERROR_MESSAGE;
+			SET refToErrItem.logErrorId = COALESCE(refToEnv.ESBServiceData.logErrorId,UUIDASCHAR);
+			
+		END IF;	
+		-->
+		
+		-- Update the logPosition to P4
+		SET Environment.ESBServiceData.logPosition 	= 'P4';
+		
+		---------------------------------
+		--Logging the Consumer Response--
+		---------------------------------
+		CALL log4jv2logging(refToEnv,OutputRoot,'ESB', COALESCE(sourceSysId,''));	
+								
+	
+		--Decrement Cache thread
+		--SET rtrnHolder=DecrementCacheAndNullifyCacheIfRequired(Environment.CacheName);
+			
+		RETURN TRUE;	
+		
+	END;
+END MODULE;

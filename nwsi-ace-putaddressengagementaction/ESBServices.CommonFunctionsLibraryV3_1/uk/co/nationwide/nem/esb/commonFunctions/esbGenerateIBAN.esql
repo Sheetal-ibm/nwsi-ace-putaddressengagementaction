@@ -1,0 +1,37 @@
+/*===========================================================================================
+ *
+ * Licensed Materials - Property of Nationwide Building Society
+ *
+ * Nationwide Enterprise Middleware DC
+ *
+ * 
+============================================================================================= 
+*********************************************************************************************
+** File Version History
+*********************************************************************************************
+** Defect	ID		CID		   Date		    Description		Test cycle
+** -----------  ---------    ----------	---------------      ----------- 
+				    C414785	  22/05/18	    Initial Version   Dev
+*********************************************************************************************
+** Description OF the modules contained in the file.
+** ========================================================================================
+** The procedure contained within this file is a common utility procedure that 
+**   generates an IBAN number for given sort code and account number
+*********************************************************************************************/
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+/*====================================================================================================
+** This procedure generates IBAN number. The results is an IBAN number
+**   
+** This procedure invokes the getIBAN() method of GenerateIBANFunction.java in 
+**  ESBServices.CommonFunctionsLibrary.java.
+** Input1) Sort code 
+** Input2) Account Number
+======================================================================================================*/
+
+CREATE PROCEDURE IBANCALL (IN sortcode CHAR , IN accNumber CHAR) RETURNS CHARACTER
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.iban.GenerateIBANFunction.getIBAN";
+
+
+

@@ -1,0 +1,461 @@
+global:
+  nameOverride: ""
+  fullnameOverride: ""
+  environment: "int-test"
+  environmentType: cloud
+  openshift:
+    host: ""
+  router:
+    ip_whitelist: ""
+    
+  vault:
+    enabled: false
+    address: ""
+    namespace: ""
+    mountPath: /etc
+    k8sMountPath: ""
+    image: ""
+
+  onprem:
+    enabled: false
+    mountPath: /etc
+
+  server:
+    tls:
+      enabled: true
+      truststore:
+        secret: ""
+        secretKey: ""
+        passwordSecret: "retrieveidentityverification-keystore-jks"
+        passwordSecretKey: ""
+        vaultSecret: ""
+        vaultKey: ""
+        file: "truststore.jks"
+        type: "JKS"
+        vaultPassSecret: ""
+        vaultPassKey: ""
+        passwordFile: ".truststorepassword"
+      keystore:
+        secret: "retrieveidentityverification-keystore-jks"
+        secretKey: "keystore.jks"
+        passwordSecret: "retrieveidentityverification-jks"
+        passwordSecretKey: "keystore.txt"
+        vaultSecret: ""
+        vaultKey: ""
+        file: "keystore.jks"
+        type: "JKS"
+        vaultPassSecret: ""
+        vaultPassKey: ""
+        passwordFile: ".keystorepassword"
+    ssl:
+      enabled: false
+    port: 7843
+    cloudport: 7843
+    healthcheck:
+      port: 8888
+    healthtargetPort: 7800
+    healthport: 8888
+    webuiPort: 7600
+    targetPort: 7843
+    host: ""
+    healthhost: ""
+
+  kafka:
+    topicName: "SIInt3-Core-All-SILogs-v1"
+    brokers: "http://kafka:9092"
+    schemaRegistry: "http://schema-registry:8081"
+    securityProtocol: ""
+    securityEnabled: false
+    keytabFile: "/etc/kafka.keytab"
+    kerberos:
+      principal: "test"
+      enabled: false
+      service: kafka
+      domainname: ""
+      realm: ""
+    secrets:
+      secretName: "test"
+      keytab: ""
+    tls:
+      enabled: false
+      truststore:
+        secret: truststore
+        secretpass: truststore-password
+        vaultSecret: ""
+        vaultPassSecret: ""
+        trustStorePasswordSecret: ""
+        file: "truststore.p12"
+        type: "PKCS12"
+        truststorekey: ""
+        truststorepasswordkey: "truststore.txt"
+        trustStorePasswordFile: "/etc/passwordfile"
+
+
+
+  appDynamics:
+    enabled: true
+    group: Speedlayer-App-Cloud
+    controllerHostPath: apmnbstest.saas.appdynamics.com
+    controllerPort: 443
+    controllerSSLEnabled: 1
+    appdAgentTierName: nwsi-ace-retrieveidentityverification-AWS
+    agentAccountName: apmnbstest
+    agentApplicationName: Speedlayer-App-Cloud
+    proxyHost: ""
+    proxyPort: ""
+    userexit: aceuser
+    loglevel: info
+    logdir: "/tmp/appd"
+    accessKey: '310af046-ef9d-4c69-9c4a-1f400d566877'
+    controllerInfoPath: "/home/aceuser/adagent"
+    accesskeyFile: ".accesskeyFile"
+
+
+  imagePullSecrets:
+    - name: "docker-artifactory"
+
+  CIS_SA13A:
+    url: RATLAdaptor/v1
+    port: 9095
+    timeout: 15
+
+  audit:
+    url: "audit/v1/details"
+    port: 8091
+    timeout: 15
+    AuditSchemaVersion: "1.0"
+    AuditVersion: "2.1"
+    AuditRetryMaxCount: "3"
+    AuditRetryAfter: "5000"
+    SourceSystemId: "TFRA"
+    AuditCfgSourceIds: "TRANSFORM"
+    
+  healthcheck:
+    port: 7800
+    path: /management/health
+  readinessProbe:
+    enabled: true
+    timeoutSeconds: 4
+    periodSeconds: 5
+    successThreshold: 1
+    initialDelaySeconds: 60
+    failureThreshold: 10
+    
+  livenessProbe:
+    enabled: true
+    timeoutSeconds: 4
+    periodSeconds: 30
+    successThreshold: 1
+    initialDelaySeconds: 180
+    failureThreshold: 4
+    
+  validation:
+    p1ValidateConfig: "YES"
+    p2ValidateConfig: "YES"
+    p3ValidateConfig: "YES"
+    p4ValidateConfig: "YES"
+    
+  krb5Config:
+    name: "krb5config"
+    key: "krb5.conf"
+    path: "krb5.conf"
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    enableClusterRoleBinding: false
+
+retrieve-identityverification:
+  image:
+    repository: "speedlayer-docker-dev-local.artifactory.aws.nbscloud.co.uk/nwsi-ace-retrieveidentityverification-3.0"
+    tag: 'set-me'
+
+  keystore: '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'
+  keystorePassword: "password"
+  trustStorePassword: "password"
+  
+  podAnnotations:
+    productChargedContainers: retrieve-identityverification
+    productID: b8b6252aa88b4cd996c4b7aca350d2fe
+    productMetric: PROCESSOR_VALUE_UNIT
+    productName: IBM App Connect Enterprise for production
+    prometheus.io/scrape: "true"
+    
+  affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - retrieve-identityverification
+          topologyKey: kubernetes.io/hostname
+
+
+  jsonconfigPath: "/var/mqsi/ace/config"
+  activeUserExitList: "aceuser"
+  userExitPath: "/home/aceuser/adagent"
+  serverconfpath: "/home/aceuser/initial-config/serverconf"
+  dbparmspath: "/home/aceuser/initial-config/setdbparms"
+  setdbparms: "bXFzaXNldGRicGFybXMgLXcgL2hvbWUvYWNldXNlci9hY2Utc2VydmVyIC1uIHNldGRicGFybXM6OnRydXN0c3RvcmUgLXUgaWdub3JlIC1wIHBhc3N3b3JkCg=="
+  log4j2path: "/var/mqsi/ace/log4j"
+
+  baroverride:
+    name: "nwsi-ace-retrieveidentityverification-3.0.properties"
+    path: "/home/aceuser/initial-config/bar_overrides"
+    property: |
+      uk.co.nationwide.si.esb.retrieveIdentityVerification.ServiceGatewayIn#Gateway In.useHTTPS=yes
+            uk.co.nationwide.si.esb.retrieveIdentityVerification.nwsi_ace_retrieveidentityverification#additionalInstances=24
+
+
+  imagePullSecrets:
+    - name: "docker-artifactory"
+
+  serviceAccount: {}
+  # Use this to specify the service account name for the application
+  # name: ""
+
+  mockServer:
+
+  APP_VERSION: 1a
+  GIT_COMMIT: NA
+  SERVICE_PORT_ADMIN: 443
+  SERVICE_PORT: 443
+  SERVICE_PORT_HTTPS: 8443
+  SERVICE_PORT_HTTP: 7800
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+
+
+  replicaCount: 1
+
+  ENV_SVC_CONFIG_LOG4JLEVEL_VALUE:
+
+  # livenessProbe section specifies setting for the ACE liveness probe, which checks for the Integration Server admin endpoint
+  livenessProbe:
+    # initialDelaySeconds should be raised if your system cannot start the Queue Manager and Integration Server in 120 seconds
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+
+  # readinessProbe section specifies setting for the ACE readiness probe, which checks for the Integration Server admin endpoint
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 50
+
+  LICENSE: "accept"
+  LOG_FORMAT: "json"
+  ACE_ENABLE_METRICS: true
+
+  ACE_MASK_ELEMENTS: "test"
+
+  aceService:
+    config:
+      name: nwsi-ace-retrieveidentityverification-3.0_config.json
+      value: |
+        {
+                "REFERENCE_DATA": {
+                   "CACHE_LIST": {
+                      "nwsi-ace-retrieveidentityverification-3.0": {
+                        "CACHE_VALUE": {
+                          "ENV_PARAMETERS": {
+                            "CIS_SA13A_TIMEOUT": "{{ .Values.global.CIS_SA13A.timeout }}",
+                            "CIS_SA13A": "{{ if not .Values.global.onprem.enabled }}{{ .Values.mockServer }}:{{ .Values.global.CIS_SA13A.port }}/{{ end }}{{ .Values.global.CIS_SA13A.url }}",
+                            "AuditCfgSourceIds": ["{{ .Values.global.audit.AuditCfgSourceIds }}"],
+                            "AuditRetryMaxCount": "{{ .Values.global.audit.AuditRetryMaxCount }}",
+                            "AuditRetryAfter": "{{ .Values.global.audit.AuditRetryAfter }}",
+                            "AuditSchemaVersion":  "{{ .Values.global.audit.AuditSchemaVersion }}",
+                            "AuditVersion": "{{ .Values.global.audit.AuditVersion }}",
+                            "MSAuditAPI_URL": "{{ if not .Values.global.onprem.enabled }}{{ .Values.mockServer }}:{{ .Values.global.audit.port }}/{{ end }}{{ .Values.global.audit.url }}",
+                            "MSAuditAPI_TIMEOUT":"{{ .Values.global.audit.timeout }}",
+                            "P1_ValidateConfig": "{{ .Values.global.validation.p1ValidateConfig }}",
+                            "P2_ValidateConfig": "{{ .Values.global.validation.p2ValidateConfig }}",
+                            "P3_ValidateConfig": "{{ .Values.global.validation.p3ValidateConfig }}",
+                            "P4_ValidateConfig": "{{ .Values.global.validation.p4ValidateConfig }}",
+                            "ValidationMessageSet": "nwsi-ace-retrieveidentityverification-3.0_LibraryMessageSet",
+                            "BackendInterface": "SA13A"
+                        },
+                        "AUDIT_LOOKUP": {
+                                  "TRANSFORM": [{
+                                  "SourceSystemId": "{{ .Values.global.audit.SourceSystemId }}"
+                                    }
+                                  ]
+                                },
+                        "ERROR_LOOKUP": {
+                          "341004_2_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: Member number must be greater than zero",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341004_3_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: Failed check digit validation",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341004_4_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: ID type is invalid",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341004_5_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: Able to read IP Header but not customer with number",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341004_6_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: Invalid IP type in IP Header",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341004_7_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: Unable to find referenced customer",
+                              "SEVERITY": "NOTFOUND"
+                            }
+                          ],
+                          "341004_8_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: Processing blob invalid",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341004_9_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SOR Technical Exception: Search Option is invalid",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341005_9001_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30014",
+                              "SERVICE_MESSAGE": "Input Validation failed: Business Unit must be greater than zero",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341005_9002_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30014",
+                              "SERVICE_MESSAGE": "Input Validation failed: User Identifier Must be Input",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341005_9003_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30014",
+                              "SERVICE_MESSAGE": "Input Validation failed: Client date is invalid",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341005_9004_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30014",
+                              "SERVICE_MESSAGE": "Input Validation failed: Client time is invalid",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341001_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30010",
+                              "SERVICE_MESSAGE": "General Error for RATL Adapter",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341002_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30011",
+                              "SERVICE_MESSAGE": "Unable to use a connection Pool",
+                              "SEVERITY": "TRANSPORTFAILURE"
+                            }
+                          ],
+                          "341003_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30012",
+                              "SERVICE_MESSAGE": "Error connecting with service provider",
+                              "SEVERITY": "TRANSPORTFAILURE"
+                            }
+                          ],
+                          "341004_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30013",
+                              "SERVICE_MESSAGE": "SoR Technical Exception",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341005_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30014",
+                              "SERVICE_MESSAGE": "Input validation failed",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "341006_RATL Adaptor_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.30015",
+                              "SERVICE_MESSAGE": "RATL Adaptor request was rejected by CIS due soft lock failure",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "RetrieveIdentityVerification_001_CIS_SA13A": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.40003",
+                              "SERVICE_MESSAGE": "An unknown fault from RATL Adaptor",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ],
+                          "RetrieveIdentityVerification_002_IIB": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.10001",
+                              "SERVICE_MESSAGE": "Schema Validation Failure",
+                              "SEVERITY": "INVALIDDATA"
+                            }
+                          ],
+                          "RetrieveIdentityVerification_003_IIB": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.44444",
+                              "SERVICE_MESSAGE": "The ESB Service TimedOut While Trying to Connect to SoR",
+                              "SEVERITY": "TRANSPORTFAILURE"
+                            }
+                          ],
+                          "RetrieveIdentityVerification_004_IIB": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.48888",
+                              "SERVICE_MESSAGE": "The Service Could Not Connect To SoR",
+                              "SEVERITY": "TRANSPORTFAILURE"
+                            }
+                          ],
+                          "RetrieveIdentityVerification_005_IIB": [
+                            {
+                              "SERVICE_ERROR_CODE": "NEM.ESB.40000",
+                              "SERVICE_MESSAGE": "Technical Exception in ESB Service",
+                              "SEVERITY": "REJECTED"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }

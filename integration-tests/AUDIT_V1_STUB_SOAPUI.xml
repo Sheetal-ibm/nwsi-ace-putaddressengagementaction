@@ -1,0 +1,705 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project activeEnvironment="Default" encryptionMode="Not encrypted" id="7cb420fb-8f61-45a6-b67e-994f3b648b13" name="AUDIT_V1_STUB" resourceRoot="" soapui-version="5.5.0" abortOnError="false" runType="SEQUENTIAL" updated="2.8.2 2019-08-27T17:04:01Z" xmlns:con="http://eviware.com/soapui/config">
+  <con:settings><con:setting id="ProjectSettings@hermesConfig">${#System#user.home}\.hermes</con:setting></con:settings>
+  <con:interface basePath="/audit/v1" definitionUrl=".\nwsi-audit-api-v1.0.yaml" id="b6331e9b-c9c0-4ec5-8ccd-dd11f61eb090" name="/audit/v1.0" type="rest" wadlVersion="https://swagger.io/swagger2/specification" xsi:type="con:RestService" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <con:description>(Definition based on Swagger Template Version - v1.4.7 (14/02/2019)) A API that allows audit message from services route to internal kafka topic.</con:description>
+    <con:settings/>
+    <con:definitionCache rootPart="file:${projectDir}/nwsi-audit-api-v1.0.yaml" type="TEXT">
+      <con:part>
+        <con:url>file:${projectDir}/nwsi-audit-api-v1.0.yaml</con:url>
+        <con:content><![CDATA[swagger: '2.0'
+info:
+  title: /audit/v1.0
+  description: >-
+    (Definition based on Swagger Template Version - v1.4.7 (14/02/2019)) A API
+    that allows audit message from services route to internal kafka topic.
+  version: v1.0
+basePath: /audit/v1
+schemes:
+  - https
+consumes:
+  - application/json; charset=utf-8
+produces:
+  - application/json; charset=utf-8
+parameters:
+  Additional-Info: &ref_1
+    in: header
+    name: X-Additional-Info
+    type: array
+    items:
+      type: string
+      pattern: ^[a-zA-Z0-9,_\'\.\-]+[ ][ a-zA-Z0-9,_\'\.\-]+$
+      minLength: 3
+      maxLength: 121
+    required: false
+    collectionFormat: csv
+    description: >
+      This object holds information in addition to the other header fields
+      below. The strings should be populated in a name/value pair format as
+      follows; "ProcessID 123456789, ParentProcessID 66213". Name value pair is
+      separated by a blank space character. Name must not contain a space but
+      the value may.
+
+
+      The values within the identifier should meet the criteria below
+        string max length of 121 and pattern of
+        ^[a-zA-Z0-9,_\'\.\-]+[ ][ a-zA-Z0-9,_\'\.\-]+$
+      This pattern describes 2 strings that are separated by 1 delimiting space
+      character.
+
+      The first string is for the name and the second for the value.
+
+      The second string accepts spaces, but the first does not.
+  Channel: &ref_2
+    in: header
+    name: X-Channel
+    type: string
+    minLength: 2
+    maxLength: 25
+    required: true
+    pattern: ^[\sa-zA-Z0-9,_'\.\-]*$
+    description: >
+      Please refer TMS domain 'BusinessTransactionCommunicationChannelCode' for
+      the  list of possible values. Sample Values include
+        - POST OFFICE
+        - INTERNET
+        - MOBILE
+  Application-ID: &ref_3
+    in: header
+    name: X-Application-ID
+    type: string
+    minLength: 1
+    maxLength: 200
+    required: true
+    pattern: ^[\sa-zA-Z0-9,_'\.\-]*$
+    description: |
+      This string holds application name of the calling system/api
+      Example value "nwsi-ace-samm-putinvolvedpartyandjournal".
+  Schema-Version: &ref_4
+    in: header
+    name: X-Schema-Version
+    type: string
+    enum:
+      - '1.0'
+    required: true
+    description: >
+      This is a way for the consumer to communicate what version of the
+      specification it has. For example a consumer may still operate using v1.0
+      while the service is at v1.1 (at which point "1.1" will be added to the
+      enumeration above, only use numeric values in the enumeration with single
+      quotes).
+
+
+      This field is used for two purposes
+        - it will allow the service to ensure the consumer receives a compatible response
+        - we can deploy a new minor version alongside an existing minor version, and route the service to either based on this field (and other info).  Based on testing / proving the service will ultimately switch to the final version.
+  Journey-Id: &ref_5
+    in: header
+    name: X-Journey-Id
+    type: string
+    minLength: 36
+    maxLength: 36
+    pattern: >-
+      ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+    required: true
+    description: >-
+      A unique identifier populated by the consumer. It follows the UUID
+      pattern, for example 123e4567-e89b-12d3-a456-426655440000
+  Source-System-Id: &ref_6
+    in: header
+    name: X-Source-System-Id
+    type: string
+    minLength: 1
+    maxLength: 60
+    required: true
+    pattern: ^[\sa-zA-Z0-9,_'\.\-]*$
+    description: |
+      'BusinessSystemID' for the  list of possible values. Sample Values include
+      TRANSFORM
+      COUK
+      OLB
+  Create-Date-Time: &ref_7
+    in: header
+    name: X-Create-Date-Time
+    type: string
+    format: date-time
+    required: true
+    description: >-
+      Time stamp associated with creation of the request message, utilisting the
+      UTC ISO 8601 Date Time format. For example 2017-01-01T00:00:00 or
+      2017-01-01T00:00:00.001Z
+  IP-Address: &ref_8
+    in: header
+    name: X-IP-Address
+    type: string
+    minLength: 7
+    maxLength: 39
+    required: false
+    pattern: ^[a-fA-F0-9:\.]*$
+    description: The IPv4/IPv6 address of the caller.
+responses:
+  '400': &ref_9
+    description: Bad Request
+    headers: &ref_0
+      X-Journey-Id:
+        type: string
+        minLength: 36
+        maxLength: 36
+        pattern: >-
+          ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+        description: >-
+          A unique identifier populated by the consumer. It follows the UUID
+          pattern, for example 123e4567-e89b-12d3-a456-426655440000
+      X-Create-Date-Time:
+        type: string
+        format: date-time
+        description: >-
+          Time stamp associated with creation of the request message. The UTC
+          ISO 8601 Date Time format. For example 2017-01-01T00:00:00 or
+          2017-01-01T00:00:00.001Z
+    schema:
+      $ref: '#/definitions/Errors'
+  '401':
+    description: Unauthorized
+  '403':
+    description: Forbidden
+  '404':
+    description: Not Found
+    headers:
+      X-Journey-Id:
+        type: string
+        minLength: 36
+        maxLength: 36
+        pattern: >-
+          ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+        description: >-
+          A unique identifier populated by the consumer. It follows the UUID
+          pattern, for example 123e4567-e89b-12d3-a456-426655440000
+      X-Create-Date-Time:
+        type: string
+        format: date-time
+        description: >-
+          Time stamp associated with creation of the request message. The UTC
+          ISO 8601 Date Time format. For example 2017-01-01T00:00:00 or
+          2017-01-01T00:00:00.001Z
+    schema:
+      $ref: '#/definitions/Errors'
+  '405':
+    description: Method Not Allowed
+  '406':
+    description: Not Acceptable
+  '429':
+    description: Too Many Requests
+  '500': &ref_10
+    description: Internal Server Error
+    headers:
+      X-Journey-Id:
+        type: string
+        minLength: 36
+        maxLength: 36
+        pattern: >-
+          ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+        description: >-
+          A unique identifier populated by the consumer. It follows the UUID
+          pattern, for example 123e4567-e89b-12d3-a456-426655440000
+      X-Create-Date-Time:
+        type: string
+        format: date-time
+        description: >-
+          Time stamp associated with creation of the request message. The UTC
+          ISO 8601 Date Time format. For example 2017-01-01T00:00:00 or
+          2017-01-01T00:00:00.001Z
+    schema:
+      $ref: '#/definitions/Errors'
+  '502': &ref_11
+    description: Bad Gateway
+    schema:
+      $ref: '#/definitions/Errors'
+  '503': &ref_12
+    description: Service Unavailable
+    headers:
+      X-Journey-Id:
+        type: string
+        minLength: 36
+        maxLength: 36
+        pattern: >-
+          ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+        description: >-
+          A unique identifier populated by the consumer. It follows the UUID
+          pattern, for example 123e4567-e89b-12d3-a456-426655440000
+      X-Create-Date-Time:
+        type: string
+        format: date-time
+        description: >-
+          Time stamp associated with creation of the request message. The UTC
+          ISO 8601 Date Time format. For example 2017-01-01T00:00:00 or
+          2017-01-01T00:00:00.001Z
+    schema:
+      $ref: '#/definitions/Errors'
+  '504': &ref_13
+    description: Gateway Timeout
+    headers:
+      X-Journey-Id:
+        type: string
+        minLength: 36
+        maxLength: 36
+        pattern: >-
+          ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+        description: >-
+          A unique identifier populated by the consumer. It follows the UUID
+          pattern, for example 123e4567-e89b-12d3-a456-426655440000
+      X-Create-Date-Time:
+        type: string
+        format: date-time
+        description: >-
+          Time stamp associated with creation of the request message. The UTC
+          ISO 8601 Date Time format. For example 2017-01-01T00:00:00 or
+          2017-01-01T00:00:00.001Z
+    schema:
+      $ref: '#/definitions/Errors'
+  ResponseHeaders:
+    description: The response header parameters are common across all SI resources.
+    headers: *ref_0
+security:
+  - JWT: []
+securityDefinitions:
+  JWT:
+    description: >-
+      A JSON Web Token will be used to pass security information from the
+      consumer of API. JWTs will be validated or Created by DataPower. The API
+      is agnostic to the underlying implementation of security.
+    name: Authorization
+    type: apiKey
+    in: header
+definitions:
+  Errors:
+    type: object
+    required:
+      - errors
+    properties:
+      errors:
+        type: array
+        description: >-
+          This block wraps either field level error or the error returned by the
+          provider service and is returned as a custom error. In case of
+          multiple service invocation failures, all errors will be wrapped and
+          returned to the consumer to allow the consumer to take a decision and
+          compose a more meaningful message if desired.
+        items:
+          $ref: '#/definitions/Error'
+        default: []
+    example:
+      errors:
+        - code: SI.ESB.AUDIT.400.000
+          message: The Schema Rules Validation Failed for <Field Name>.
+          logErrorId: c9cd35a4-8cf8-4b9c-90e5-299aea597024
+        - code: SI.ESB.AUDIT.404.001
+          message: The requested SourceSystem ID Topic unavailable
+          logErrorId: c9cd35a4-8cf8-4b9c-90e5-299aea597025
+  Error:
+    type: object
+    description: >-
+      Error code and message will be used to communicate failure to consumer.
+      This block provides the ability to create internal error code and message
+      communicating the causes of the error. Validation errors for GET, PUT,
+      PATCH and POST requests will need a field breakdown. This is best modelled
+      by using an error code for validation failures and providing the detailed
+      errors message in error message field.
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        description: >-
+          A custom error code returned by the API for the consumer interested in
+          fine-grained error handling. In the case where HTTP response code is
+          too generic to provide specific treatment by the consumer, custom code
+          can be used to handle specific error conditions based on the provider
+          services' error condition. For example a UI might want to show a list
+          of field errors by name. Each interface specification specifies which
+          errors this API can return.
+      message:
+        type: string
+        maxLength: 2048
+        description: >-
+          It provides information about application-specific errors returned by
+          the provider service or description of class of error returned by the
+          API for example 'validation error'.
+      logErrorId:
+        type: string
+        format: uuid
+        description: An unique reference for each error being logged.
+    example:
+      code: SI.ESB.AUDIT.500.001
+      message: Internal Server Error.
+      logErrorId: c9cd35a4-8cf8-4b9c-90e5-299aea597024
+  auditVersion:
+    description: The field value contains the SOAP Audit schema version number
+    type: string
+    enum:
+      - '2.0'
+      - '2.1'
+      - '2.2'
+    example: '2.1'
+  auditMessage:
+    description: The field value embeds the SOAP Audit message generated by services
+    type: string
+    minLength: 1
+    example: >-
+      <NS1:Envelope
+      xmlns:NS1="http://www.w3.org/2003/05/soap-envelope"><NS1:Header><NS1:KD4SoapHeaderV2
+      xmlns:NS1="http://www.ibm.com/KD4Soap">AFIAAgAkNTk5NGY3NmYtNmM0Ni04ZjAwLWRmZDgtNGZkNzQwMWQxZWM0ACRhYzcyNWU2NS05YjgyLTZhMTMtNTcxMC04ZDEyNDk4YzMyM2EAAw==</NS1:KD4SoapHeaderV2><wsse:Security
+      xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+      xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><saml2:Assertion
+      xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" Version="2.0"
+      ID="SAML-0a596fa8-08bf-4d40-a4c4-0db938014889"
+      IssueInstant="2021-08-26T04:14:41.999Z"><saml2:Issuer>NEMTMS:1.0</saml2:Issuer><Signature
+      xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod
+      Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/><SignatureMethod
+      Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><Reference
+      URI="#SAML-0a596fa8-08bf-4d40-a4c4-0db938014889"><Transforms><Transform
+      Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><Transform
+      Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></Transforms><DigestMethod
+      Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><DigestValue>Z0Vf1ixpUlFbqdXj8qNiaBxo+nRaaND3Qt6nZ9qvxLs=</DigestValue></Reference></SignedInfo><SignatureValue>vwbuFo+wx1gsG4HscuhNbwyssxaVgMvmGMCRpDB2EXfzEkEdb1LU73Vg5xTlM01W088/q3HmUwkUfU8fcdzN5lAar51zUtCWXP6NR8ksJ+3t0Be/QZLDyLdANbEOcQu+ri29PWxQGKF1GHY1dbHz06CrPuFDhh9G5cfVkr1uKXH4ZJ9xnAHUDHtV9DdxYUyqVlUTHoV/zKvVR35cT3xpwBDiHkuklwmnxCP2Vc7wDaq5BEzG0hsYsB3EyM/cOJrlArrKDhOqyANS2EpSbpVn5HpNkhde3qYxC73aOmlvq2ttuPbYWa2BzHORdzqr4v2+2N1l+Vbf+klth+QYxIp/mQ==</SignatureValue><KeyInfo><X509Data><X509Certificate>MIIFJDCCBAygAwIBAgIKGaNgSwAAAAAOLzANBgkqhkiG9w0BAQsFADBUMQswCQYDVQQGEwJHQjETMBEGA1UEChMKTmF0aW9ud2lkZTELMAkGA1UECxMCSVQxIzAhBgNVBAMTGk5hdGlvbndpZGUgREVWIGlzc3VpbmcgQ0ExMB4XDTE5MDMxNDE1MzIwOFoXDTI0MDMxMjE1MzIwOFowdTELMAkGA1UEBhMCR0IxEDAOBgNVBAcTB1N3aW5kb24xEzARBgNVBAoTCk5hdGlvbndpZGUxEjAQBgNVBAsTCURhdGFQb3dlcjErMCkGA1UEAwwiU0FNTF9Ub2tlbl9TaWduZXJfREVWLm5ic2Rldi5jby51azCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAM709lvmBMEC5wWvi/1Bcz8A3Y+rmsCNcDdLCOY0K9/DBciGwRkx3i8LNJi2iEo3XV7DiS3MA0fKkQpD56+4bH0QHj/wJFQ51qw29jtk3sY7V7xubOojtNlPwA+Y4F0C185InA1XYlPu3fUY6llTXzYkTVOkaa9FcES1RTAXx0SkFSiqENifmM8nblCrUYfCEqg0bOKpQGCPMVbnaXG6fhpQJaOtQHmgUYXASbsUgtGEri/y+7EUQzIURHldaKjGrnzFh1imYn8KOrvGttXAaBVUTXnGX+zzYKLzDkcV3ZoO0dwl7cFYFPFASqF1PzqnGMW/dw7QgZMDDir8BUFS+yECAwEAAaOCAdUwggHRMAsGA1UdDwQEAwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwCwYDVR0RBAQwAoIAMB0GA1UdDgQWBBQYExjLZTjQ1JjAPNpH7xLscXBp9TAfBgNVHSMEGDAWgBQb9pDBLZl595tfsDuCt52FneP5mDBQBgNVHR8ESTBHMEWgQ6BBhj9odHRwOi8vZGV2cGtkLm5ic2Rldi5jby51ay9OYXRpb253aWRlJTIwREVWJTIwaXNzdWluZyUyMENBMS5jcmwwgYgGCCsGAQUFBwEBBHwwejBLBggrBgEFBQcwAoY/aHR0cDovL2RldnBrZC5uYnNkZXYuY28udWsvTmF0aW9ud2lkZSUyMERFViUyMGlzc3VpbmclMjBDQTEuY2VyMCsGCCsGAQUFBzABhh9odHRwOi8vZGV2cGtkLm5ic2Rldi5jby51ay9vY3NwMD0GCSsGAQQBgjcVBwQwMC4GJisGAQQBgjcVCIHo1EuC+6Qlhq2VM4XE0WOHy9l4OIXw2TiB7Y5IAgFkAgEHMBEGA1UdIAQKMAgwBgYEVR0gADAnBgkrBgEEAYI3FQoEGjAYMAoGCCsGAQUFBwMBMAoGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUAA4IBAQAhCtPF9i+rEiHOqcd1x3+Q+PC3x8r872A67epPQ90o1wcGSvkHOqElBGnpC4Z/qhDLIQppJhL70mS94vfCmBDIdCUesM5a1J4eVs40zm8psTeyD4y6evLT8+6rzN64l5wqPLnaQubtN3qJmkxZ0mLUAVfWmyM0W4Zb/QjEe8X8nM+QTuFeIwbugePQ9P2YZHl4FN85uahaO8Ey13c8CN05LCvJD/z70NYn8zgrs2Op70NKAaHIiJ+CxQY9ZZp6TffF8mAfCi3JjA2VL8+HE06isYLbNqYRbg28eSJj6OKOZ+XtKu6MHZE3t5SC2FDPYn0GFTDWUYWkqx67rwsK1ZvU</X509Certificate><X509IssuerSerial><X509IssuerName>CN=Nationwide
+      DEV issuing CA1, OU=IT, O=Nationwide,
+      C=GB</X509IssuerName><X509SerialNumber>121072919995406681640495</X509SerialNumber></X509IssuerSerial></X509Data></KeyInfo></Signature><saml2:Subject><saml2:NameID>9473054607</saml2:NameID><saml2:SubjectConfirmation
+      Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"/></saml2:Subject><saml2:Conditions
+      NotBefore="2021-08-26T04:14:40.999Z"
+      NotOnOrAfter="2021-08-26T14:14:41.999Z"/><saml2:AuthnStatement
+      AuthnInstant="2021-08-26T04:14:41.999Z"><saml2:AuthnContext><saml2:AuthnContextClassRef>urn:nationwide:authentication:memdata</saml2:AuthnContextClassRef></saml2:AuthnContext></saml2:AuthnStatement><saml2:AttributeStatement><saml2:Attribute
+      Name="subject-authentication-strength"><saml2:AttributeValue>100</saml2:AttributeValue></saml2:Attribute><saml2:Attribute
+      Name="origin"><saml2:AttributeValue>COUK</saml2:AttributeValue></saml2:Attribute><saml2:Attribute
+      Name="employee-role"><saml2:AttributeValue>RETAIL</saml2:AttributeValue></saml2:Attribute></saml2:AttributeStatement></saml2:Assertion></wsse:Security></NS1:Header><NS1:Body><NS3:createAuditEvent
+      xmlns:NS3="http://uk/co/nationwide/Services/Utility/AuditManager/v1/IAuditManager/"><NS4:serviceHeader
+      xmlns:NS4="http://uk/co/nationwide/Services/Utility/AuditManager/v1/IAuditManager/CreateAuditEvent/"><NS5:messageInfo
+      xmlns:NS5="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/"><NS5:journeyID>964581a4-c8a1-cfcb-abc8-a1acfca2c316</NS5:journeyID><NS5:sourceSystemID/><NS5:createDateTime>2016-12-17T09:30:47Z</NS5:createDateTime></NS5:messageInfo><NS6:channelInfo
+      xmlns:NS6="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/"><NS6:channel>BRANCH</NS6:channel><NS6:alternateIdentifier><NS6:type>EMPLOYEEID</NS6:type><NS6:identifier>9473054607</NS6:identifier></NS6:alternateIdentifier></NS6:channelInfo></NS4:serviceHeader><NS8:auditInformation
+      xmlns:NS8="http://uk/co/nationwide/Services/Utility/AuditManager/v1/IAuditManager/CreateAuditEvent/"><NS9:contextId
+      xmlns:NS9="http://uk/co/nationwide/Services/Utility/Auditing">SAML-0a596fa8-08bf-4d40-a4c4-0db938014889</NS9:contextId><NS10:originatingSystem
+      xmlns:NS10="http://uk/co/nationwide/Services/Utility/Auditing">ESB</NS10:originatingSystem><NS11:eventSource
+      xmlns:NS11="http://uk/co/nationwide/Services/Utility/Auditing">Retrieve
+      Involved Party Details:
+      -InvolvedPartyManagement.RetrieveInvolvedPartyDetails</NS11:eventSource><NS12:auditTypeId
+      xmlns:NS12="http://uk/co/nationwide/Services/Utility/Auditing">O00018</NS12:auditTypeId><NS13:eventTimestamp
+      xmlns:NS13="http://uk/co/nationwide/Services/Utility/Auditing">2021-08-26T05:14:42.512308</NS13:eventTimestamp><NS14:isJournal
+      xmlns:NS14="http://uk/co/nationwide/Services/Utility/Auditing">0</NS14:isJournal><NS15:serverName
+      xmlns:NS15="http://uk/co/nationwide/Services/Utility/Auditing">InvolvedParty02</NS15:serverName><NS16:eventData
+      xmlns:NS16="http://uk/co/nationwide/Services/Utility/Auditing"><NS16:name>MEMBER_NUMBER</NS16:name><NS16:value>9473054607</NS16:value></NS16:eventData><NS17:eventData
+      xmlns:NS17="http://uk/co/nationwide/Services/Utility/Auditing"><NS17:name>NEM_STATUS_CALL</NS17:name><NS17:value>2</NS17:value></NS17:eventData><NS18:eventData
+      xmlns:NS18="http://uk/co/nationwide/Services/Utility/Auditing"><NS18:name>INTERACTION_TYPE</NS18:name><NS18:value>View</NS18:value></NS18:eventData><NS19:eventData
+      xmlns:NS19="http://uk/co/nationwide/Services/Utility/Auditing"><NS19:name>UDDI</NS19:name><NS19:value>f494d4bd-058a-11e8-a435-9a0ce11a5e30</NS19:value></NS19:eventData><NS20:appendix
+      xmlns:NS20="http://uk/co/nationwide/Services/Utility/Auditing">
+      </NS20:appendix></NS8:auditInformation></NS3:createAuditEvent></NS1:Body></NS1:Envelope>
+paths:
+  /details:
+    post:
+      summary: Creates a request for Audit message to route to topics
+      description: >-
+        The method will route audit message according to the source system ID
+        value to topics.
+      operationId: auditDetails
+      parameters:
+        - *ref_1
+        - *ref_2
+        - *ref_3
+        - *ref_4
+        - *ref_5
+        - *ref_6
+        - *ref_7
+        - *ref_8
+        - in: body
+          name: auditRequest
+          required: true
+          schema:
+            type: object
+            properties:
+              auditVersion:
+                $ref: '#/definitions/auditVersion'
+              auditMessage:
+                $ref: '#/definitions/auditMessage'
+            required:
+              - auditVersion
+              - auditMessage
+      responses:
+        '200':
+          description: Audit message is successfully written to the topic.
+          headers:
+            X-Journey-Id:
+              type: string
+              minLength: 36
+              maxLength: 36
+              pattern: >-
+                ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+              description: >-
+                A unique identifier populated by the consumer. It follows the
+                UUID pattern, for example 123e4567-e89b-12d3-a456-426655440000
+            X-Create-Date-Time:
+              type: string
+              format: date-time
+              description: >-
+                Time stamp associated with creation of the request message. The
+                UTC ISO 8601 Date Time format. For example 2017-01-01T00:00:00
+                or 2017-01-01T00:00:00.001Z
+          schema:
+            title: audit-api 200 response
+            type: object
+            properties:
+              auditCreatedIndicator:
+                type: boolean
+                description: >-
+                  True - means the message is written successfully in Topic
+                  False means the message failed to write to a Topic.
+              auditTopic:
+                type: string
+                description: >-
+                  This field holds the Topic name to which the audit message was
+                  written.
+                example: TFR-Audit-v1
+              auditTopicEventID:
+                type: string
+                description: This field holds unique Topic write event id
+                example: 16060615-0091-4605-0581-956189633302
+        '400': *ref_9
+        '500': *ref_10
+        '502': *ref_11
+        '503': *ref_12
+        '504': *ref_13]]></con:content>
+        <con:type>https://swagger.io/swagger2/specification</con:type>
+      </con:part>
+    </con:definitionCache>
+    <con:endpoints/>
+    <con:resource id="6cfd1668-9c35-4e7a-bafe-8a84b8456ada" name="/details" path="/details">
+      <con:settings/>
+      <con:parameters/>
+      <con:method id="150f88df-d931-49f6-9aa6-593c98fadd0c" method="POST" name="auditDetails">
+        <con:description>The method will route audit message according to the source system ID value to topics.Creates a request for Audit message to route to topics</con:description>
+        <con:settings/>
+        <con:parameters>
+          <con:parameter>
+            <con:name>X-Additional-Info</con:name>
+            <con:style>HEADER</con:style>
+            <con:dataType>array</con:dataType>
+            <con:description>This object holds information in addition to the other header fields below. The strings should be populated in a name/value pair format as follows; "ProcessID 123456789, ParentProcessID 66213". Name value pair is separated by a blank space character. Name must not contain a space but the value may.The values within the identifier should meet the criteria belowstring max length of 121 and pattern of^[a-zA-Z0-9,_\'\.\-]+[ ][ a-zA-Z0-9,_\'\.\-]+$This pattern describes 2 strings that are separated by 1 delimiting space character.The first string is for the name and the second for the value.The second string accepts spaces, but the first does not.</con:description>
+          </con:parameter>
+          <con:parameter required="true">
+            <con:name>X-Channel</con:name>
+            <con:style>HEADER</con:style>
+            <con:description>Please refer TMS domain 'BusinessTransactionCommunicationChannelCode' for the  list of possible values. Sample Values include- POST OFFICE- INTERNET- MOBILE</con:description>
+          </con:parameter>
+          <con:parameter required="true">
+            <con:name>X-Application-ID</con:name>
+            <con:style>HEADER</con:style>
+            <con:description>This string holds application name of the calling system/apiExample value "nwsi-ace-samm-putinvolvedpartyandjournal".</con:description>
+          </con:parameter>
+          <con:parameter required="true">
+            <con:name>X-Schema-Version</con:name>
+            <con:style>HEADER</con:style>
+            <con:description>This is a way for the consumer to communicate what version of the specification it has. For example a consumer may still operate using v1.0 while the service is at v1.1 (at which point "1.1" will be added to the enumeration above, only use numeric values in the enumeration with single quotes).This field is used for two purposes- it will allow the service to ensure the consumer receives a compatible response- we can deploy a new minor version alongside an existing minor version, and route the service to either based on this field (and other info).  Based on testing / proving the service will ultimately switch to the final version.</con:description>
+          </con:parameter>
+          <con:parameter required="true">
+            <con:name>X-Journey-Id</con:name>
+            <con:style>HEADER</con:style>
+            <con:description>A unique identifier populated by the consumer. It follows the UUID pattern, for example 123e4567-e89b-12d3-a456-426655440000</con:description>
+          </con:parameter>
+          <con:parameter required="true">
+            <con:name>X-Source-System-Id</con:name>
+            <con:style>HEADER</con:style>
+            <con:description>'BusinessSystemID' for the  list of possible values. Sample Values includeTRANSFORMCOUKOLB</con:description>
+          </con:parameter>
+          <con:parameter required="true">
+            <con:name>X-Create-Date-Time</con:name>
+            <con:style>HEADER</con:style>
+            <con:description>Time stamp associated with creation of the request message, utilisting the UTC ISO 8601 Date Time format. For example 2017-01-01T00:00:00 or 2017-01-01T00:00:00.001Z</con:description>
+          </con:parameter>
+          <con:parameter>
+            <con:name>X-IP-Address</con:name>
+            <con:style>HEADER</con:style>
+            <con:description>The IPv4/IPv6 address of the caller.</con:description>
+          </con:parameter>
+        </con:parameters>
+        <con:representation type="REQUEST">
+          <con:mediaType>application/json; charset=utf-8</con:mediaType>
+          <con:params/>
+          <con:sampleContent/>
+        </con:representation>
+        <con:representation type="RESPONSE">
+          <con:mediaType>application/json; charset=utf-8</con:mediaType>
+          <con:status>200</con:status>
+          <con:params/>
+          <con:sampleContent xsi:nil="true"/>
+        </con:representation>
+        <con:representation type="RESPONSE">
+          <con:mediaType>application/json; charset=utf-8</con:mediaType>
+          <con:status>400</con:status>
+          <con:params/>
+          <con:sampleContent xsi:nil="true"/>
+        </con:representation>
+        <con:representation type="RESPONSE">
+          <con:mediaType>application/json; charset=utf-8</con:mediaType>
+          <con:status>500</con:status>
+          <con:params/>
+          <con:sampleContent xsi:nil="true"/>
+        </con:representation>
+        <con:representation type="RESPONSE">
+          <con:mediaType>application/json; charset=utf-8</con:mediaType>
+          <con:status>502</con:status>
+          <con:params/>
+          <con:sampleContent xsi:nil="true"/>
+        </con:representation>
+        <con:representation type="RESPONSE">
+          <con:mediaType>application/json; charset=utf-8</con:mediaType>
+          <con:status>503</con:status>
+          <con:params/>
+          <con:sampleContent xsi:nil="true"/>
+        </con:representation>
+        <con:representation type="RESPONSE">
+          <con:mediaType>application/json; charset=utf-8</con:mediaType>
+          <con:status>504</con:status>
+          <con:params/>
+          <con:sampleContent xsi:nil="true"/>
+        </con:representation>
+        <con:request id="0c59265c-2634-4c82-8104-81cf33db31de" mediaType="application/json; charset=utf-8" name="Request 1" postQueryString="false">
+          <con:settings>
+            <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting>
+          </con:settings>
+          <con:endpoint>http://localhost:8091/</con:endpoint>
+          <con:request/>
+          <con:originalUri>http://localhost/audit/v1/details</con:originalUri>
+          <con:credentials>
+            <con:selectedAuthProfile>No Authorization</con:selectedAuthProfile>
+            <con:authType>No Authorization</con:authType>
+          </con:credentials>
+          <con:jmsConfig JMSDeliveryMode="PERSISTENT"/>
+          <con:parameters/>
+        </con:request>
+      </con:method>
+    </con:resource>
+  </con:interface>
+  <con:restMockService host="localhost" id="202cabe0-3c29-4bbd-ae3e-bc9469231c8b" name="AUDIT_V1_STUB" path="/" port="8091" docroot="">
+    <con:settings>
+      <con:setting id="com.eviware.soapui.impl.wsdl.panels.mock.WsdlMockServiceDesktopPanel$LogListModel@maxSize">100</con:setting>
+    </con:settings>
+    <con:properties>
+      <con:property>
+        <con:name>StubMessageStore</con:name>
+        <con:value>\\dvafimgw01\StubMessageStore\AUDIT_V1_STUB</con:value>
+      </con:property>
+    </con:properties>
+    <con:constraints>
+      <con:congestion>0</con:congestion>
+      <con:inputBandwidth>-1</con:inputBandwidth>
+      <con:outputBandwidth>-1</con:outputBandwidth>
+      <con:maxThreadPoolCapacity>20</con:maxThreadPoolCapacity>
+      <con:coreThreadPoolCapacity>5</con:coreThreadPoolCapacity>
+      <con:virtError>
+        <con:start>0</con:start>
+        <con:endless>true</con:endless>
+      </con:virtError>
+    </con:constraints>
+    <con:headerValidator type="NONE"/>
+    <con:restMockAction id="1d378fed-ac8e-45d9-b803-6f0d9e998d92" method="POST" name="/audit/v1/details" resourcePath="/audit/v1/details">
+      <con:settings/>
+      <con:defaultResponse>Response_400</con:defaultResponse>
+      <con:dispatchStyle>SCRIPT</con:dispatchStyle>
+      <con:dispatchConfig/>
+      <con:dispatchPath>import com.nbs.nemdc.testframework.script.StubRunner;
+import com.nbs.nemdc.testframework.script.factory.StubRunnerFactory;
+import com.nbs.nemdc.testframework.utility.HTTPData;
+//For some reason, setting the StubMessageStore on the command line doesn't set the mock service StubMessageStore property (which is used by the framework).
+//So grab the property if it's been passed in via the CLI and set the service property.
+def stubMsgStoreProperty = context.expand( '${#Project#StubMessageStore}' )
+if (stubMsgStoreProperty) {
+context.getMockService().setPropertyValue("StubMessageStore",stubMsgStoreProperty);
+}
+log.info("StubMessageStore property: " + context.getMockService().getPropertyValue("StubMessageStore"));
+// create the stub runner
+StubRunner sr = StubRunnerFactory.getStubRunner("AUDIT_V1_STUB");
+// run the stub
+def responseData = new HTTPData()
+responseData = sr.executeRESTStub(context, mockRequest, mockOperation)
+// select the response named by the http status code returned
+responseName = responseData.httpStatusCode
+response = mockOperation.getMockResponseByName(responseName)
+// set the response http headers
+def headers = response.responseHeaders
+responseData.httpHeaders.each {
+requestContext.setProperty(it.key,it.value)
+}
+// set the response content
+requestContext.responseMessage = responseData.json
+// respond
+return responseName</con:dispatchPath>
+      <con:dispatchXPath/>
+      <con:parameterDispatcherRuleContainer/>
+      <con:routeScript/>
+      <con:response compressedBodyContent="aced00057372002f636f6d2e657669776172652e736f617075692e696d706c2e737570706f72742e436f6d7072657373656456616c7565000b8b02c748eeab0200025a000a636f6d707265737365645b0004646174617400025b4278700070" dataSource="" encoding="utf-8" httpResponseStatus="200" id="5e92546f-f2ff-4bfd-a6dd-f83d5ea0fb3d" mediaType="application/json" name="200">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+      </con:response>
+      <con:response compressedBodyContent="aced00057372002f636f6d2e657669776172652e736f617075692e696d706c2e737570706f72742e436f6d7072657373656456616c7565000b8b02c748eeab0200025a000a636f6d707265737365645b0004646174617400025b4278700070" dataSource="" encoding="utf-8" httpResponseStatus="400" id="290256d8-7908-40c1-9cb5-fe4fe5b1255b" mediaType="application/json" name="400">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+      </con:response>
+      <con:response compressedBodyContent="aced00057372002f636f6d2e657669776172652e736f617075692e696d706c2e737570706f72742e436f6d7072657373656456616c7565000b8b02c748eeab0200025a000a636f6d707265737365645b0004646174617400025b4278700070" dataSource="" encoding="utf-8" httpResponseStatus="500" id="317aa298-7b92-4fae-8df1-1d6599ed2d1b" mediaType="application/json" name="500">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+      </con:response>
+      <con:response compressedBodyContent="aced00057372002f636f6d2e657669776172652e736f617075692e696d706c2e737570706f72742e436f6d7072657373656456616c7565000b8b02c748eeab0200025a000a636f6d707265737365645b0004646174617400025b4278700070" dataSource="" encoding="utf-8" httpResponseStatus="502" id="746111bf-dcac-4617-821e-a55f2b160352" mediaType="application/json" name="502">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+      </con:response>
+      <con:response compressedBodyContent="aced00057372002f636f6d2e657669776172652e736f617075692e696d706c2e737570706f72742e436f6d7072657373656456616c7565000b8b02c748eeab0200025a000a636f6d707265737365645b0004646174617400025b4278700070" dataSource="" encoding="utf-8" httpResponseStatus="503" id="bde36144-476f-4135-acf9-dff6a3bf71f0" mediaType="application/json" name="503">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+      </con:response>
+      <con:response compressedBodyContent="aced00057372002f636f6d2e657669776172652e736f617075692e696d706c2e737570706f72742e436f6d7072657373656456616c7565000b8b02c748eeab0200025a000a636f6d707265737365645b0004646174617400025b4278700070" dataSource="" encoding="utf-8" httpResponseStatus="504" id="24a2b05e-a874-4c5a-b3ff-c65291caefda" mediaType="application/json" name="504">
+        <con:settings/>
+        <con:responseContent>${responseMessage}</con:responseContent>
+      </con:response>
+    </con:restMockAction>
+  </con:restMockService>
+  <con:savedRecentRuns>1</con:savedRecentRuns>
+  <con:properties/>
+  <con:wssContainer/>
+  <con:databaseConnectionContainer/>
+  <con:jmsConnectionContainer/>
+  <con:oAuth2ProfileContainer/>
+  <con:oAuth1ProfileContainer/>
+  <con:reporting>
+    <con:xmlTemplates/>
+    <con:parameters/>
+  </con:reporting>
+  <con:eventHandlers name="RequestFilter.filterRequest" type="RequestFilter.filterRequest">
+    <con:script>// Sample event script to add custom HTTP header to all outgoing REST, SOAP and HTTP(S) calls
+// This code is often used for adding custom authentication to SoapUI Pro tests
+
+// If hardcoding the token, uncomment and change line 5
+// def token = '4567'
+
+// If your token is parameterized in Project level custom property, uncomment line 8
+// def token = request.parent.testCase.testSuite.project.getProperty('auth_token').getValue()
+
+// To modify all outgoing calls, remove comments from lines 11 to 16
+// def headers = request.requestHeaders
+// if (headers.containsKey('auth_token2') == false) {
+//   headers.put('auth_token2', token)
+//   request.requestHeaders = headers
+// }</con:script>
+  </con:eventHandlers>
+  <con:eventHandlers name="TestRunListener.afterStep" type="TestRunListener.afterStep">
+    <con:script>// Save all test step results into files
+// Change the directory path in line 5 to a location where you want to store details
+// then uncomment lines 5 to 10
+
+// filePath = 'C:\\tempOutputDirectory\\'
+// fos = new FileOutputStream(filePath + testStepResult.testStep.label + '.txt', true)
+// pw = new PrintWriter(fos)
+// testStepResult.writeTo(pw)
+// pw.close()
+// fos.close()</con:script>
+  </con:eventHandlers>
+  <con:authRepository/>
+  <con:tags/>
+  <con:sensitiveInformation/>
+</con:soapui-project>

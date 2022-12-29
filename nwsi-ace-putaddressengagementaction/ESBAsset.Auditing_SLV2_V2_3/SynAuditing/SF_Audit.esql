@@ -1,0 +1,77 @@
+BROKER SCHEMA SynAuditing
+PATH LIB_Core; -- This allows use of the core db procedures
+
+--------------------------------------------------------------------------------------
+-- Program History
+-- Fix Number Module    Name                Date    	Description
+-- 			  All		Rich Jones			29/06/05	Initial Version
+--			  All		Rich Jones			10/10/05	Changed the error codes
+-- AA00000093 All		Rich Jones			26/10/05	Corrected to match latest design doc
+-- AA00000502 All		Rich Jones			28/11/05	Corrected the database read
+-- AA00000582 All		Rich Jones			19/12/05	Replaced embedded sql with common functions
+---------------------------------------------------------------------------------------
+-- Description:
+-- Writes to the AUDIT_LOG table
+---------------------------------------------------------------------------------------
+
+CREATE COMPUTE MODULE SF_Audit_Insert_To_Audit_Log_table
+	Declare ClearCaseRevision CHAR('%Revision');
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyEntireMessage();
+		
+		Declare oleRef        Reference to OutputLocalEnvironment;
+		Declare DB_IN_PARAMS  Reference To InputLocalEnvironment;
+		Declare DB_OUT_PARAMS Reference To InputLocalEnvironment;
+		Declare evRef		  Reference to Environment.Variables;
+		
+		Declare throwOnNoRowsFalse Boolean False;
+		Declare SQL_STATEMENT Char ''; -- Insert sql used in passthru
+		Declare resultBranchName Char;
+		
+		-- Read the AUDIT_TYPE table
+--		Set DB_OUT_PARAMS.OUTPUT[] = (Select AT."PARAM_LIST"
+--									    From ASSET.Database.AUDIT_TYPE As AT
+--									   Where AT.AUDIT_TYPE_ID = evRef."Audit"."auditType");
+		
+		Set resultBranchName = 'OUTPUT';
+			
+		Set SQL_STATEMENT    = 'Select PARAM_LIST
+								  From ASSET.AUDIT_TYPE
+								 Where AUDIT_TYPE_ID = ?';		              
+		
+		Set DB_IN_PARAMS.AUDIT_TYPE_ID = evRef."Audit"."auditType";
+			             
+		Call cDatabaseRead(SQL_STATEMENT, throwOnNoRowsFalse, 'ERR:00111', DB_IN_PARAMS, DB_OUT_PARAMS, resultBranchName);
+		
+		-- Insert to AUDIT_LOG table
+		CREATE FIELD oleRef.AUDIT_LOG As DB_IN_PARAMS;
+		
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'AUDIT_TYPE_ID' 		Value evRef."Audit"."auditType";
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'EVENT_TSTMP' 		Value CURRENT_TIMESTAMP;
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'SOURCE_SYSTEM' 		Value Coalesce(evRef."Audit"."sourceSystem", 'SYSTEM');
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'SOURCE_USER' 		Value Coalesce(evRef."Audit"."sourceUser", 'SYSTEM');
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'ENTITY_NAME' 		Value evRef."Audit"."entityName";
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'ENTITY_ID' 			Value Coalesce(evRef."Audit"."entityID", NULL);
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'ACTION_TYPE' 		Value Coalesce(evRef."Audit"."action", NULL);
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'OUTCOME' 			Value Coalesce(evRef."Audit"."outcome", NULL);
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'FINANCIAL_VALUE' 	Value Coalesce(evRef."Audit"."financialValue", NULL);
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'FINANCIAL_CURRENCY' 	Value Coalesce(evRef."Audit"."currency", NULL);
+		CREATE LASTCHILD of DB_IN_PARAMS Name 'PARMS' 				Value Coalesce(DB_OUT_PARAMS.OUTPUT.PARAM_LIST, NULL);
+
+		Set SQL_STATEMENT = 'Insert into ASSET.AUDIT_LOG' ||
+				            '(AUDIT_TYPE_ID, EVENT_TSTMP, SOURCE_SYSTEM, SOURCE_USER, ENTITY_NAME, ENTITY_ID,
+				     		  ACTION_TYPE, OUTCOME, FINANCIAL_VALUE, FINANCIAL_CURRENCY, PARMS)
+				             Values (?,?,?,?,?,?,?,?,?,?,?)';
+		
+		CALL cDatabaseWrite(SQL_STATEMENT, 'ERR:00002', DB_IN_PARAMS);
+		
+		RETURN TRUE;
+		
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

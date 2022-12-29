@@ -1,0 +1,39 @@
+--===========================================================================================
+-- *
+-- * Licensed Materials - Property of Nationwide Building Society
+-- *
+-- * Nationwide Enterprise Middleware DC
+-- *
+-- * 
+--============================================================================================= 
+--*********************************************************************************************
+----** File Version History
+--*********************************************************************************************
+----** Defect	ID		CID		Date		Description		Test cycle
+----** -----------  --------- ----------	--------------- ----------- 
+--				    C39099	  09/11/15	    Initial Version   Dev
+--*********************************************************************************************
+----** Description OF the modules contained in the file.
+----** ========================================================================================
+----** The procedure contained within this file is a common utility procedure that 
+----**   formats the input telephone number.
+--*********************************************************************************************
+
+BROKER SCHEMA uk.co.nationwide.nem.esb.commonFunctions
+
+--=================================================================================================================
+----** This procedure formats an unformatted number. The results of formatting are stored
+----**   as a tree structre at the reference provided as input
+----** This procedure invokes the callFormatPhone() method of FormatPhoneWrapper.java in 
+----**  ESBServices.CommonFunctionsLibrary.java.
+----** Input1) Unformatted Phone Number 
+----** Input2) Phone codes file and path
+----** Input3) ISCD codes file and path
+----** IN/OUT) Reference where result tree structure is stored
+----**			Usage Hint:- Create a root variable in Environment and provide that as a reference here. 
+--=================================================================================================================
+CREATE PROCEDURE FormatPhone (IN UnformattedPhone CHARACTER, IN PhoneFormatFile CHARACTER, IN CodesFile CHARACTER, INOUT ResultTree REFERENCE )
+LANGUAGE JAVA
+EXTERNAL NAME "uk.co.nationwide.nem.formatphone.FormatPhoneWrapper.callFormatPhone";
+
+

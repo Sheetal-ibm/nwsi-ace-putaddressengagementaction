@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" name="IAuditManager" targetNamespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/" xmlns:tns="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:documentation>
+    <wsdl:appinfo source="WMQI_APPINFO">
+      <MRWSDLAppInfo imported="true">
+        <generatedXSD location="IAuditManager_InlineSchema1.xsd"/>
+      </MRWSDLAppInfo>
+    </wsdl:appinfo>
+  </wsdl:documentation>
+  <wsdl:types>
+    
+          <xsd:schema targetNamespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/" xmlns:cns="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:xsd_1="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/">
+<xsd:import namespace="http://uk/co/nationwide/Services/Definitions/CoreDatatypes/" schemaLocation="Services/Definitions/CoreDatatypes/CoreDatatypes.xsd"/>
+<xsd:import namespace="http://uk/co/nationwide/Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/" schemaLocation="Services/Utility/AuditManager/v2/IAuditManager/CreateAuditEvent/CreateAuditEvent.xsd"/>
+<xsd:include schemaLocation="IAuditManager_InlineSchema1.xsd"/>
+    </xsd:schema>
+    </wsdl:types>
+  <wsdl:message name="createAuditEventRequest">
+    <wsdl:part element="tns:createAuditEvent" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="createAuditEventResponse">
+    <wsdl:part element="tns:createAuditEventResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="fault">
+    <wsdl:part element="tns:fault" name="fault"/>
+  </wsdl:message>
+  <wsdl:portType name="IAuditManager">
+    <wsdl:operation name="createAuditEvent">
+      <wsdl:input message="tns:createAuditEventRequest"/>
+      <wsdl:output message="tns:createAuditEventResponse"/>
+      <wsdl:fault message="tns:fault" name="fault"/>
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>

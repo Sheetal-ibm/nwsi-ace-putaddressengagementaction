@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://uk/co/nationwide/Services/Definitions/Enumerations/" version="1.0" xmlns:cenum="http://uk/co/nationwide/Services/Definitions/Enumerations/">
+  <xsd:simpleType name="InvolvedPartyReviewType">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a classification of  based on the reason for the review. See also (IBM Unique ID: BOM02789 - StatusReviewType - no longer used in NBS)</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Customer Relationship Review">
+        <xsd:annotation>
+          <xsd:documentation>IFW Literal moved by adding it to this enumeration in the context of moving the type classification of the parent class ( StatusReview.type=StatusReviewType) to the leaf level: InvolvedPartyReview.type=InvolvedPartyReviewType. Identifies a  for the purposes of meeting with the  to enhance the customer relationship. IBM Unique ID: BOM02586 - NBS:moved</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Communication Response Status Review">
+        <xsd:annotation>
+          <xsd:documentation>IFW Literal moved by adding it to this enumeration in the context of moving the type classification of the parent class ( StatusReview.type=StatusReviewType) to the leaf level: InvolvedPartyReview.type=InvolvedPartyReviewType. Identifies a  of a response to a .  It is recognized that a potential  lead is an important asset for a  and should be managed accordingly.  It is therefore important that leads are followed up by monitoring the status of communications sent to customers. If no response has been received by a predetermined date, it is good practice for the Financial Institution to contact the potential customer to see why they have not replied.  This is a useful exercise even where it transpires that the potential customer has decided to use a product or service offered by a competing institution.  The Financial Institution may be able to ascertain the reasons why the potential customer considered the competitor's product to better match their requirements and budget, and can use this information as valuable input to the product development and pricing processes. (Description copied from original location in enumeration StatusReviewType: IBM Unique ID: BOM02585)</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Involved Party KYC Check">
+        <xsd:annotation>
+          <xsd:documentation>Identifies an  for the purpose of verifying the  KYC (Know your customer) status.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Involved Party AML Check"/>
+      <xsd:enumeration value="Verify Account Arrangement">
+        <xsd:annotation>
+          <xsd:documentation>A review that involves confirmation that the individual has a relationship to an arrangement to which funds may be transferred.
+
+a.k.a "Ownership assessment"</xsd:documentation>
+        </xsd:annotation>
+      </xsd:enumeration>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ChannelType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="BRANCH"/>
+      <xsd:enumeration value="ONLINE"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="AlternateIdentifierType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="CASHIERID"/>
+      <xsd:enumeration value="CUSTOMERID"/>
+      <xsd:enumeration value="EMPLOYEEID"/>
+      <xsd:enumeration value="MACHINEID"/>
+      <xsd:enumeration value="TERMINALID"/>
+      <xsd:enumeration value="USERID"/>
+      <xsd:enumeration value="FUNCTIONALUNITID"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="MessageType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="REQUEST"/>
+      <xsd:enumeration value="RESPONSE"/>
+      <xsd:enumeration value="FIREANDFORGET"/>
+      <xsd:enumeration value="NOTIFICATION"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="MandateActionCodeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="NEW"/>
+      <xsd:enumeration value="AMEND"/>
+      <xsd:enumeration value="CANCEL"/>
+      <xsd:enumeration value="REINSTATE"/>
+      <xsd:enumeration value="SUSPEND"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="MaintenanceTransactionType">
+    <xsd:annotation>
+      <xsd:documentation>Identifies a classification of &lt;MaintenanceTransaction&gt;s according to the intended effect of  the Transaction For example, Involved Party Maintenance (name change of a customer), Location Maintenance (change ZIP codes for some postal areas), Resource Item Maintenance (add details of where Personal Computers are located). This is a Placeholder. IBM Unique ID: IDM24622</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Nominated Account Update"/>
+      <xsd:enumeration value="Product Switch"/>
+      <xsd:enumeration value="Account Origination"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="CategoryType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="COMPLETEFAILURE"/>
+      <xsd:enumeration value="INPUTERROR"/>
+      <xsd:enumeration value="OUTCOMEUNKNOWN"/>
+      <xsd:enumeration value="PARTIALFAILURE"/>
+      <xsd:enumeration value="TIMEOUT"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BankAccountValidityResult">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Pass"/>
+      <xsd:enumeration value="Fail"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ResponseStatusType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="INVALIDDATA"/>
+      <xsd:enumeration value="PARTIALSUCCESS"/>
+      <xsd:enumeration value="REJECTED"/>
+      <xsd:enumeration value="SUCCESS"/>
+      <xsd:enumeration value="TRANSPORTFAILURE"/>
+      <xsd:enumeration value="PROTOCOLFAILURE"/>
+      <xsd:enumeration value="NOTFOUND"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BehaviourType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="ABORT"/>
+      <xsd:enumeration value="CANCOMPENSATE"/>
+      <xsd:enumeration value="CANOVERRIDE"/>
+      <xsd:enumeration value="CANRETRY"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ArrangementEnterpriseIdType">
+    <xsd:annotation>
+      <xsd:documentation/>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="SCAN Product Arrangement Identifer"/>
+      <xsd:enumeration value="Asset Securitization Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Benefit Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Employment Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Escrow Service Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Fund Investment Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="International Bank Account Number (IBAN)">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Merchant Service Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Investment Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Non-SCAN Product Arrangement Identifier"/>
+      <xsd:enumeration value="Product Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="SAP Product Arrangement GUID"/>
+      <xsd:enumeration value="Security Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Service Arrangement Identifier">
+        <xsd:annotation>
+          <xsd:documentation/>
+        </xsd:annotation>
+      </xsd:enumeration>
+      <xsd:enumeration value="Unisys Internal Number"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SeverityType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Error"/>
+      <xsd:enumeration value="Critical"/>
+      <xsd:enumeration value="Warning"/>
+      <xsd:enumeration value="Info"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:uk_co_nationwide_nem_esb_involvedPartyManagement_BackendMediation_InvolvedPartyManagement.subflow="uk/co/nationwide/nem/esb/involvedPartyManagement/BackendMediation_InvolvedPartyManagement.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_InvolvedPartyManagementV3.subflow" nsPrefix="uk_co_nationwide_si_esb_putAddressEngagementAction_SF_Call_InvolvedPartyManagementV3.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="SF_Call_InvolvedPartyManagementV3" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_InvolvedPartyManagementV3" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/nwsi-ace-putaddressengagementaction-4.0/icons/full/obj16/SF_Call_InvolvedPartyManagementV3.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/nwsi-ace-putaddressengagementaction-4.0/icons/full/obj30/SF_Call_InvolvedPartyManagementV3.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="InvolvedPartyManagement_v3_X_PutInvolvedParties (UIPD) - Transformation/Mediation subflow"/>
+    <longDescription xmi:type="utility:ConstantString" string="The subflow deals with transformation of message from previous nodes into a REST JSON request for ESB service PutInvolvedParties, mediates with the backend service using the subflow from BackendMed lib and handles any errors during the process.  The schema  version of the Backend REST API to be called is configurable via a setting in the config file of the service."/>
+    <version xmi:type="utility:ConstantString" string="1.0"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="636,208" computeExpression="esql://routine/uk.co.nationwide.nem.esb.putAddressEngagementAction#SF_Call_InvolvedPartyManagementV3_HandleUnModelledError.Main">
+        <translation xmi:type="utility:ConstantString" string="HandleUnModelledError"/>
+        <shortDescription xmi:type="utility:ConstantString" string="UIPD_v3 UnModelledError ExceptionHandler"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node handles any Unmodelled errors and throws back user exception with appropriate fault code to be used by the CatchHandler subflow in the main flow."/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="38,176">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_InvolvedPartyManagementV3" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="617,126" computeExpression="esql://routine/uk.co.nationwide.nem.esb.putAddressEngagementAction#SF_Call_InvolvedPartyManagementV3_HandleSuccess_ModelledError.Main">
+        <translation xmi:type="utility:ConstantString" string="HandleSuccess_ModelledError"/>
+        <shortDescription xmi:type="utility:ConstantString" string="UIPD_V3 ModelledError/PartialSuccess response handler"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node handles any PartialSuccess/Modelled errors and throws back user exception with appropriate fault code to be used by the CatchHandler subflow in the main flow. The node is also wired to accept the message for success scenarios which is saved in Environment variable to be used by compute modules down the line."/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="89,176" computeExpression="esql://routine/uk.co.nationwide.nem.esb.putAddressEngagementAction#SF_Call_InvolvedPartyManagementV3_TransformToPutInvolvedPartiesRequest.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="TransformToPutInvolvedPartiesRequest"/>
+        <shortDescription xmi:type="utility:ConstantString" string="UIPD(PutInvolvedParties) Request Transformation"/>
+        <longDescription xmi:type="utility:ConstantString" string="The module within this node transforms the message from previous nodes into a JSON message required for the REST API call of the backend ESB service, UIPD. It also sets the URL &amp; timeout value for the Backend service from the config file of the same name."/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="769,181" computeExpression="esql://routine/uk.co.nationwide.nem.esb.putAddressEngagementAction#PutAddressEngagementAction_moreProcessingPresent.Main" computeMode="exception">
+        <translation xmi:type="utility:ConstantString" string="moreProcessingPresent"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Routing the request on the basis of more processing indicator"/>
+        <longDescription xmi:type="utility:ConstantString" string="The logic in this compute node determines if moreProcessing is present. If so, no portrait event would be generated."/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="922,121">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_InvolvedPartyManagementV3" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.skipRSCE1" location="928,226">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.CallRSCE" bundleName="uk/co/nationwide/si/esb/putAddressEngagementAction/SF_Call_InvolvedPartyManagementV3" pluginId="nwsi-ace-putaddressengagementaction-4.0"/>
+      </nodes>
+      <nodes xmi:type="uk_co_nationwide_nem_esb_involvedPartyManagement_BackendMediation_InvolvedPartyManagement.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="308,177">
+        <translation xmi:type="utility:ConstantString" string="BackendMediation_InvolvedPartyManagement"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_4" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_28" targetNode="OutTerminal.skipRSCE1" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.ModelledError" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output2" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>
